@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  phone     String?
+  avatar    String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bookings  Booking[]
+  reviews   Review[]
+  wishlist  Wishlist[]
+}
+
+model Destination {
+  id          String   @id @default(cuid())
+  name        String
+  tagline     String
+  description String
+  state       String
+  category    String
+  price       Int
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  image       String
+  badge       String?
+  badgeColor  String?
+  tags        String
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  bookings    Booking[]
+  reviews     Review[]
+  wishlist    Wishlist[]
+}
+
+model Booking {
+  id            String      @id @default(cuid())
+  userId        String
+  destinationId String
+  user          User        @relation(fields: [userId], references: [id])
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  checkIn       DateTime
+  checkOut      DateTime
+  guests        Int         @default(1)
+  totalPrice    Int
+  status        String      @default("pending")
+  paymentStatus String      @default("pending")
+  phone         String?
+  specialReqs   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  userId        String
+  destinationId String
+  user          User        @relation(fields: [userId], references: [id])
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  rating        Int
+  comment       String
+  createdAt     DateTime    @default(now())
+}
+
+model Wishlist {
+  id            String      @id @default(cuid())
+  userId        String
+  destinationId String
+  user          User        @relation(fields: [userId], references: [id])
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  createdAt     DateTime    @default(now())
+}
