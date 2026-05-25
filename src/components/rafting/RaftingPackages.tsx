@@ -1,13 +1,13 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Waves,
   Clock,
   Route,
-  Calendar,
   Shield,
   Star,
   Zap,
@@ -16,14 +16,15 @@ import {
   UsersRound,
   Briefcase,
   Rocket,
+  Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { useState } from 'react'
 
-interface RaftingPackage {
+interface PackageData {
   id: string
   name: string
+  tagline: string
   subtitle: string
   price: number
   distance: string
@@ -31,73 +32,15 @@ interface RaftingPackage {
   rapidsLevel: string
   rapidsDescription: string
   targetDemo: string
-  targetIcon: React.ElementType
-  highlights?: string
   timings: string
-  popular?: boolean
-  extreme?: boolean
   image: string
   gradient: string
-  badgeText?: string
+  badge: string | null
   badgeColor: string
+  rating: number
+  reviewCount: number
+  featured: boolean
 }
-
-const raftingPackages: RaftingPackage[] = [
-  {
-    id: 'brahmpuri',
-    name: 'Brahmpuri To Rishikesh',
-    subtitle: 'Beginner & Family',
-    price: 399,
-    distance: '9km to 12km route',
-    duration: '1.5 to 2+ Hours',
-    rapidsLevel: 'Grade I & II',
-    rapidsDescription: 'Easy waves — perfect introduction to rafting',
-    targetDemo: 'School groups, families, and first-timers. Safe for children above 14.',
-    targetIcon: UsersRound,
-    timings: '07:00 AM to 04:00 PM',
-    image: 'https://picsum.photos/seed/brahmpuri-rafting-rishikesh/800/500',
-    gradient: 'from-emerald-500/80 to-teal-600/80',
-    badgeText: 'Family Friendly',
-    badgeColor: 'bg-emerald-500',
-  },
-  {
-    id: 'shivpuri',
-    name: 'Shivpuri To Rishikesh',
-    subtitle: 'Most Popular',
-    price: 499,
-    distance: '16km Route',
-    duration: '3 to 4+ Hours',
-    rapidsLevel: 'Grade II & III',
-    rapidsDescription: 'Moderate rapids with exciting waves',
-    targetDemo: 'College groups, friends, and corporate trips.',
-    targetIcon: Briefcase,
-    highlights: 'Includes body surfing and cliff jumping',
-    timings: '07:00 AM to 04:00 PM',
-    popular: true,
-    image: 'https://picsum.photos/seed/shivpuri-rafting-adventure/800/500',
-    gradient: 'from-brand-orange/80 to-amber-600/80',
-    badgeText: 'Most Popular',
-    badgeColor: 'bg-brand-orange',
-  },
-  {
-    id: 'marine-drive',
-    name: 'Marine Drive To Rishikesh',
-    subtitle: 'Extreme Adventure',
-    price: 599,
-    distance: '24km to 26km Route',
-    duration: '4 to 6 Hours',
-    rapidsLevel: 'Grade III & IV',
-    rapidsDescription: 'High thrill — for the adrenaline seekers',
-    targetDemo: 'Highly energetic individuals and adventure junkies.',
-    targetIcon: Rocket,
-    timings: '07:00 AM to 04:00 PM',
-    extreme: true,
-    image: 'https://picsum.photos/seed/marine-drive-extreme-rafting/800/500',
-    gradient: 'from-red-600/80 to-rose-700/80',
-    badgeText: 'Extreme',
-    badgeColor: 'bg-red-600',
-  },
-]
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -105,71 +48,36 @@ const fadeInUp = {
   viewport: { once: true },
 }
 
+function getTargetIcon(subtitle: string) {
+  if (subtitle.includes('Family') || subtitle.includes('Beginner')) return UsersRound
+  if (subtitle.includes('Popular')) return Briefcase
+  if (subtitle.includes('Extreme')) return Rocket
+  return UsersRound
+}
+
 export function RaftingPackages() {
   const { navigate, isAuthenticated, user } = useAppStore()
-  const [bookingPkg, setBookingPkg] = useState<string | null>(null)
 
-  const handleBookTrip = (pkg: RaftingPackage) => {
+  const { data: packages = [], isLoading } = useQuery({
+    queryKey: ['rafting-packages'],
+    queryFn: async () => {
+      const res = await fetch('/api/packages?category=rafting')
+      const data = await res.json()
+      return data as PackageData[]
+    },
+  })
+
+  const handleBookTrip = (pkg: PackageData) => {
     if (!isAuthenticated) {
       toast.error('Please login to book a rafting trip')
       return
     }
+    // Navigate to booking form
+    navigate('package-booking', null, pkg.id)
+  }
 
-    setBookingPkg(pkg.id)
-
-    // Create a booking via the API - use the Rishikesh destination
-    const createBooking = async () => {
-      try {
-        // First find the Rishikesh destination
-        const destRes = await fetch('/api/destinations?search=Rishikesh')
-        const destinations = await destRes.json()
-        const rishikesh = destinations.find((d: { name: string }) => d.name === 'Rishikesh')
-
-        if (!rishikesh) {
-          toast.error('Rishikesh destination not found')
-          setBookingPkg(null)
-          return
-        }
-
-        // Calculate dates (next weekend)
-        const tomorrow = new Date()
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        const dayAfter = new Date()
-        dayAfter.setDate(dayAfter.getDate() + 2)
-
-        const res = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user?.id || '',
-          },
-          body: JSON.stringify({
-            destinationId: rishikesh.id,
-            checkIn: tomorrow.toISOString().split('T')[0],
-            checkOut: dayAfter.toISOString().split('T')[0],
-            guests: 1,
-            totalPrice: pkg.price,
-            phone: user?.phone || '',
-            specialReqs: `Rafting Package: ${pkg.name} (${pkg.subtitle})`,
-          }),
-        })
-
-        if (!res.ok) {
-          const data = await res.json()
-          toast.error(data.error || 'Failed to create booking')
-          return
-        }
-
-        toast.success(`${pkg.name} booked successfully! Get ready for an adventure!`)
-        navigate('booking-success', rishikesh.id)
-      } catch {
-        toast.error('Failed to book trip. Please try again.')
-      } finally {
-        setBookingPkg(null)
-      }
-    }
-
-    createBooking()
+  const handleViewDetails = (pkg: PackageData) => {
+    navigate('package-detail', null, pkg.id)
   }
 
   return (
@@ -211,7 +119,7 @@ export function RaftingPackages() {
             {/* Quick Stats */}
             <div className="flex items-center justify-center gap-6 sm:gap-10 mt-6">
               <div className="text-center">
-                <div className="text-white font-bold text-xl sm:text-2xl">3</div>
+                <div className="text-white font-bold text-xl sm:text-2xl">{packages.length || 3}</div>
                 <div className="text-white/50 text-xs">Packages</div>
               </div>
               <div className="w-px h-8 bg-white/20" />
@@ -259,172 +167,200 @@ export function RaftingPackages() {
         </motion.div>
 
         {/* Package Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {raftingPackages.map((pkg, index) => {
-            const TargetIcon = pkg.targetIcon
-            const isBooking = bookingPkg === pkg.id
-
-            return (
-              <motion.div
-                key={pkg.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.5 }}
-                className={`relative group ${
-                  pkg.popular ? 'md:-mt-4 md:mb-4' : ''
-                }`}
-              >
-                {/* Popular glow */}
-                {pkg.popular && (
-                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange/20 to-amber-500/20 rounded-3xl blur-lg group-hover:from-brand-orange/30 group-hover:to-amber-500/30 transition-all duration-500" />
-                )}
-
-                <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 ${
-                  pkg.popular ? 'ring-2 ring-brand-orange' : ''
-                }`}>
-                  {/* Image Section */}
-                  <div className="relative h-48 sm:h-56 overflow-hidden">
-                    <img
-                      src={pkg.image}
-                      alt={pkg.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                    {/* Badge */}
-                    <div className={`absolute top-4 left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
-                      {pkg.popular && <Star className="w-3 h-3 fill-white" />}
-                      {pkg.extreme && <Zap className="w-3 h-3" />}
-                      {!pkg.popular && !pkg.extreme && <Shield className="w-3 h-3" />}
-                      {pkg.badgeText}
-                    </div>
-
-                    {/* Price floating badge */}
-                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
-                      <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
-                      <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
-                    </div>
-
-                    {/* Bottom content on image */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-bold text-lg sm:text-xl leading-tight">{pkg.name}</h3>
-                      <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
-                    </div>
-                  </div>
-
-                  {/* Details Section */}
-                  <div className="p-5 sm:p-6 space-y-4">
-                    {/* Key Specs - Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                          <Route className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">Distance</div>
-                          <div className="text-sm font-semibold text-brand-dark">{pkg.distance}</div>
-                        </div>
-                      </div>
-                      <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                          <Timer className="w-4 h-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">Duration</div>
-                          <div className="text-sm font-semibold text-brand-dark">{pkg.duration}</div>
-                        </div>
-                      </div>
-                      <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                          <Waves className="w-4 h-4 text-red-600" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">Rapids Level</div>
-                          <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
-                        </div>
-                      </div>
-                      <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                          <Clock className="w-4 h-4 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">Timings</div>
-                          <div className="text-sm font-semibold text-brand-dark">{pkg.timings}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Rapids Description */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Waves className="w-4 h-4 text-brand-orange shrink-0" />
-                      <span className="text-muted-foreground">{pkg.rapidsDescription}</span>
-                    </div>
-
-                    {/* Highlights */}
-                    {pkg.highlights && (
-                      <div className="bg-brand-orange/5 border border-brand-orange/10 rounded-xl p-3">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-brand-orange mb-1">
-                          <Star className="w-4 h-4 fill-brand-orange" />
-                          Key Highlights
-                        </div>
-                        <p className="text-sm text-brand-dark">{pkg.highlights}</p>
-                      </div>
-                    )}
-
-                    {/* Target Demo */}
-                    <div className="flex items-start gap-2.5 text-sm">
-                      <TargetIcon className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-medium text-brand-dark">Best for: </span>
-                        <span className="text-muted-foreground">{pkg.targetDemo}</span>
-                      </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="border-t border-border/50" />
-
-                    {/* Price & Book */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                        <span className="text-muted-foreground text-sm"> / Per Person</span>
-                      </div>
-                      <Button
-                        onClick={() => handleBookTrip(pkg)}
-                        disabled={isBooking}
-                        className={`text-white rounded-full px-5 sm:px-6 h-11 text-sm font-semibold shadow-lg ${
-                          pkg.extreme
-                            ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
-                            : pkg.popular
-                            ? 'bg-brand-orange hover:bg-brand-orange/90 shadow-brand-orange/30'
-                            : 'bg-brand-teal hover:bg-brand-teal/90 shadow-brand-teal/30'
-                        }`}
-                      >
-                        {isBooking ? (
-                          <span className="flex items-center gap-2">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                            />
-                            Booking...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1.5">
-                            Book {pkg.name.split(' ')[0]} Trip
-                            <ChevronRight className="w-4 h-4" />
-                          </span>
-                        )}
-                      </Button>
-                    </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg animate-pulse">
+                <div className="h-48 sm:h-56 bg-muted" />
+                <div className="p-5 sm:p-6 space-y-4">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-16 bg-muted rounded-xl" />
+                    <div className="h-16 bg-muted rounded-xl" />
+                    <div className="h-16 bg-muted rounded-xl" />
+                    <div className="h-16 bg-muted rounded-xl" />
                   </div>
                 </div>
-              </motion.div>
-            )
-          })}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {packages.map((pkg, index) => {
+              const TargetIcon = getTargetIcon(pkg.subtitle)
+              const isPopular = pkg.badge === 'Most Popular'
+              const isExtreme = pkg.badge === 'Extreme'
+
+              return (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15, duration: 0.5 }}
+                  className={`relative group ${
+                    isPopular ? 'md:-mt-4 md:mb-4' : ''
+                  }`}
+                >
+                  {/* Popular glow */}
+                  {isPopular && (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange/20 to-amber-500/20 rounded-3xl blur-lg group-hover:from-brand-orange/30 group-hover:to-amber-500/30 transition-all duration-500" />
+                  )}
+
+                  <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer ${
+                    isPopular ? 'ring-2 ring-brand-orange' : ''
+                  }`}>
+                    {/* Image Section */}
+                    <div className="relative h-48 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                      {/* Badge */}
+                      <div className={`absolute top-4 left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
+                        {isPopular && <Star className="w-3 h-3 fill-white" />}
+                        {isExtreme && <Zap className="w-3 h-3" />}
+                        {!isPopular && !isExtreme && <Shield className="w-3 h-3" />}
+                        {pkg.badge}
+                      </div>
+
+                      {/* Price floating badge */}
+                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+                        <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
+                        <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
+                      </div>
+
+                      {/* Bottom content on image */}
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h3 className="text-white font-bold text-lg sm:text-xl leading-tight">{pkg.name}</h3>
+                        <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
+                      </div>
+                    </div>
+
+                    {/* Details Section */}
+                    <div className="p-5 sm:p-6 space-y-4">
+                      {/* Key Specs - Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                            <Route className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Distance</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.distance}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                            <Timer className="w-4 h-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Duration</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.duration}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                            <Waves className="w-4 h-4 text-red-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Rapids Level</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                            <Clock className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Timings</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.timings}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Rapids Description */}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Waves className="w-4 h-4 text-brand-orange shrink-0" />
+                        <span className="text-muted-foreground">{pkg.rapidsDescription}</span>
+                      </div>
+
+                      {/* Target Demo */}
+                      <div className="flex items-start gap-2.5 text-sm">
+                        <TargetIcon className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-brand-dark">Best for: </span>
+                          <span className="text-muted-foreground">{pkg.targetDemo}</span>
+                        </div>
+                      </div>
+
+                      {/* Rating */}
+                      {pkg.rating > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < Math.round(pkg.rating)
+                                    ? 'fill-brand-gold text-brand-gold'
+                                    : 'text-gray-200'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium text-brand-dark">{pkg.rating}</span>
+                          <span className="text-xs text-muted-foreground">({pkg.reviewCount} reviews)</span>
+                        </div>
+                      )}
+
+                      {/* Divider */}
+                      <div className="border-t border-border/50" />
+
+                      {/* Price, View Details & Book */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
+                          <span className="text-muted-foreground text-sm"> / Person</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleViewDetails(pkg)}
+                            className="rounded-full px-4 h-10 text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5"
+                          >
+                            <Eye className="w-4 h-4 mr-1.5" />
+                            Details
+                          </Button>
+                          <Button
+                            onClick={() => handleBookTrip(pkg)}
+                            className={`text-white rounded-full px-4 h-10 text-sm font-semibold shadow-lg ${
+                              isExtreme
+                                ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
+                                : isPopular
+                                ? 'bg-brand-orange hover:bg-brand-orange/90 shadow-brand-orange/30'
+                                : 'bg-brand-teal hover:bg-brand-teal/90 shadow-brand-teal/30'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1">
+                              Book
+                              <ChevronRight className="w-4 h-4" />
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Bottom CTA */}
         <motion.div
@@ -486,7 +422,7 @@ export function RaftingPackages() {
           </div>
           <div className="flex items-start gap-3 bg-white rounded-xl p-5 shadow-sm">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <Calendar className="w-5 h-5 text-blue-600" />
+              <Clock className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h4 className="font-semibold text-brand-dark text-sm">Easy Booking</h4>

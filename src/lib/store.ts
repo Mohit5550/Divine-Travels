@@ -13,10 +13,11 @@ interface AppUser {
 interface AppStore {
   currentView: string
   selectedDestinationId: string | null
+  selectedPackageId: string | null
   user: AppUser | null
   isAuthenticated: boolean
   isAdmin: boolean
-  navigate: (view: string, destId?: string | null) => void
+  navigate: (view: string, destId?: string | null, pkgId?: string | null) => void
   setUser: (user: AppUser | null) => void
   logout: () => void
 }
@@ -26,14 +27,16 @@ export const useAppStore = create<AppStore>()(
     (set) => ({
       currentView: 'landing',
       selectedDestinationId: null,
+      selectedPackageId: null,
       user: null,
       isAuthenticated: false,
       isAdmin: false,
 
-      navigate: (view: string, destId?: string | null) => {
+      navigate: (view: string, destId?: string | null, pkgId?: string | null) => {
         set({
           currentView: view,
           selectedDestinationId: destId ?? null,
+          selectedPackageId: pkgId ?? null,
         })
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
@@ -53,6 +56,7 @@ export const useAppStore = create<AppStore>()(
           isAdmin: false,
           currentView: 'landing',
           selectedDestinationId: null,
+          selectedPackageId: null,
         })
       },
     }),

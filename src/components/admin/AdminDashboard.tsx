@@ -12,19 +12,25 @@ import {
   Compass,
   ChevronLeft,
   Menu,
+  Package,
+  Waves,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
 import { AdminDestinations } from './AdminDestinations'
 import { AdminBookings } from './AdminBookings'
 import { AdminUsers } from './AdminUsers'
+import { AdminPackages } from './AdminPackages'
+import { AdminPackageBookings } from './AdminPackageBookings'
 
-type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users'
+type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
 
 const tabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
   { id: 'destinations' as AdminTab, label: 'Destinations', icon: MapPin },
   { id: 'bookings' as AdminTab, label: 'Bookings', icon: CalendarCheck },
+  { id: 'packages' as AdminTab, label: 'Packages', icon: Package },
+  { id: 'package-bookings' as AdminTab, label: 'Pkg Bookings', icon: Waves },
   { id: 'users' as AdminTab, label: 'Users', icon: Users },
 ]
 
@@ -58,7 +64,7 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -103,6 +109,25 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <AdminOverview />
+      case 'destinations':
+        return <AdminDestinations />
+      case 'bookings':
+        return <AdminBookings />
+      case 'packages':
+        return <AdminPackages />
+      case 'package-bookings':
+        return <AdminPackageBookings />
+      case 'users':
+        return <AdminUsers />
+      default:
+        return <AdminOverview />
+    }
+  }
 
   return (
     <div className="min-h-screen bg-brand-cream flex">
@@ -182,46 +207,14 @@ export function AdminDashboard() {
       <div className="flex-1 min-w-0 overflow-auto">
         <div className="p-4 sm:p-6 lg:p-8">
           <AnimatePresence mode="wait">
-            {activeTab === 'overview' && (
-              <motion.div
-                key="overview"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <AdminOverview />
-              </motion.div>
-            )}
-            {activeTab === 'destinations' && (
-              <motion.div
-                key="destinations"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <AdminDestinations />
-              </motion.div>
-            )}
-            {activeTab === 'bookings' && (
-              <motion.div
-                key="bookings"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <AdminBookings />
-              </motion.div>
-            )}
-            {activeTab === 'users' && (
-              <motion.div
-                key="users"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <AdminUsers />
-              </motion.div>
-            )}
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {renderTabContent()}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>

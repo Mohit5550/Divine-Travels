@@ -15,6 +15,8 @@ import { AdminDashboard } from '@/components/admin/AdminDashboard'
 import { DestinationDetail } from '@/components/destination/DestinationDetail'
 import { BookingSuccess } from '@/components/booking/BookingSuccess'
 import { RaftingPackages } from '@/components/rafting/RaftingPackages'
+import { PackageDetail } from '@/components/package/PackageDetail'
+import { PackageBookingForm } from '@/components/package/PackageBookingForm'
 import { useState } from 'react'
 
 export default function Home() {
@@ -42,6 +44,10 @@ export default function Home() {
         return <BookingSuccess />
       case 'rafting-packages':
         return <RaftingPackages />
+      case 'package-detail':
+        return <PackageDetail />
+      case 'package-booking':
+        return <PackageBookingForm />
       case 'landing':
       default:
         return (
@@ -59,12 +65,12 @@ export default function Home() {
     }
   }
 
+  // Views that should NOT show the Navbar
+  const hideNavbarViews = ['admin-dashboard', 'landing', 'rafting-packages', 'package-detail', 'package-booking']
+
   return (
     <main className="min-h-screen flex flex-col">
-      {/* Show Navbar on non-admin, non-landing views */}
-      {currentView !== 'admin-dashboard' && currentView !== 'landing' && currentView !== 'rafting-packages' && (
-        <Navbar />
-      )}
+      {!hideNavbarViews.includes(currentView) && <Navbar />}
 
       <AnimatePresence mode="wait">
         <motion.div
