@@ -14,12 +14,21 @@ import { UserDashboard } from '@/components/user/UserDashboard'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
 import { DestinationDetail } from '@/components/destination/DestinationDetail'
 import { BookingSuccess } from '@/components/booking/BookingSuccess'
+import { RaftingPackages } from '@/components/rafting/RaftingPackages'
 import { useState } from 'react'
 
 export default function Home() {
-  const { currentView } = useAppStore()
+  const { currentView, navigate } = useAppStore()
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleCategoryChange = (category: string) => {
+    if (category === 'rafting') {
+      navigate('rafting-packages')
+    } else {
+      setActiveCategory(category)
+    }
+  }
 
   const renderView = () => {
     switch (currentView) {
@@ -31,13 +40,15 @@ export default function Home() {
         return <DestinationDetail />
       case 'booking-success':
         return <BookingSuccess />
+      case 'rafting-packages':
+        return <RaftingPackages />
       case 'landing':
       default:
         return (
           <>
             <Navbar />
             <HeroBanner />
-            <ActivityBar activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+            <ActivityBar activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
             <DestinationGrid activeCategory={activeCategory} searchQuery={searchQuery} />
             <WhyChooseUs />
             <Testimonials />
@@ -50,8 +61,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      {/* Show Navbar on non-admin views */}
-      {currentView !== 'admin-dashboard' && currentView !== 'landing' && (
+      {/* Show Navbar on non-admin, non-landing views */}
+      {currentView !== 'admin-dashboard' && currentView !== 'landing' && currentView !== 'rafting-packages' && (
         <Navbar />
       )}
 
