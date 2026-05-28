@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, User, LogOut, LayoutDashboard, Compass, Heart } from 'lucide-react'
+import { Search, Menu, X, User, LogOut, LayoutDashboard, Compass, Heart, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoginModal } from './LoginModal'
 
 export function Navbar() {
   const { isAuthenticated, user, isAdmin, navigate, logout } = useAppStore()
   const [scrolled, setScrolled] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
@@ -25,7 +24,6 @@ export function Navbar() {
     e.preventDefault()
     if (searchQuery.trim()) {
       navigate('landing')
-      setSearchOpen(false)
     }
   }
 
@@ -34,80 +32,70 @@ export function Navbar() {
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white ${
           scrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-border'
-            : 'bg-transparent'
+            ? 'shadow-md border-b border-gray-100'
+            : 'shadow-sm border-b border-gray-100'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
+          <div className="flex items-center justify-between h-16 sm:h-[72px] gap-4">
+            {/* Logo - Left */}
             <button
               onClick={() => navigate('landing')}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-brand-orange flex items-center justify-center">
-                <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-orange flex items-center justify-center">
+                <Compass className="w-5 h-5 sm:w-5 sm:h-5 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-xl sm:text-2xl text-brand-dark leading-tight">
-                  Divine Travel
-                </span>
-                <span className="text-[10px] text-brand-gold tracking-widest uppercase hidden sm:block">
-                  Explore the Sacred
-                </span>
-              </div>
+              <span className="font-bold text-lg sm:text-xl text-brand-dark">
+                Divine Travel
+              </span>
             </button>
 
-            {/* Desktop Nav Links */}
-            <nav className="hidden md:flex items-center gap-8">
-              <button
-                onClick={() => navigate('landing')}
-                className="text-sm font-medium text-brand-dark hover:text-brand-orange transition-colors"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => {
-                  navigate('landing')
-                  setTimeout(() => {
-                    const el = document.getElementById('destinations')
-                    el?.scrollIntoView({ behavior: 'smooth' })
-                  }, 100)
-                }}
-                className="text-sm font-medium text-brand-dark hover:text-brand-orange transition-colors"
-              >
-                Destinations
-              </button>
-              <button
-                onClick={() => {
-                  navigate('landing')
-                  setTimeout(() => {
-                    const el = document.getElementById('why-us')
-                    el?.scrollIntoView({ behavior: 'smooth' })
-                  }, 100)
-                }}
-                className="text-sm font-medium text-brand-dark hover:text-brand-orange transition-colors"
-              >
-                About
-              </button>
-            </nav>
+            {/* Search Bar - Center */}
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search for experiences"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-full border-2 border-brand-orange/60 bg-white text-sm focus:outline-none focus:border-brand-orange transition-colors"
+                />
+              </div>
+            </form>
 
-            {/* Right section */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Search Toggle */}
+            {/* Right Section */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              {/* Mobile search toggle */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="rounded-full"
+                className="md:hidden rounded-full"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Search className="w-5 h-5" />
               </Button>
 
               {isAuthenticated ? (
-                <div className="flex items-center gap-2">
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate('landing')}
+                    className="hidden sm:flex rounded-full relative"
+                  >
+                    <Heart className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hidden sm:flex rounded-full relative"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                  </Button>
                   {isAdmin && (
                     <Button
                       variant="ghost"
@@ -131,15 +119,6 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => navigate('landing')}
-                    className="hidden sm:flex items-center gap-1"
-                  >
-                    <Heart className="w-4 h-4" />
-                    Wishlist
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
                     onClick={logout}
                     className="hidden sm:flex items-center gap-1"
                   >
@@ -150,25 +129,40 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden"
+                    className="sm:hidden"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   >
                     {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                   </Button>
-                </div>
+                </>
               ) : (
                 <>
                   <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hidden sm:flex rounded-full"
                     onClick={() => setLoginOpen(true)}
-                    className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-full px-4 sm:px-6"
                   >
-                    <User className="w-4 h-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Login</span>
+                    <Heart className="w-5 h-5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden"
+                    className="hidden sm:flex rounded-full"
+                    onClick={() => setLoginOpen(true)}
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => setLoginOpen(true)}
+                    className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-full px-4 sm:px-6 h-9 text-sm font-medium"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="sm:hidden"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   >
                     {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -179,32 +173,6 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-border bg-white"
-            >
-              <form onSubmit={handleSearch} className="max-w-2xl mx-auto p-4">
-                <div className="flex items-center gap-2 bg-brand-cream rounded-full px-4 py-2">
-                  <Search className="w-5 h-5 text-brand-orange" />
-                  <input
-                    type="text"
-                    placeholder="Search destinations, activities..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm"
-                    autoFocus
-                  />
-                </div>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Mobile Menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
@@ -212,9 +180,22 @@ export function Navbar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden overflow-hidden border-t border-border bg-white"
+              className="sm:hidden overflow-hidden border-t border-gray-100 bg-white"
             >
               <div className="p-4 flex flex-col gap-2">
+                {/* Mobile search */}
+                <form onSubmit={handleSearch} className="mb-2">
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search for experiences"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 rounded-full border-2 border-brand-orange/60 bg-white text-sm focus:outline-none focus:border-brand-orange"
+                    />
+                  </div>
+                </form>
                 <button
                   onClick={() => { navigate('landing'); setMobileMenuOpen(false) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
@@ -225,7 +206,7 @@ export function Navbar() {
                   onClick={() => { navigate('landing'); setMobileMenuOpen(false) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
                 >
-                  Destinations
+                  Experiences
                 </button>
                 {isAuthenticated ? (
                   <>

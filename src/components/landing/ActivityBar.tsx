@@ -1,57 +1,62 @@
 'use client'
 
-import { Landmark, Car, Bike, Compass, Waves, Mountain, Package, Building2, Plane, Flower2, Bed } from 'lucide-react'
+import { Landmark, Car, Bike, Compass, Waves, Mountain, Building2, Plane, Flower2, Bed, Tent, Flame, Zap, Anchor } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAppStore } from '@/lib/store'
 
 const activities = [
-  { id: 'all', label: 'All', icon: Compass },
-  { id: 'spiritual', label: 'Spiritual', icon: Landmark },
-  { id: 'adventure', label: 'Adventure', icon: Waves },
-  { id: 'trekking', label: 'Trekking', icon: Mountain },
-  { id: 'hotel', label: 'Hotels', icon: Building2 },
-  { id: 'bike', label: 'Bike Trip', icon: Bike },
-  { id: 'rafting', label: 'Rafting', icon: Waves },
-  { id: 'domestic', label: 'Domestic', icon: Car },
-  { id: 'skiing', label: 'Skiing', icon: Mountain },
-  { id: 'custom', label: 'Custom', icon: Package },
-  { id: 'flights', label: 'Flights', icon: Plane },
-  { id: 'yoga', label: 'Yoga', icon: Flower2 },
-  { id: 'resort', label: 'Resorts', icon: Bed },
+  { id: 'rafting', label: 'Rafting', icon: Waves, color: 'bg-blue-500' },
+  { id: 'bungee', label: 'Bungee', icon: Zap, color: 'bg-red-500' },
+  { id: 'paragliding', label: 'Paragliding', icon: Compass, color: 'bg-sky-500' },
+  { id: 'zipline', label: 'Zipline', icon: Anchor, color: 'bg-amber-500' },
+  { id: 'camping', label: 'Camping', icon: Tent, color: 'bg-green-600' },
+  { id: 'trekking', label: 'Trekking', icon: Mountain, color: 'bg-emerald-500' },
+  { id: 'hotel', label: 'Hotels', icon: Building2, color: 'bg-purple-500' },
+  { id: 'bike', label: 'Bike Trip', icon: Bike, color: 'bg-orange-600' },
+  { id: 'spiritual', label: 'Spiritual', icon: Landmark, color: 'bg-amber-600' },
+  { id: 'skiing', label: 'Skiing', icon: Mountain, color: 'bg-cyan-500' },
+  { id: 'yoga', label: 'Yoga', icon: Flower2, color: 'bg-teal-500' },
+  { id: 'resort', label: 'Resorts', icon: Bed, color: 'bg-rose-500' },
+  { id: 'campfire', label: 'Campfire', icon: Flame, color: 'bg-orange-500' },
+  { id: 'flights', label: 'Flights', icon: Plane, color: 'bg-indigo-500' },
 ]
 
-interface ActivityBarProps {
-  activeCategory: string
-  onCategoryChange: (category: string) => void
-}
+export function ActivityBar() {
+  const { navigate } = useAppStore()
 
-export function ActivityBar({ activeCategory, onCategoryChange }: ActivityBarProps) {
+  const handleClick = (id: string) => {
+    if (id === 'rafting') {
+      navigate('rafting-packages')
+    }
+    // Other categories can be handled later
+  }
+
   return (
-    <div className="py-6 bg-brand-cream/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto hide-scrollbar pb-2">
+    <section className="bg-white border-b border-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+        <div className="flex gap-2 sm:gap-3 md:gap-4 overflow-x-auto hide-scrollbar pb-1">
           {activities.map((activity, index) => {
             const Icon = activity.icon
-            const isActive = activeCategory === activity.id
             return (
               <motion.button
                 key={activity.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
-                onClick={() => onCategoryChange(activity.id)}
-                className={`flex flex-col items-center gap-1.5 min-w-[72px] sm:min-w-[80px] px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? 'bg-brand-orange text-white shadow-lg shadow-brand-orange/30'
-                    : 'bg-white text-brand-dark hover:bg-brand-orange/10 hover:text-brand-orange'
-                }`}
+                onClick={() => handleClick(activity.id)}
+                className="flex flex-col items-center gap-2 min-w-[68px] sm:min-w-[76px] md:min-w-[80px] px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200 cursor-pointer group hover:scale-105"
               >
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[10px] sm:text-xs font-medium whitespace-nowrap">{activity.label}</span>
+                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full ${activity.color} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-medium text-brand-dark whitespace-nowrap group-hover:text-brand-orange transition-colors">
+                  {activity.label}
+                </span>
               </motion.button>
             )
           })}
         </div>
       </div>
-    </div>
+    </section>
   )
 }

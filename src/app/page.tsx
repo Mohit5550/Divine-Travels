@@ -3,11 +3,11 @@
 import { useAppStore } from '@/lib/store'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from '@/components/landing/Navbar'
+import { TealNavBar } from '@/components/landing/TealNavBar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { HeroBanner } from '@/components/landing/HeroBanner'
-import { DestinationGrid } from '@/components/landing/DestinationGrid'
-import { WhyChooseUs } from '@/components/landing/WhyChooseUs'
-import { Testimonials } from '@/components/landing/Testimonials'
+import { DestinationCarousel } from '@/components/landing/DestinationCarousel'
+import { AdventureGrid } from '@/components/landing/AdventureGrid'
 import { CTABanner } from '@/components/landing/CTABanner'
 import { Footer } from '@/components/landing/Footer'
 import { UserDashboard } from '@/components/user/UserDashboard'
@@ -17,20 +17,9 @@ import { BookingSuccess } from '@/components/booking/BookingSuccess'
 import { RaftingPackages } from '@/components/rafting/RaftingPackages'
 import { PackageDetail } from '@/components/package/PackageDetail'
 import { PackageBookingForm } from '@/components/package/PackageBookingForm'
-import { useState } from 'react'
 
 export default function Home() {
   const { currentView, navigate } = useAppStore()
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const handleCategoryChange = (category: string) => {
-    if (category === 'rafting') {
-      navigate('rafting-packages')
-    } else {
-      setActiveCategory(category)
-    }
-  }
 
   const renderView = () => {
     switch (currentView) {
@@ -53,11 +42,11 @@ export default function Home() {
         return (
           <>
             <Navbar />
+            <TealNavBar />
+            <ActivityBar />
             <HeroBanner />
-            <ActivityBar activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
-            <DestinationGrid activeCategory={activeCategory} searchQuery={searchQuery} />
-            <WhyChooseUs />
-            <Testimonials />
+            <DestinationCarousel />
+            <AdventureGrid />
             <CTABanner />
             <Footer />
           </>
@@ -66,11 +55,11 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar
-  const hideNavbarViews = ['admin-dashboard', 'landing', 'rafting-packages', 'package-detail', 'package-booking']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'package-detail', 'package-booking']
 
   return (
     <main className="min-h-screen flex flex-col">
-      {!hideNavbarViews.includes(currentView) && <Navbar />}
+      {!hideNavbarViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
 
       <AnimatePresence mode="wait">
         <motion.div
