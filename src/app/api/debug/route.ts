@@ -3,8 +3,8 @@ import { db } from '@/lib/db'
 
 export async function GET() {
   try {
-    const url = process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 40) + '...' : 'unset'
-    const token = process.env.TURSO_AUTH_TOKEN ? process.env.TURSO_AUTH_TOKEN.substring(0, 30) + '...' : 'unset'
+    const url = process.env.DATABASE_URL ? 'set' : 'unset'
+    const token = process.env.TURSO_AUTH_TOKEN ? 'set' : 'unset'
     let dbOk = false
     let dbError = ''
     try {
