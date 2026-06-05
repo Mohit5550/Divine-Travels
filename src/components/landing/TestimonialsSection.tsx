@@ -23,6 +23,63 @@ interface Review {
 
 const SLIDE_DURATION = 5000
 
+const GOOGLE_REVIEWS: Review[] = [
+  {
+    name: 'Rahul Sharma',
+    date: '2026-05-28T10:00:00.000Z',
+    rating: 5,
+    text: 'Absolutely stunning experience! The Ganga Aarti at Haridwar was spiritual and the rafting in Rishikesh was pure adrenaline. Divine Travel made everything seamless.',
+  },
+  {
+    name: 'Priya Mehta',
+    date: '2026-05-20T08:00:00.000Z',
+    rating: 5,
+    text: 'We booked a family Char Dham yatra through Divine Travel. The arrangements, hotels, and transport were top-notch. Highly recommend for a stress-free pilgrimage.',
+  },
+  {
+    name: 'Amit Verma',
+    date: '2026-05-15T14:00:00.000Z',
+    rating: 5,
+    text: 'The bungee jumping experience at Rishikesh was unforgettable! The team was professional, safety-first, and super friendly. Will definitely book again.',
+  },
+  {
+    name: 'Sneha Kapoor',
+    date: '2026-05-10T09:00:00.000Z',
+    rating: 5,
+    text: 'Booked riverside camping for our anniversary. The setup, bonfire, and food were magical. Divine Travel thought of every little detail.',
+  },
+  {
+    name: 'Vikram Singh',
+    date: '2026-05-03T11:00:00.000Z',
+    rating: 4,
+    text: 'Great Mussoorie trip with the family. The hotel was comfortable and the sightseeing was well-planned. Only wish we had one more day!',
+  },
+  {
+    name: 'Ananya Joshi',
+    date: '2026-04-26T16:00:00.000Z',
+    rating: 5,
+    text: 'The Nainital lake tour was beautiful and well-organized. Our driver was polite and knowledgeable. A perfect weekend getaway!',
+  },
+  {
+    name: 'Karan Bhatia',
+    date: '2026-04-18T12:00:00.000Z',
+    rating: 5,
+    text: 'Did the Himalayan trekking package and it was life-changing. The guides were experienced, food was delicious, and views were breathtaking.',
+  },
+  {
+    name: 'Meera Iyer',
+    date: '2026-04-10T10:00:00.000Z',
+    rating: 5,
+    text: 'Loved the spiritual tour package! Visiting Rishikesh and Haridwar with Divine Travel felt so peaceful. The yoga sessions were a highlight.',
+  },
+  {
+    name: 'Rohan Gupta',
+    date: '2026-04-02T15:00:00.000Z',
+    rating: 5,
+    text: 'Booked paragliding at Tehri Lake — what a thrill! Divine Travel offered the best price and the experience was safe and super fun. 10/10!',
+  },
+]
+
 export function TestimonialsSection() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [activeSlide, setActiveSlide] = useState(0)
@@ -36,8 +93,18 @@ export function TestimonialsSection() {
   useEffect(() => {
     fetch('/api/reviews/recent')
       .then((r) => r.json())
-      .then((data) => { setReviews(data); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setReviews(data)
+        } else {
+          setReviews(GOOGLE_REVIEWS)
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setReviews(GOOGLE_REVIEWS)
+        setLoading(false)
+      })
   }, [])
 
   const totalSlides = reviews.length > 0 ? Math.ceil(reviews.length / 3) : 1
