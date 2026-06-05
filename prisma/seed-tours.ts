@@ -1,6 +1,14 @@
-import { PrismaClient } from '@prisma/client'
+import * as dotenv from 'dotenv'
+dotenv.config()
 
-const prisma = new PrismaClient()
+import { PrismaClient } from '@prisma/client'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
+
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+})
+const prisma = new PrismaClient({ adapter })
 
 const rishikeshPrograms = [
   { id: 1, title: 'Kunjapuri Sunrise', img: 'https://sun-b2b.s3.us-east-2.amazonaws.com/tour/Sunrise-view-from-kunjapuri-temple.jpg', itinerary: ['Kunjapuri Viewpoint', 'Janki Jhula', 'Paramarth Niketan', 'Geetabhawan', 'Ram Jhula Market', 'Neer Waterfall', 'Triveni Ghat Aarti'] },
@@ -213,6 +221,28 @@ async function main() {
       ]),
     },
   })
+
+  // ===== Hotel Packages =====
+  const hotels = [
+    { name: 'Hotel Holy Ganga', slug: 'holy-ganga', tagline: 'Riverside Comfort', subtitle: 'Premium Riverside Hotel', description: 'Experience true riverside living at Hotel Holy Ganga. Located in the heart of Rishikesh, this hotel offers stunning Ganga views, modern amenities, and warm hospitality.', price: 2200, image: 'https://drive.google.com/thumbnail?id=1WfJVW2z0lW0P4_m9cvpS31fQ4cHqlTo0&sz=w800', images: JSON.stringify(hotelImages.map(u => u.replace('uc?export=view', 'thumbnail').replace('id=', 'id=') + '&sz=w800')), category: 'stay-hotel', duration: '1 Night', location: 'Rishikesh', rating: 4.0, reviewCount: 12, badge: 'Most Popular', badgeColor: 'bg-brand-orange', gradient: 'from-brand-orange/80 to-amber-600/80', featured: true, active: true },
+    { name: 'The Grand Heritage', slug: 'grand-heritage', tagline: 'Luxury Living', subtitle: 'Heritage Hotel', description: 'A luxurious heritage hotel combining traditional architecture with modern comforts. Featuring a rooftop restaurant with panoramic views, spa services, and elegantly appointed rooms.', price: 3500, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80', images: '[]', category: 'stay-hotel', duration: '1 Night', location: 'Rishikesh', rating: 4.5, reviewCount: 8, badge: 'Premium', badgeColor: 'bg-brand-gold', gradient: 'from-brand-gold/80 to-amber-700/80', featured: false, active: true },
+    { name: 'River View Inn', slug: 'river-view-inn', tagline: 'Budget Friendly', subtitle: 'Economy Stay', description: 'Clean, comfortable, and affordable accommodation with direct Ganga river views. Ideal for backpackers and budget-conscious travelers.', price: 1200, image: 'https://images.unsplash.com/photo-1585412727339-54e4bae3bbf9?w=800&q=80', images: '[]', category: 'stay-hotel', duration: '1 Night', location: 'Rishikesh', rating: 3.8, reviewCount: 15, badge: null, badgeColor: 'bg-brand-teal', gradient: 'from-brand-teal/80 to-emerald-600/80', featured: false, active: true },
+  ]
+  for (const h of hotels) {
+    await prisma.package.upsert({ where: { slug: h.slug }, update: h, create: h })
+    console.log('  hotel:', h.name)
+  }
+
+  // ===== Camping Packages =====
+  const camps = [
+    { name: 'Riverside Camping Deluxe', slug: 'riverside-camping', tagline: 'Bonfire & River Views', subtitle: 'Premium Riverside Camping', description: 'Experience the magic of camping by the Ganges. Enjoy a bonfire under the stars, sleep in comfortable tents with river views, and wake up to the sound of flowing water.', price: 1800, image: 'https://drive.google.com/thumbnail?id=1sWB7FLPZRrwHE_Nq6oeonm5DMzpW6s7X&sz=w800', images: JSON.stringify(campImages.map(u => u.replace('uc?export=view', 'thumbnail') + '&sz=w800')), category: 'stay-camping', duration: '1 Night', location: 'Rishikesh Riverside', rating: 4.7, reviewCount: 25, badge: 'Most Popular', badgeColor: 'bg-brand-orange', gradient: 'from-brand-orange/80 to-amber-600/80', featured: true, active: true },
+    { name: 'Luxury Glamping Tent', slug: 'luxury-glamping', tagline: 'Camp in Style', subtitle: 'Luxury Glamping', description: 'Glamping at its finest! Spacious safari-style tents with real beds, attached washrooms, and premium furnishings. Enjoy gourmet meals and bonfire.', price: 3500, image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80', images: '[]', category: 'stay-camping', duration: '1 Night', location: 'Rishikesh', rating: 4.9, reviewCount: 10, badge: 'Premium', badgeColor: 'bg-brand-gold', gradient: 'from-brand-gold/80 to-amber-700/80', featured: false, active: true },
+    { name: 'Group Camping Adventure', slug: 'group-camping', tagline: 'Best for Groups', subtitle: 'Group Package', description: 'Perfect for groups! Special group pricing with team activities, river games, bonfire with music, and all meals included. Minimum 10 persons.', price: 1400, image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80', images: '[]', category: 'stay-camping', duration: '1 Night', location: 'Rishikesh', rating: 4.5, reviewCount: 18, badge: 'Group Offer', badgeColor: 'bg-brand-teal', gradient: 'from-brand-teal/80 to-emerald-600/80', featured: false, active: true },
+  ]
+  for (const c of camps) {
+    await prisma.package.upsert({ where: { slug: c.slug }, update: c, create: c })
+    console.log('  camping:', c.name)
+  }
 
   console.log('Tour seeding complete!')
 }
