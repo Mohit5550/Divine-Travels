@@ -173,13 +173,6 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                 {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
               </Button>
 
-              {/* Demo credentials */}
-              <div className="bg-brand-cream rounded-lg p-3 text-xs text-muted-foreground">
-                <p className="font-semibold text-brand-dark mb-1">Demo Credentials:</p>
-                <p>Admin: admin@divinetravel.com / admin123</p>
-                <p>User: user@test.com / user123</p>
-              </div>
-
               <div className="text-center">
                 <button
                   type="button"
