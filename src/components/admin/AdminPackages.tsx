@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { Plus, Pencil, Trash2, X, Star, Eye, EyeOff } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,7 @@ interface PackageData {
   subtitle: string
   description: string
   price: number
+  originalPrice: number | null
   image: string
   images: string
   category: string
@@ -52,6 +53,7 @@ const emptyForm = {
   subtitle: '',
   description: '',
   price: '',
+  originalPrice: '',
   image: '',
   images: '',
   category: 'rafting',
@@ -75,7 +77,20 @@ const emptyForm = {
   active: true,
 }
 
-export function AdminPackages() {
+const categoryLabels: Record<string, string> = {
+  'rafting': 'Rafting',
+  'bike-rental': 'Bike Rental',
+  'taxi-booking': 'Taxi Booking',
+  'trekking': 'Trekking',
+  'adventure': 'Adventure Activities',
+  'domestic-tours': 'Domestic Tours',
+  'spiritual-tours': 'Spiritual Tours',
+  'international-tours': 'International Tours',
+  'stay-hotel': 'Hotel Packages',
+  'stay-camping': 'Camping Packages',
+}
+
+export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const { user } = useAppStore()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
@@ -87,16 +102,19 @@ export function AdminPackages() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['admin-packages'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=', {
+      const res = await fetch('/api/packages', {
         headers: { 'x-user-id': user?.id || '' },
       })
-      // Fetch all including inactive
-      const activeRes = await fetch('/api/packages', {
-        headers: { 'x-user-id': user?.id || '' },
-      })
-      return activeRes.json() as Promise<PackageData[]>
+      return res.json() as Promise<PackageData[]>
     },
   })
+
+  const filteredPackages = useMemo(() => {
+    if (!categoryFilter) return packages
+    return packages.filter((p) => p.category === categoryFilter)
+  }, [packages, categoryFilter])
+
+  const categoryName = categoryFilter ? (categoryLabels[categoryFilter] || categoryFilter) : 'All'
 
   const openEdit = (pkg: PackageData) => {
     setEditingId(pkg.id)
@@ -107,6 +125,7 @@ export function AdminPackages() {
       subtitle: pkg.subtitle,
       description: pkg.description,
       price: String(pkg.price),
+      originalPrice: String(pkg.originalPrice || ''),
       image: pkg.image,
       images: pkg.images,
       category: pkg.category,
@@ -135,7 +154,7 @@ export function AdminPackages() {
 
   const openCreate = () => {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm({ ...emptyForm, category: categoryFilter || 'rafting' })
     setActiveTab('basic')
     setShowForm(true)
   }
@@ -157,6 +176,7 @@ export function AdminPackages() {
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
+          originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
         }),
       })
 
@@ -200,17 +220,26 @@ export function AdminPackages() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">Manage Packages</h2>
+        <div>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">
+            {categoryFilter ? (
+              <><span className="text-brand-orange">{categoryName}</span> Packages</>
+            ) : 'All Packages'}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {filteredPackages.length} package{filteredPackages.length !== 1 ? 's' : ''}
+            {categoryFilter ? ` in ${categoryName}` : ''}
+          </p>
+        </div>
         <Button
           onClick={openCreate}
           className="bg-brand-orange hover:bg-brand-orange/90 text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Package
+          Add {categoryFilter ? categoryName : 'Package'}
         </Button>
       </div>
 
-      {/* Form Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -227,14 +256,13 @@ export function AdminPackages() {
             >
               <div className="flex items-center justify-between p-6 border-b border-border">
                 <h3 className="font-semibold text-lg text-brand-dark">
-                  {editingId ? 'Edit Package' : 'New Package'}
+                  {editingId ? `Edit ${categoryName} Package` : `New ${categoryName} Package`}
                 </h3>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Form Tabs */}
               <div className="flex border-b border-border px-6">
                 {(['basic', 'details', 'content'] as const).map((tab) => (
                   <button
@@ -257,40 +285,47 @@ export function AdminPackages() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="name">Name *</Label>
-                        <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Brahmpuri To Rishikesh" required />
+                        <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Package name" required />
                       </div>
                       <div>
                         <Label htmlFor="slug">Slug *</Label>
-                        <Input id="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="brahmpuri-rishikesh-rafting" required />
+                        <Input id="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="package-slug" required />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="tagline">Tagline</Label>
-                        <Input id="tagline" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} placeholder="Gentle waves, unforgettable memories" />
+                        <Input id="tagline" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} placeholder="Short catchy description" />
                       </div>
                       <div>
                         <Label htmlFor="subtitle">Subtitle</Label>
-                        <Input id="subtitle" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} placeholder="Beginner & Family" />
+                        <Input id="subtitle" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} placeholder="Beginner / Advanced" />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="description">About / Description *</Label>
-                      <Textarea id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} placeholder="Full description for the About section..." required />
+                      <Textarea id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} placeholder="Full description..." required />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="price">Price (INR per person) *</Label>
+                        <Label htmlFor="price">Discounted Price (INR) *</Label>
                         <Input id="price" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+                      </div>
+                      <div>
+                        <Label htmlFor="originalPrice">Original Price (INR)</Label>
+                        <Input id="originalPrice" type="number" value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} placeholder="Higher MRP for strikethrough" />
                       </div>
                       <div>
                         <Label htmlFor="category">Category</Label>
                         <Input id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="rafting" />
                       </div>
-                    </div>
-                    <div>
                       <Label htmlFor="image">Main Image URL *</Label>
                       <Input id="image" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." required />
+                      {form.image && (
+                        <div className="mt-2 rounded-lg overflow-hidden w-32 h-20 border">
+                          <img src={form.image} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="images">Gallery Images (JSON array)</Label>
@@ -327,39 +362,39 @@ export function AdminPackages() {
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="distance">Distance</Label>
-                        <Input id="distance" value={form.distance} onChange={(e) => setForm({ ...form, distance: e.target.value })} placeholder="9km to 12km route" />
+                        <Label htmlFor="distance">Distance / Altitude</Label>
+                        <Input id="distance" value={form.distance} onChange={(e) => setForm({ ...form, distance: e.target.value })} placeholder="9km route / 12,000 ft" />
                       </div>
                       <div>
                         <Label htmlFor="duration">Duration</Label>
-                        <Input id="duration" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="1.5 to 2+ Hours" />
+                        <Input id="duration" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="2 Hours / 6 Days" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="rapidsLevel">Rapids Level</Label>
+                        <Label htmlFor="rapidsLevel">Difficulty / Level</Label>
                         <Input id="rapidsLevel" value={form.rapidsLevel} onChange={(e) => setForm({ ...form, rapidsLevel: e.target.value })} placeholder="Grade I & II" />
                       </div>
                       <div>
-                        <Label htmlFor="rapidsDescription">Rapids Description</Label>
+                        <Label htmlFor="rapidsDescription">Short Description</Label>
                         <Input id="rapidsDescription" value={form.rapidsDescription} onChange={(e) => setForm({ ...form, rapidsDescription: e.target.value })} placeholder="Easy waves — perfect introduction" />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="targetDemo">Target Demographic</Label>
-                      <Input id="targetDemo" value={form.targetDemo} onChange={(e) => setForm({ ...form, targetDemo: e.target.value })} placeholder="School groups, families, first-timers" />
+                      <Label htmlFor="targetDemo">Target Audience</Label>
+                      <Input id="targetDemo" value={form.targetDemo} onChange={(e) => setForm({ ...form, targetDemo: e.target.value })} placeholder="Families, beginners, groups" />
                     </div>
                     <div>
-                      <Label htmlFor="timings">Timings</Label>
-                      <Input id="timings" value={form.timings} onChange={(e) => setForm({ ...form, timings: e.target.value })} placeholder="07:00 AM to 04:00 PM" />
+                      <Label htmlFor="timings">Timings / Season</Label>
+                      <Input id="timings" value={form.timings} onChange={(e) => setForm({ ...form, timings: e.target.value })} placeholder="07:00 AM to 04:00 PM / Oct-June" />
                     </div>
                     <div>
-                      <Label htmlFor="eligibility">Eligibility</Label>
-                      <Textarea id="eligibility" value={form.eligibility} onChange={(e) => setForm({ ...form, eligibility: e.target.value })} rows={3} placeholder="Age requirements, fitness level, medical conditions..." />
+                      <Label htmlFor="eligibility">Eligibility Requirements</Label>
+                      <Textarea id="eligibility" value={form.eligibility} onChange={(e) => setForm({ ...form, eligibility: e.target.value })} rows={3} placeholder="Age, fitness, medical requirements..." />
                     </div>
                     <div>
                       <Label htmlFor="location">Location</Label>
-                      <Textarea id="location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} rows={3} placeholder="Starting point address and directions..." />
+                      <Textarea id="location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} rows={3} placeholder="Address, directions, pickup points..." />
                     </div>
                     <div>
                       <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
@@ -372,7 +407,7 @@ export function AdminPackages() {
                   <>
                     <div>
                       <Label htmlFor="highlights">Highlights (JSON array of strings)</Label>
-                      <Textarea id="highlights" value={form.highlights} onChange={(e) => setForm({ ...form, highlights: e.target.value })} rows={5} placeholder='["Highlight 1", "Highlight 2", "Highlight 3"]' />
+                      <Textarea id="highlights" value={form.highlights} onChange={(e) => setForm({ ...form, highlights: e.target.value })} rows={5} placeholder='["Highlight 1", "Highlight 2"]' />
                       <p className="text-xs text-muted-foreground mt-1">Enter as JSON array of strings</p>
                     </div>
                     <div>
@@ -385,7 +420,7 @@ export function AdminPackages() {
                     </div>
                     <div>
                       <Label htmlFor="faqs">FAQs (JSON array of objects)</Label>
-                      <Textarea id="faqs" value={form.faqs} onChange={(e) => setForm({ ...form, faqs: e.target.value })} rows={5} placeholder='[{"question": "Q1?", "answer": "A1"}, {"question": "Q2?", "answer": "A2"}]' />
+                      <Textarea id="faqs" value={form.faqs} onChange={(e) => setForm({ ...form, faqs: e.target.value })} rows={5} placeholder='[{"question": "Q?", "answer": "A!"}]' />
                       <p className="text-xs text-muted-foreground mt-1">Enter as JSON array with question/answer objects</p>
                     </div>
                   </>
@@ -405,17 +440,25 @@ export function AdminPackages() {
         )}
       </AnimatePresence>
 
-      {/* Packages Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Loading...</div>
+        ) : filteredPackages.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            No packages found{categoryFilter ? ` for ${categoryName}` : ''}.
+            <br />
+            <Button onClick={openCreate} variant="outline" className="mt-3">
+              <Plus className="w-4 h-4 mr-2" />
+              Add your first {categoryFilter ? categoryName : 'package'}
+            </Button>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-brand-cream/50 border-b border-border">
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Package</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Category</th>
+                  {!categoryFilter && <th className="text-left py-3 px-4 font-medium text-muted-foreground">Category</th>}
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Price</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Rating</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
@@ -423,7 +466,7 @@ export function AdminPackages() {
                 </tr>
               </thead>
               <tbody>
-                {packages.map((pkg) => (
+                {filteredPackages.map((pkg) => (
                   <tr key={pkg.id} className="border-b border-border/50 hover:bg-brand-cream/30">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
@@ -434,7 +477,7 @@ export function AdminPackages() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 capitalize">{pkg.category}</td>
+                    {!categoryFilter && <td className="py-3 px-4 capitalize">{pkg.category}</td>}
                     <td className="py-3 px-4 font-medium">₹{pkg.price.toLocaleString()}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const {
-      name, slug, tagline, subtitle, description, price,
+      name, slug, tagline, subtitle, description, price, originalPrice,
       image, images, category, distance, duration, rapidsLevel,
       rapidsDescription, targetDemo, timings, highlights,
       inclusions, exclusions, eligibility, location,
@@ -69,6 +69,7 @@ export async function POST(request: Request) {
         subtitle: subtitle || '',
         description,
         price: Number(price),
+        originalPrice: originalPrice ? Number(originalPrice) : null,
         image: image || '',
         images: images || '[]',
         category: category || 'rafting',

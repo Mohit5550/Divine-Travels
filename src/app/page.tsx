@@ -3,20 +3,42 @@
 import { useAppStore } from '@/lib/store'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from '@/components/landing/Navbar'
-import { TealNavBar } from '@/components/landing/TealNavBar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { HeroBanner } from '@/components/landing/HeroBanner'
 import { DestinationCarousel } from '@/components/landing/DestinationCarousel'
+import { TopDestinations } from '@/components/landing/TopDestinations'
 import { AdventureGrid } from '@/components/landing/AdventureGrid'
+import { StaySection } from '@/components/landing/StaySection'
 import { CTABanner } from '@/components/landing/CTABanner'
+import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { Footer } from '@/components/landing/Footer'
 import { UserDashboard } from '@/components/user/UserDashboard'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
 import { DestinationDetail } from '@/components/destination/DestinationDetail'
 import { BookingSuccess } from '@/components/booking/BookingSuccess'
 import { RaftingPackages } from '@/components/rafting/RaftingPackages'
+import { BikePackages } from '@/components/bike-rental/BikePackages'
+import { TaxiPackages } from '@/components/taxi-booking/TaxiPackages'
+import { TrekkingPackages } from '@/components/trekking/TrekkingPackages'
+import { AdventurePackages } from '@/components/adventure/AdventurePackages'
+import { DomesticPackages } from '@/components/domestic/DomesticPackages'
+import { SpiritualPackages } from '@/components/spiritual/SpiritualPackages'
+import { RishikeshTour } from '@/components/tours/RishikeshTour'
+import { HaridwarTour } from '@/components/tours/HaridwarTour'
+import { MussoorieTour } from '@/components/tours/MussoorieTour'
+import { NainitalTour } from '@/components/tours/NainitalTour'
+import { HillStationsTour } from '@/components/tours/HillStationsTour'
+import { CharDhamTour } from '@/components/tours/CharDhamTour'
+import { HotelPackages } from '@/components/stay/HotelPackages'
+import { CampingPackages } from '@/components/stay/CampingPackages'
 import { PackageDetail } from '@/components/package/PackageDetail'
 import { PackageBookingForm } from '@/components/package/PackageBookingForm'
+import { AboutUs } from '@/components/pages/AboutUs'
+import { Contact } from '@/components/pages/Contact'
+import { PrivacyPolicy } from '@/components/pages/PrivacyPolicy'
+import { TermsOfService } from '@/components/pages/TermsOfService'
+import { RefundPolicy } from '@/components/pages/RefundPolicy'
+import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
 
 export default function Home() {
   const { currentView, navigate } = useAppStore()
@@ -33,20 +55,62 @@ export default function Home() {
         return <BookingSuccess />
       case 'rafting-packages':
         return <RaftingPackages />
+      case 'bike-rental':
+        return <BikePackages />
+      case 'taxi-booking':
+        return <TaxiPackages />
+      case 'trekking':
+        return <TrekkingPackages />
+      case 'adventure':
+        return <AdventurePackages />
+      case 'domestic-tours':
+        return <DomesticPackages />
+      case 'spiritual-tours':
+        return <SpiritualPackages />
+      case 'rishikesh-tour':
+        return <RishikeshTour />
+      case 'haridwar-tour':
+        return <HaridwarTour />
+      case 'mussoorie-tour':
+        return <MussoorieTour />
+      case 'nainital-tour':
+        return <NainitalTour />
+      case 'hill-stations-tour':
+        return <HillStationsTour />
+      case 'char-dham-tour':
+        return <CharDhamTour />
+      case 'hotel-packages':
+        return <HotelPackages />
+      case 'camping-packages':
+        return <CampingPackages />
       case 'package-detail':
         return <PackageDetail />
       case 'package-booking':
         return <PackageBookingForm />
+      case 'about-us':
+        return <AboutUs />
+      case 'contact':
+        return <Contact />
+      case 'privacy-policy':
+        return <PrivacyPolicy />
+      case 'terms-of-service':
+        return <TermsOfService />
+      case 'refund-policy':
+        return <RefundPolicy />
+      case 'cancellation-policy':
+        return <CancellationPolicy />
       case 'landing':
       default:
         return (
           <>
             <Navbar />
-            <TealNavBar />
             <ActivityBar />
             <HeroBanner />
             <DestinationCarousel />
+            <TopDestinations />
             <AdventureGrid />
+            <StaySection />
+            <TestimonialsSection />
             <CTABanner />
             <Footer />
           </>
@@ -54,8 +118,8 @@ export default function Home() {
     }
   }
 
-  // Views that should NOT show the Navbar
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'package-detail', 'package-booking']
+  // Views that should NOT show the Navbar (handled internally)
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
 
   return (
     <main className="min-h-screen flex flex-col">

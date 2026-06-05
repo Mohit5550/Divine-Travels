@@ -14,6 +14,20 @@ import {
   Menu,
   Package,
   Waves,
+  Mountain,
+  Bike,
+  Car,
+  Globe,
+  Map,
+  Landmark,
+  Star,
+  Settings,
+  Mail,
+  Ticket,
+  Image,
+  FileText,
+  Bed,
+  Tent,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
@@ -22,17 +36,65 @@ import { AdminBookings } from './AdminBookings'
 import { AdminUsers } from './AdminUsers'
 import { AdminPackages } from './AdminPackages'
 import { AdminPackageBookings } from './AdminPackageBookings'
+import { AdminReviews } from './AdminReviews'
+import { AdminSettings } from './AdminSettings'
+import { AdminInquiries } from './AdminInquiries'
+import { AdminCoupons } from './AdminCoupons'
+import { AdminMedia } from './AdminMedia'
+import { AdminReports } from './AdminReports'
+import { AdminTourBookings } from './AdminTourBookings'
+import { AdminTourDestinations } from './AdminTourDestinations'
+import { AdminAvailability } from './AdminAvailability'
 
-type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
+export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
+  | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
+  | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
+  | 'svc-hotel-packages' | 'svc-camping-packages'
+  | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'reports'
+  | 'tour-bookings' | 'tour-destinations' | 'availability'
 
-const tabs = [
+const mainTabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
   { id: 'destinations' as AdminTab, label: 'Destinations', icon: MapPin },
   { id: 'bookings' as AdminTab, label: 'Bookings', icon: CalendarCheck },
-  { id: 'packages' as AdminTab, label: 'Packages', icon: Package },
   { id: 'package-bookings' as AdminTab, label: 'Pkg Bookings', icon: Waves },
   { id: 'users' as AdminTab, label: 'Users', icon: Users },
+  { id: 'reviews' as AdminTab, label: 'Reviews', icon: Star },
+  { id: 'inquiries' as AdminTab, label: 'Inquiries', icon: Mail },
+  { id: 'coupons' as AdminTab, label: 'Coupons', icon: Ticket },
+  { id: 'media' as AdminTab, label: 'Media', icon: Image },
+  { id: 'settings' as AdminTab, label: 'Settings', icon: Settings },
+  { id: 'reports' as AdminTab, label: 'Reports', icon: FileText },
+  { id: 'tour-bookings' as AdminTab, label: 'Tour Bookings', icon: CalendarCheck },
+  { id: 'tour-destinations' as AdminTab, label: 'Tour Content', icon: Map },
+  { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
 ]
+
+const serviceTabs = [
+  { id: 'svc-rafting' as AdminTab, label: 'Rafting', icon: Waves, color: 'bg-blue-500' },
+  { id: 'svc-trekking' as AdminTab, label: 'Trekking', icon: Mountain, color: 'bg-emerald-500' },
+  { id: 'svc-adventure' as AdminTab, label: 'Adventure', icon: Compass, color: 'bg-red-500' },
+  { id: 'svc-bike-rental' as AdminTab, label: 'Bike Rental', icon: Bike, color: 'bg-orange-600' },
+  { id: 'svc-taxi-booking' as AdminTab, label: 'Taxi Booking', icon: Car, color: 'bg-amber-500' },
+  { id: 'svc-domestic-tours' as AdminTab, label: 'Domestic Tours', icon: Map, color: 'bg-teal-500' },
+  { id: 'svc-spiritual-tours' as AdminTab, label: 'Spiritual Tours', icon: Landmark, color: 'bg-amber-600' },
+  { id: 'svc-international-tours' as AdminTab, label: 'International', icon: Globe, color: 'bg-indigo-500' },
+  { id: 'svc-hotel-packages' as AdminTab, label: 'Hotel Packages', icon: Bed, color: 'bg-amber-600' },
+  { id: 'svc-camping-packages' as AdminTab, label: 'Camping Packages', icon: Tent, color: 'bg-emerald-600' },
+]
+
+const categoryFromTab: Record<string, string> = {
+  'svc-rafting': 'rafting',
+  'svc-trekking': 'trekking',
+  'svc-adventure': 'adventure',
+  'svc-bike-rental': 'bike-rental',
+  'svc-taxi-booking': 'taxi-booking',
+  'svc-domestic-tours': 'domestic-tours',
+  'svc-spiritual-tours': 'spiritual-tours',
+  'svc-international-tours': 'international-tours',
+  'svc-hotel-packages': 'stay-hotel',
+  'svc-camping-packages': 'stay-camping',
+}
 
 interface SidebarContentProps {
   user: { name?: string; email?: string } | null
@@ -65,7 +127,7 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
-        {tabs.map((tab) => {
+        {mainTabs.map((tab) => {
           const Icon = tab.icon
           return (
             <button
@@ -78,6 +140,32 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
+              {!sidebarCollapsed && tab.label}
+            </button>
+          )
+        })}
+
+        {!sidebarCollapsed && (
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Services</p>
+          </div>
+        )}
+
+        {serviceTabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false) }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-brand-orange text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded ${tab.color} flex items-center justify-center flex-shrink-0`}>
+                <Icon className="w-3 h-3 text-white" />
+              </div>
               {!sidebarCollapsed && tab.label}
             </button>
           )
@@ -124,14 +212,38 @@ export function AdminDashboard() {
         return <AdminPackageBookings />
       case 'users':
         return <AdminUsers />
+      case 'reviews':
+        return <AdminReviews />
+      case 'settings':
+        return <AdminSettings />
+      case 'inquiries':
+        return <AdminInquiries />
+      case 'coupons':
+        return <AdminCoupons />
+      case 'media':
+        return <AdminMedia />
+      case 'reports':
+        return <AdminReports />
+      case 'tour-bookings':
+        return <AdminTourBookings />
+      case 'tour-destinations':
+        return <AdminTourDestinations />
+      case 'availability':
+        return <AdminAvailability />
+
       default:
+        if (activeTab.startsWith('svc-')) {
+          const category = categoryFromTab[activeTab]
+          if (category) {
+            return <AdminPackages categoryFilter={category} />
+          }
+        }
         return <AdminOverview />
     }
   }
 
   return (
     <div className="min-h-screen bg-brand-cream flex">
-      {/* Desktop Sidebar */}
       <div
         className={`hidden lg:flex flex-col bg-brand-dark transition-all duration-300 ${
           sidebarCollapsed ? 'w-16' : 'w-64'
@@ -159,7 +271,6 @@ export function AdminDashboard() {
         />
       </div>
 
-      {/* Mobile Menu Button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -169,7 +280,6 @@ export function AdminDashboard() {
         </Button>
       </div>
 
-      {/* Mobile Sidebar */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -203,7 +313,6 @@ export function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
       <div className="flex-1 min-w-0 overflow-auto">
         <div className="p-4 sm:p-6 lg:p-8">
           <AnimatePresence mode="wait">

@@ -15,6 +15,7 @@ model User {
   phone           String?
   avatar          String?
   role            String           @default("user")
+  preferences     String           @default("{}")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   bookings        Booking[]
@@ -22,6 +23,9 @@ model User {
   wishlist        Wishlist[]
   packageReviews  PackageReview[]
   packageBookings PackageBooking[]
+  packageWishlist PackageWishlist[]
+  notifications   Notification[]
+  payments        Payment[]
 }
 
 model Destination {
@@ -73,6 +77,7 @@ model Review {
   destination   Destination @relation(fields: [destinationId], references: [id])
   rating        Int
   comment       String
+  approved      Boolean     @default(true)
   createdAt     DateTime    @default(now())
 }
 
@@ -93,6 +98,7 @@ model Package {
   subtitle           String
   description        String
   price              Int
+  originalPrice      Int?
   image              String
   images             String          @default("[]")
   category           String          @default("rafting")
@@ -120,6 +126,7 @@ model Package {
   updatedAt          DateTime        @updatedAt
   reviews            PackageReview[]
   bookings           PackageBooking[]
+  wishlist           PackageWishlist[]
 }
 
 model PackageReview {
@@ -130,6 +137,7 @@ model PackageReview {
   package   Package  @relation(fields: [packageId], references: [id])
   rating    Int
   comment   String
+  approved  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
 
@@ -146,7 +154,143 @@ model PackageBooking {
   preferredTime   String?
   additionalNotes String?
   totalPrice      Int
+  couponId        String?
+  discountAmount  Int      @default(0)
   status          String   @default("pending")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  coupon          Coupon?  @relation(fields: [couponId], references: [id])
+}
+
+model PackageWishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  packageId String
+  user      User     @relation(fields: [userId], references: [id])
+  package   Package  @relation(fields: [packageId], references: [id])
+  createdAt DateTime @default(now())
+  @@unique([userId, packageId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id           String          @id @default(cuid())
+  userId       String
+  bookingId    String?
+  pkgBookingId String?
+  user         User            @relation(fields: [userId], references: [id])
+  amount       Int
+  method       String          @default("online")
+  transactionId String?
+  status       String          @default("completed")
+  createdAt    DateTime        @default(now())
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  subject   String?
+  source    String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Coupon {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  description String?
+  discountPct Int
+  maxDiscount Int?
+  minAmount   Int?
+  maxUses     Int?
+  usedCount   Int              @default(0)
+  expiresAt   DateTime?
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  bookings    PackageBooking[]
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  label     String?
+  alt       String?
+  category  String?
+  createdAt DateTime @default(now())
+}
+
+model TourDestination {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  type      String   @default("day-based") // "day-based" or "single-select"
+  config    String   @default("{}") // JSON: heroImage, heroTitle, heroSubtitle, heroTag, sectionTitle, sectionSubtitle
+  programs  String   @default("[]") // JSON: array of {id, title, img, itinerary[]}
+  dayConfigs String  @default("[]") // JSON: for day-based: [{label, title, maxSelect}]
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StayContent {
+  id          String   @id @default(cuid())
+  section     String   @unique // "hotel" or "camping"
+  name        String
+  description String
+  tag         String?  // badge text like "Riverside Camping"
+  rating      Float    @default(0)
+  images      String   @default("[]") // JSON array of Google Drive file IDs
+  features    String   @default("[]") // JSON array of feature/amenity names
+  pricings    String   @default("[]") // JSON array of {label, sublabel, price, unit, highlighted}
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DateAvailability {
+  id         String   @id @default(cuid())
+  date       String   // "2026-06-05" format
+  service    String   // "rafting", "trekking", "taxi", "bike", "stay", "tour-packages"
+  subOptions String   @default("[]") // JSON array of available sub-options, e.g. ["hunter","activa"]
+  allDay     Boolean  @default(false) // if true, everything for this service is available
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([date, service])
+}
+
+model TourBooking {
+  id               String   @id @default(cuid())
+  destination      String   // "Rishikesh", "Haridwar", etc.
+  dayLabel         String?  // "Day 1", "Day 2", "Day 3", "Master", or null for single-select
+  packageType      String   // "Rishikesh Day 1", "Hill Station Tour", etc.
+  selectedPrograms String   // JSON array of selected program names
+  name             String
+  phone            String
+  travelDate       String
+  travelers        Int      @default(1)
+  status           String   @default("pending") // "pending", "approved", "rejected"
+  adminNotes       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

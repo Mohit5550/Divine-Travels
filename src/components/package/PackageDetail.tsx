@@ -53,6 +53,7 @@ interface PackageData {
   subtitle: string
   description: string
   price: number
+  originalPrice: number | null
   image: string
   images: string
   category: string
@@ -694,7 +695,15 @@ export function PackageDetail() {
                     <p className="text-white/60 text-sm">{pkg.subtitle}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                    {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
+                      <>
+                        <div className="text-white/50 text-sm line-through">₹{pkg.originalPrice}</div>
+                        <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</div>
+                      </>
+                    ) : (
+                      <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                    )}
                     <div className="text-white/60 text-xs">per person</div>
                   </div>
                 </div>

@@ -17,9 +17,15 @@ import {
   Briefcase,
   Rocket,
   Eye,
+  Check,
+  Phone,
+  MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { Navbar } from '@/components/landing/Navbar'
+import { ActivityBar } from '@/components/landing/ActivityBar'
+import { Footer } from '@/components/landing/Footer'
 
 interface PackageData {
   id: string
@@ -55,6 +61,37 @@ function getTargetIcon(subtitle: string) {
   return UsersRound
 }
 
+const inclusions = [
+  'Certified and Experienced River Guides',
+  'High-Quality Life Jackets & Helmets',
+  'Paddles and Safety Rescue Bags',
+  'Body Surfing & Cliff Jumping (Depending on water level)',
+  'Transport from our office to the starting point (if selected)',
+]
+
+const faqs = [
+  {
+    question: 'Can non-swimmers do river rafting in Rishikesh?',
+    answer: 'Yes, non-swimmers can easily do river rafting in Rishikesh. A high-quality life jacket is provided to everyone, which keeps you floating in the water even if you fall. Our expert guides are always there to help you.',
+  },
+  {
+    question: 'What is the best time for river rafting in Rishikesh?',
+    answer: 'The best time for rafting is from September to June. The water level is perfect during these months. Rafting is officially closed by the government during the monsoon season (July and August) due to heavy water flow.',
+  },
+  {
+    question: 'Is river rafting safe for children?',
+    answer: 'Yes, for children above 14 years of age, Brahmpuri rafting (9km) is safe. However, children below 14 years and pregnant women are strictly not allowed to do rafting for safety reasons.',
+  },
+  {
+    question: 'Is there any locker facility available at the rafting point?',
+    answer: 'Yes, paid locker facilities are available at the Shivpuri and Marine Drive starting points. You can keep your mobile phones, wallets, and extra clothes safely there before starting the rafting.',
+  },
+  {
+    question: 'How to reach the rafting starting point from Rishikesh?',
+    answer: 'If you book with Divine Travels, we provide a complimentary pickup from our office in Tapovan/Rishikesh to the Shivpuri or Marine Drive starting point. You can also drive your own car; parking is available.',
+  },
+]
+
 export function RaftingPackages() {
   const { navigate, isAuthenticated, user } = useAppStore()
 
@@ -72,7 +109,6 @@ export function RaftingPackages() {
       toast.error('Please login to book a rafting trip')
       return
     }
-    // Navigate to booking form
     navigate('package-booking', null, pkg.id)
   }
 
@@ -82,18 +118,20 @@ export function RaftingPackages() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <Navbar />
+      <ActivityBar />
+
       {/* Hero Section */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://picsum.photos/seed/rishikesh-ganga-rafting/1600/900"
+            src="https://divinetravels.in/wp-content/uploads/2025/11/photo_2025-11-01_19-11-58.jpg"
             alt="White Water Rafting in Rishikesh"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
 
-        {/* Ornaments */}
         <div className="absolute top-8 left-8 w-32 h-32 border border-white/10 rounded-full pointer-events-none" />
         <div className="absolute bottom-20 right-12 w-48 h-48 border border-white/5 rounded-full pointer-events-none" />
 
@@ -116,7 +154,6 @@ export function RaftingPackages() {
               beginner-friendly to extreme adventure
             </p>
 
-            {/* Quick Stats */}
             <div className="flex items-center justify-center gap-6 sm:gap-10 mt-6">
               <div className="text-center">
                 <div className="text-white font-bold text-xl sm:text-2xl">{packages.length || 3}</div>
@@ -136,18 +173,6 @@ export function RaftingPackages() {
           </motion.div>
         </div>
       </section>
-
-      {/* Back Button */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <Button
-          variant="ghost"
-          className="text-brand-dark hover:text-brand-orange"
-          onClick={() => navigate('landing')}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Destinations
-        </Button>
-      </div>
 
       {/* Section Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -203,7 +228,6 @@ export function RaftingPackages() {
                     isPopular ? 'md:-mt-4 md:mb-4' : ''
                   }`}
                 >
-                  {/* Popular glow */}
                   {isPopular && (
                     <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange/20 to-amber-500/20 rounded-3xl blur-lg group-hover:from-brand-orange/30 group-hover:to-amber-500/30 transition-all duration-500" />
                   )}
@@ -211,7 +235,6 @@ export function RaftingPackages() {
                   <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer ${
                     isPopular ? 'ring-2 ring-brand-orange' : ''
                   }`}>
-                    {/* Image Section */}
                     <div className="relative h-48 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
                       <img
                         src={pkg.image}
@@ -221,7 +244,6 @@ export function RaftingPackages() {
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                      {/* Badge */}
                       <div className={`absolute top-4 left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
                         {isPopular && <Star className="w-3 h-3 fill-white" />}
                         {isExtreme && <Zap className="w-3 h-3" />}
@@ -229,22 +251,18 @@ export function RaftingPackages() {
                         {pkg.badge}
                       </div>
 
-                      {/* Price floating badge */}
                       <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
                         <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
                         <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
                       </div>
 
-                      {/* Bottom content on image */}
                       <div className="absolute bottom-4 left-4 right-4">
                         <h3 className="text-white font-bold text-lg sm:text-xl leading-tight">{pkg.name}</h3>
                         <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
                       </div>
                     </div>
 
-                    {/* Details Section */}
                     <div className="p-5 sm:p-6 space-y-4">
-                      {/* Key Specs - Grid */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
                           <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
@@ -284,13 +302,11 @@ export function RaftingPackages() {
                         </div>
                       </div>
 
-                      {/* Rapids Description */}
                       <div className="flex items-center gap-2 text-sm">
                         <Waves className="w-4 h-4 text-brand-orange shrink-0" />
                         <span className="text-muted-foreground">{pkg.rapidsDescription}</span>
                       </div>
 
-                      {/* Target Demo */}
                       <div className="flex items-start gap-2.5 text-sm">
                         <TargetIcon className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
                         <div>
@@ -299,7 +315,6 @@ export function RaftingPackages() {
                         </div>
                       </div>
 
-                      {/* Rating */}
                       {pkg.rating > 0 && (
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-0.5">
@@ -314,15 +329,13 @@ export function RaftingPackages() {
                               />
                             ))}
                           </div>
-                          <span className="text-sm font-medium text-brand-dark">{pkg.rating}</span>
+                          <span className="text-sm font-semibold text-brand-dark">{pkg.rating}</span>
                           <span className="text-xs text-muted-foreground">({pkg.reviewCount} reviews)</span>
                         </div>
                       )}
 
-                      {/* Divider */}
                       <div className="border-t border-border/50" />
 
-                      {/* Price, View Details & Book */}
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
@@ -361,13 +374,131 @@ export function RaftingPackages() {
             })}
           </div>
         )}
+      </div>
 
-        {/* Bottom CTA */}
+      {/* Book River Rafting Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <motion.div {...fadeInUp} className="text-center mb-10">
+          <h2 className="font-serif text-3xl sm:text-4xl text-brand-dark">
+            Book River Rafting in Rishikesh at <span className="text-brand-orange">Lowest Price</span>
+          </h2>
+          <p className="text-muted-foreground mt-3 max-w-3xl mx-auto">
+            Experience the thrill of Ganga River with Divine Travels! We are a locally based travel agency in Rishikesh offering the best and safest river rafting packages. Whether you are a beginner or an adventure lover, we have the perfect rafting stretch for you — from 9km Brahmpuri to the famous 16km Shivpuri and 26km Marine Drive rafting.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+            <a href="https://wa.me/916396919007?text=Hi%20I%20want%20to%20book%20Rafting%20in%20Rishikesh" target="_blank" rel="noopener noreferrer">
+              <Button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6 h-12">
+                <MessageCircle className="w-5 h-5 mr-2" />
+                WhatsApp to Book Rafting
+              </Button>
+            </a>
+            <a href="tel:+916396919007">
+              <Button variant="outline" className="rounded-full px-6 h-12 border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5">
+                <Phone className="w-5 h-5 mr-2" />
+                Call Now for Details
+              </Button>
+            </a>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Pricing Details */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <motion.div {...fadeInUp}>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">
+            Rishikesh Rafting Packages & Pricing 2026
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
+              <h3 className="font-bold text-lg text-brand-dark mb-2">1. Brahmpuri Rafting (9 Km)</h3>
+              <p className="text-brand-orange font-bold text-xl mb-2">₹399/- Per Person</p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li><span className="font-medium text-brand-dark">Rapids:</span> Grade I & II (Easy waves)</li>
+                <li><span className="font-medium text-brand-dark">Duration:</span> 1.5 to 2 Hours</li>
+                <li><span className="font-medium text-brand-dark">Best for:</span> School groups, families, and first-timers</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-brand-orange ring-2 ring-brand-orange/20">
+              <h3 className="font-bold text-lg text-brand-dark mb-2">2. Shivpuri Rafting (16 Km)</h3>
+              <p className="text-brand-orange font-bold text-xl mb-2">₹499/- Per Person</p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li><span className="font-medium text-brand-dark">Rapids:</span> Grade II & III (Body surfing & cliff jumping included)</li>
+                <li><span className="font-medium text-brand-dark">Duration:</span> 3 to 4 Hours</li>
+                <li><span className="font-medium text-brand-dark">Best for:</span> College groups, friends, and corporate trips</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-red-500">
+              <h3 className="font-bold text-lg text-brand-dark mb-2">3. Marine Drive Rafting (26 Km)</h3>
+              <p className="text-brand-orange font-bold text-xl mb-2">₹599/- Per Person</p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li><span className="font-medium text-brand-dark">Rapids:</span> Grade III & IV (High thrill)</li>
+                <li><span className="font-medium text-brand-dark">Duration:</span> 5 to 6 Hours</li>
+                <li><span className="font-medium text-brand-dark">Best for:</span> Highly energetic people and adventure junkies</li>
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* What's Included */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <motion.div {...fadeInUp}>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">
+            What is Included in Your Rafting Package?
+          </h2>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <ul className="space-y-3">
+              {inclusions.map((item, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="text-muted-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* What to Wear */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <motion.div {...fadeInUp}>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">
+            What to Wear & Carry for Rafting?
+          </h2>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <p className="text-muted-foreground leading-relaxed">
+              To make your rafting experience safe and comfortable, wear comfortable clothes like quick-dry t-shirts and shorts. Avoid heavy jeans, sarees, or leather shoes. Wear comfortable sports shoes or sandals that grip well. Do not carry expensive mobile phones, wallets, or car keys while rafting. Lockers are available at the starting point to keep your valuables safe.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* FAQs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <motion.div {...fadeInUp}>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-sm">
+                <h3 className="font-bold text-brand-dark mb-2">{faq.question}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-16 sm:mt-20 bg-gradient-to-r from-brand-dark via-brand-navy to-brand-dark rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden"
+          className="bg-gradient-to-r from-brand-dark via-brand-navy to-brand-dark rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-32 h-32 bg-brand-orange/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-brand-gold/10 rounded-full blur-3xl" />
@@ -381,35 +512,30 @@ export function RaftingPackages() {
               Contact our travel experts for personalized recommendations based on your group size and adventure level.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    toast.error('Please login to contact us')
-                  } else {
-                    navigate('user-dashboard')
-                  }
-                }}
-                className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-full px-8 h-12"
-              >
-                Contact Us
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('landing')}
-                className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-12"
-              >
-                View All Destinations
-              </Button>
+              <a href="https://wa.me/916396919007?text=Hi%20I%20need%20help%20choosing%20a%20rafting%20package" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-8 h-12">
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  WhatsApp Us
+                </Button>
+              </a>
+              <a href="tel:+916396919007">
+                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-12">
+                  <Phone className="w-5 h-5 mr-2" />
+                  Call Now
+                </Button>
+              </a>
             </div>
           </div>
         </motion.div>
+      </div>
 
-        {/* Safety Info */}
+      {/* Safety Info */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pb-16"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6"
         >
           <div className="flex items-start gap-3 bg-white rounded-xl p-5 shadow-sm">
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
@@ -440,6 +566,8 @@ export function RaftingPackages() {
           </div>
         </motion.div>
       </div>
+
+      <Footer />
     </div>
   )
 }
