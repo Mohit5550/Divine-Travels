@@ -118,7 +118,11 @@ export function AdventureGrid() {
                   <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                     <h3 className="text-white font-bold text-sm sm:text-base">
                       {item.name}
-                      {item.company && <span className="text-white/40 text-[10px] ml-1.5 font-medium">({item.company})</span>}
+                      {item.company && (
+                        <span className="block text-white/70 text-[10px] sm:text-[11px] mt-0.5 font-normal italic">
+                          by {item.company}
+                        </span>
+                      )}
                     </h3>
                     {item.tagline && (
                       <p className="text-white/60 text-xs mt-0.5 hidden sm:block truncate">{item.tagline}</p>
