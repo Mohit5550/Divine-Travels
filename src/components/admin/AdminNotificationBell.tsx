@@ -107,11 +107,11 @@ export function AdminNotificationBell() {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+        className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
       >
-        <Bell className="w-4 h-4 text-white" />
+        <Bell className="w-5 h-5 text-brand-dark" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4.5 h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] min-h-[18px] leading-none">
+          <span className="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] min-h-[18px] px-1 leading-none">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

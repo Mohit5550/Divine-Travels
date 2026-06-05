@@ -255,7 +255,6 @@ export function AdminDashboard() {
             <span className="font-serif text-lg text-white">Divine Travel</span>
           )}
           <div className="flex items-center gap-2">
-            <AdminNotificationBell />
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
@@ -318,6 +317,18 @@ export function AdminDashboard() {
       </AnimatePresence>
 
       <div className="flex-1 min-w-0 overflow-auto">
+        <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-end gap-3 shadow-sm">
+          <AdminNotificationBell />
+          <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+            <div className="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white text-sm font-bold">
+              {user?.name?.charAt(0).toUpperCase() || 'A'}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-medium text-brand-dark leading-tight">{user?.name}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Admin</p>
+            </div>
+          </div>
+        </div>
         <div className="p-4 sm:p-6 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div

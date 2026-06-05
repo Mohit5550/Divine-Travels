@@ -119,8 +119,8 @@ export function AdventureGrid() {
                     <h3 className="text-white font-bold text-sm sm:text-base">
                       {item.name}
                       {item.company && (
-                        <span className="block text-white/70 text-[10px] sm:text-[11px] mt-0.5 font-normal italic">
-                          by {item.company}
+                        <span className="block text-red-400 text-[11px] sm:text-xs mt-0.5 font-semibold">
+                          ({item.company})
                         </span>
                       )}
                     </h3>
