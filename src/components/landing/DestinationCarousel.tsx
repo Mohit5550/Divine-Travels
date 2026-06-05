@@ -169,7 +169,7 @@ export function DestinationCarousel() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-4 overflow-x-auto hide-scrollbar scroll-smooth snap-x snap-mandatory px-2"
+              className="flex gap-4 overflow-x-auto overflow-y-hidden hide-scrollbar scroll-smooth snap-x snap-mandatory px-2"
             >
               {destinations.map((dest, index) => (
                 <motion.div

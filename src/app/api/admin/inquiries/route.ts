@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       data: { name, email, phone, message, subject, source },
     })
 
-    return NextResponse.json({ success: true }, { status: 201 })
+    notifyAdmin('New Contact Inquiry', `${name} (${email}) sent an inquiry: ${message.substring(0, 100)}`, 'inquiry')
   } catch {
     return NextResponse.json({ error: 'Failed to submit inquiry' }, { status: 500 })
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
         status: 'pending',
       },
     })
+
+    notifyAdmin('New Tour Booking', `${name} booked ${destination} for ${travelers} traveler(s)`, 'booking')
 
     return NextResponse.json({ success: true, id: booking.id }, { status: 201 })
   } catch (error) {

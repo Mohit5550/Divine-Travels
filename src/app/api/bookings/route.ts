@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 // GET /api/bookings - List bookings
 export async function GET(request: NextRequest) {
@@ -66,6 +67,9 @@ export async function POST(request: NextRequest) {
       },
       include: { destination: true },
     })
+
+    const user = await db.user.findUnique({ where: { id: userId } })
+    notifyAdmin('New Destination Booking', `${user?.name || 'Someone'} booked ${booking.destination?.name || 'a destination'}`, 'booking', `/admin?tab=bookings`)
 
     return NextResponse.json(booking, { status: 201 })
   } catch {

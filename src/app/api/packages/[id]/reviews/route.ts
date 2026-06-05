@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 // GET /api/packages/[id]/reviews - Get reviews for a package
 export async function GET(
@@ -82,6 +83,9 @@ export async function POST(
         reviewCount: stats._count.rating || 0,
       },
     })
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } })
+    notifyAdmin('New Package Review', `${user?.name || 'Someone'} left a ${rating}-star review on "${pkg.name}"`, 'review')
 
     return NextResponse.json(review, { status: 201 })
   } catch (error) {

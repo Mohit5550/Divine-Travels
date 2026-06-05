@@ -31,9 +31,9 @@ async function main() {
   // Create admin user
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@divinetravel.com',
+      email: 'divinetravels.in.info@gmail.com',
       name: 'Admin',
-      password: 'admin123',
+      password: 'Divine@198#',
       role: 'admin',
       phone: '+91 9876543210',
     },
@@ -47,17 +47,6 @@ async function main() {
       password: 'user123',
       role: 'user',
       phone: '+91 9123456789',
-    },
-  })
-
-  // Create second test user for reviews
-  const user2 = await prisma.user.create({
-    data: {
-      email: 'priya@test.com',
-      name: 'Priya Sharma',
-      password: 'user123',
-      role: 'user',
-      phone: '+91 9988776655',
     },
   })
 
@@ -348,58 +337,6 @@ async function main() {
       tags: 'Tea,Toy Train,Sunrise,Trekking',
       featured: true,
     },
-  })
-
-  // ============ DESTINATION REVIEWS ============
-  await prisma.review.createMany({
-    data: [
-      {
-        userId: user.id,
-        destinationId: rishikesh.id,
-        rating: 5,
-        comment: 'Absolutely divine experience! The rafting was thrilling and the Ganga Aarti was soul-stirring. A must-visit for every traveler.',
-      },
-      {
-        userId: user.id,
-        destinationId: haridwar.id,
-        rating: 4,
-        comment: 'The spiritual energy of Haridwar is unmatched. Ganga Aarti at Har Ki Pauri is a mesmerizing experience that stays with you forever.',
-      },
-      {
-        userId: user.id,
-        destinationId: auli.id,
-        rating: 5,
-        comment: 'Skiing in Auli was a dream come true! The ropeway ride offers breathtaking views. Perfect destination for adventure lovers.',
-      },
-    ],
-  })
-
-  // ============ DESTINATION BOOKINGS ============
-  await prisma.booking.createMany({
-    data: [
-      {
-        userId: user.id,
-        destinationId: rishikesh.id,
-        checkIn: new Date('2025-06-15'),
-        checkOut: new Date('2025-06-18'),
-        guests: 2,
-        totalPrice: 5997,
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        phone: '+91 9123456789',
-      },
-      {
-        userId: user.id,
-        destinationId: mussoorie.id,
-        checkIn: new Date('2025-07-01'),
-        checkOut: new Date('2025-07-04'),
-        guests: 3,
-        totalPrice: 6897,
-        status: 'pending',
-        paymentStatus: 'pending',
-        phone: '+91 9123456789',
-      },
-    ],
   })
 
   // ============ RAFTING PACKAGES ============
@@ -2235,233 +2172,6 @@ async function main() {
     })
   }
 
-  // ============ PACKAGE REVIEWS ============
-  await prisma.packageReview.createMany({
-    data: [
-      {
-        userId: user.id,
-        packageId: brahmpuri.id,
-        rating: 5,
-        comment: 'Perfect family outing! Our kids (14 and 16) loved every minute. The guides were patient and made sure everyone felt safe. The gentle rapids were just right for beginners. Highly recommend!',
-      },
-      {
-        userId: user2.id,
-        packageId: brahmpuri.id,
-        rating: 4,
-        comment: 'Great experience for first-timers. The views are stunning and the water is refreshing. Only giving 4 stars because I wish it was a bit longer — we finished in about 1.5 hours.',
-      },
-      {
-        userId: user.id,
-        packageId: shivpuri.id,
-        rating: 5,
-        comment: 'THE best rafting experience! Roller Coaster rapid lived up to its name — absolutely thrilling! Cliff jumping was the highlight of our trip. Our guide Raju was phenomenal.',
-      },
-      {
-        userId: user2.id,
-        packageId: shivpuri.id,
-        rating: 5,
-        comment: 'We went as a corporate team and it was the best team building activity ever! Everyone loved it, even the scared ones. Body surfing in the calm stretches was so peaceful.',
-      },
-      {
-        userId: user2.id,
-        packageId: shivpuri.id,
-        rating: 5,
-        comment: 'Second time doing this stretch and it never gets old. The guides make all the difference — fun, professional, and safety-conscious. Already planning my next trip!',
-      },
-      {
-        userId: user.id,
-        packageId: marineDrive.id,
-        rating: 5,
-        comment: 'The Wall rapid is no joke — our raft nearly flipped! But the adrenaline rush was incredible. This is not for the faint-hearted but if you want the real deal, Marine Drive is it.',
-      },
-      {
-        userId: user2.id,
-        packageId: marineDrive.id,
-        rating: 4,
-        comment: 'Challenging and exhilarating! The 6 hours on the river were intense but the scenery between rapids was breathtaking. Make sure you are physically prepared for this one.',
-      },
-    ],
-  })
-
-  // ============ PACKAGE BOOKINGS (sample) ============
-  await prisma.packageBooking.createMany({
-    data: [
-      {
-        userId: user.id,
-        packageId: shivpuri.id,
-        fullName: 'Rahul Patel',
-        mobile: '+91 9123456789',
-        numberOfPeople: 4,
-        preferredDate: new Date('2025-06-20'),
-        preferredTime: 'Morning (7-9 AM)',
-        additionalNotes: 'Corporate group — need invoice for company reimbursement',
-        totalPrice: 499 * 4,
-        status: 'confirmed',
-      },
-      {
-        userId: user2.id,
-        packageId: brahmpuri.id,
-        fullName: 'Priya Sharma',
-        mobile: '+91 9988776655',
-        numberOfPeople: 3,
-        preferredDate: new Date('2025-07-05'),
-        preferredTime: 'No preference',
-        additionalNotes: 'Family trip with 14-year-old child',
-        totalPrice: 399 * 3,
-        status: 'pending',
-      },
-    ],
-  })
-
-  // ============ UPDATE USERS WITH PREFERENCES ============
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      preferences: JSON.stringify({ theme: 'light', currency: 'INR', language: 'English', budgetRange: 'mid-range' }),
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul',
-    },
-  })
-  await prisma.user.update({
-    where: { id: user2.id },
-    data: {
-      preferences: JSON.stringify({ theme: 'light', currency: 'INR', language: 'Hindi', budgetRange: 'budget' }),
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',
-    },
-  })
-
-  // ============ PACKAGE WISHLIST ============
-  await prisma.packageWishlist.createMany({
-    data: [
-      { userId: user.id, packageId: shivpuri.id },
-      { userId: user.id, packageId: marineDrive.id },
-      { userId: user.id, packageId: kedarkantha.id },
-      { userId: user2.id, packageId: brahmpuri.id },
-      { userId: user2.id, packageId: himalayan450.id },
-    ],
-  })
-
-  // ============ NOTIFICATIONS ============
-  await prisma.notification.createMany({
-    data: [
-      {
-        userId: user.id,
-        title: 'Booking Confirmed!',
-        message: 'Your Shivpuri rafting booking for 4 people on Jun 20 has been confirmed.',
-        type: 'booking',
-        read: false,
-      },
-      {
-        userId: user.id,
-        title: 'Payment Received',
-        message: 'Payment of ₹1,996 for Shivpuri rafting has been processed successfully.',
-        type: 'payment',
-        read: false,
-      },
-      {
-        userId: user.id,
-        title: 'Summer Sale is Live!',
-        message: 'Get 20% off on all summer bookings with code SUMMER20. Limited period offer!',
-        type: 'promo',
-        read: false,
-      },
-      {
-        userId: user.id,
-        title: 'Welcome to Divine Travels!',
-        message: 'Thank you for joining Divine Travels. Use code WELCOME10 for 10% off your first booking.',
-        type: 'info',
-        read: true,
-      },
-      {
-        userId: user.id,
-        title: 'Wishlist Price Drop',
-        message: 'Marine Drive rafting is now available at a discounted price! Check it out.',
-        type: 'alert',
-        read: false,
-      },
-      {
-        userId: user2.id,
-        title: 'Booking Pending',
-        message: 'Your Brahmpuri rafting booking for 3 people on Jul 5 is awaiting confirmation.',
-        type: 'booking',
-        read: false,
-      },
-      {
-        userId: user2.id,
-        title: 'Weekend Special Offer',
-        message: 'Flat ₹100 off on bookings this weekend with code DIVINE100.',
-        type: 'promo',
-        read: false,
-      },
-    ],
-  })
-
-  // ============ PAYMENTS ============
-  await prisma.payment.createMany({
-    data: [
-      {
-        userId: user.id,
-        bookingId: null,
-        pkgBookingId: null,
-        amount: 1996,
-        method: 'online',
-        transactionId: 'TXN' + Date.now() + '1',
-        status: 'completed',
-      },
-      {
-        userId: user.id,
-        bookingId: null,
-        pkgBookingId: null,
-        amount: 5000,
-        method: 'online',
-        transactionId: 'TXN' + Date.now() + '2',
-        status: 'completed',
-      },
-      {
-        userId: user.id,
-        bookingId: null,
-        pkgBookingId: null,
-        amount: 3500,
-        method: 'upi',
-        transactionId: 'UPI' + Date.now() + '3',
-        status: 'completed',
-      },
-      {
-        userId: user2.id,
-        bookingId: null,
-        pkgBookingId: null,
-        amount: 1197,
-        method: 'online',
-        transactionId: 'TXN' + Date.now() + '4',
-        status: 'pending',
-      },
-      {
-        userId: user2.id,
-        bookingId: null,
-        pkgBookingId: null,
-        amount: 2500,
-        method: 'cash',
-        transactionId: null,
-        status: 'completed',
-      },
-    ],
-  })
-
-  // ============ SITE SETTINGS ============
-  const defaultSettings = [
-    { key: 'whatsapp', value: '+916396919007' },
-    { key: 'phone', value: '+916396919007' },
-    { key: 'email', value: 'info@divinetravels.in' },
-    { key: 'address', value: 'Near Swami Narayan Ashram, Muni Ki Reti, Rishikesh - 249137' },
-    { key: 'facebook', value: 'https://facebook.com/divinetravels' },
-    { key: 'instagram', value: 'https://instagram.com/divinetravels' },
-    { key: 'youtube', value: 'https://youtube.com/@divinetravels' },
-    { key: 'siteName', value: 'Divine Travels' },
-    { key: 'tagline', value: 'Explore the Divine with Us' },
-  ]
-  for (const s of defaultSettings) {
-    await prisma.siteSetting.upsert({ where: { key: s.key }, update: { value: s.value }, create: s })
-  }
-
   // ============ COUPONS ============
   await prisma.coupon.createMany({
     data: [
@@ -2483,55 +2193,11 @@ async function main() {
   ]
   await prisma.media.createMany({ data: mediaItems })
 
-  // ============ CONTACT INQUIRIES ============
-  await prisma.contactInquiry.createMany({
-    data: [
-      {
-        name: 'Ankit Verma',
-        email: 'ankit@example.com',
-        phone: '+91 9876543210',
-        subject: 'Chardham Yatra inquiry',
-        message: 'Hi, I am planning a Chardham Yatra with my family of 6 in June 2026. Can you share the detailed itinerary, pricing, and availability? We would prefer a private tour with good hotel accommodations. Please call me back to discuss.',
-        source: 'contact-form',
-        read: false,
-      },
-      {
-        name: 'Sneha Gupta',
-        email: 'sneha@example.com',
-        phone: '+91 8765432109',
-        subject: 'Rafting group booking',
-        message: 'We are a group of 12 people planning to visit Rishikesh in August. We want to book the Shivpuri rafting package. Do you have group discounts? Also can we combine it with bungee jumping?',
-        source: 'whatsapp',
-        read: false,
-      },
-      {
-        name: 'Rajesh Kumar',
-        email: 'rajesh@example.com',
-        phone: null,
-        subject: 'Bike rental for Himalayan trip',
-        message: 'I want to rent a Himalayan 450 for 7 days in September. Planning to go from Rishikesh to Leh. What documents do I need and what is the total cost including security deposit?',
-        source: 'contact-form',
-        read: true,
-      },
-      {
-        name: 'Priya Singh',
-        email: 'priya.singh@example.com',
-        phone: '+91 7654321098',
-        subject: null,
-        message: 'Do you offer customized tour packages for Kerala? We want to visit Munnar, Alleppey, and Kovalam over 7 days. Please share options and pricing for a couple.',
-        source: 'contact-form',
-        read: false,
-      },
-    ],
-  })
-
   console.log('Seed data created successfully!')
-  console.log(`Admin: admin@divinetravel.com / admin123`)
+  console.log(`Admin: divinetravels.in.info@gmail.com / Divine@198#`)
   console.log(`User: user@test.com / user123`)
-  console.log(`16 destinations, 3 destination reviews, 2 destination bookings`)
-  console.log(`85 packages (3 rafting + 7 bike + 7 taxi + 10 trekking + 26 adventure + 21 domestic + 11 spiritual), 7 package reviews, 2 package bookings`)
-  console.log(`9 site settings, 4 coupons, 6 media items, 4 contact inquiries`)
-  console.log(`2 users with preferences & avatars, 5 package wishlist items, 7 notifications, 5 payments`)
+  console.log(`16 destinations, 85 packages (3 rafting + 7 bike + 7 taxi + 10 trekking + 26 adventure + 21 domestic + 11 spiritual + 3 hotel + 3 camping)`)
+  console.log(`9 site settings, 4 coupons, 6 media items`)
 }
 
 main()

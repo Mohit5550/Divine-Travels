@@ -170,7 +170,7 @@ async function main() {
   })
   console.log('  ✓ Char Dham')
 
-  // ===== Stay Content =====
+  // ===== Hotel Packages =====
   const hotelImages = [
     'https://drive.google.com/uc?export=view&id=1WfJVW2z0lW0P4_m9cvpS31fQ4cHqlTo0',
     'https://drive.google.com/uc?export=view&id=1FxzGGejRREKQiQT078LYyC2YQhakUh-h',
@@ -184,45 +184,6 @@ async function main() {
     'https://drive.google.com/uc?export=view&id=1FN8OLXvVq3CfzvUx7stprQbqlHNogG64',
     'https://drive.google.com/uc?export=view&id=1xqeGaMPY6FOPF0CWx8cpYoU8D8n7GAIN',
   ]
-
-  await prisma.stayContent.upsert({
-    where: { section: 'hotel' },
-    update: {},
-    create: {
-      section: 'hotel',
-      name: 'Hotel Holy Ganga',
-      description: 'Riverside comfort in the heart of Rishikesh',
-      tag: null,
-      rating: 4.0,
-      images: JSON.stringify(hotelImages),
-      features: JSON.stringify(['Free WiFi', 'Breakfast', 'Parking']),
-      pricings: JSON.stringify([
-        { label: 'Double Occupancy', sublabel: 'Non-AC Room', price: '1800', unit: '', highlighted: false },
-        { label: 'Double Occupancy', sublabel: 'AC Room', price: '2200', unit: '', highlighted: true },
-      ]),
-    },
-  })
-
-  await prisma.stayContent.upsert({
-    where: { section: 'camping' },
-    update: {},
-    create: {
-      section: 'camping',
-      name: 'Camping by the Ganges',
-      description: 'Bonfire, river views & starry nights',
-      tag: 'Riverside Camping',
-      rating: 4.5,
-      images: JSON.stringify(campImages),
-      features: JSON.stringify(['Bonfire', 'River View', 'Stargazing', 'Meals Included']),
-      pricings: JSON.stringify([
-        { label: 'Double Sharing', sublabel: '2 persons per tent', price: '1800', unit: '/pp', highlighted: false },
-        { label: 'Triple Sharing', sublabel: '3 persons per tent', price: '1600', unit: '/pp', highlighted: true },
-        { label: 'Quad Sharing', sublabel: '4 persons per tent', price: '1400', unit: '/pp', highlighted: false },
-      ]),
-    },
-  })
-
-  // ===== Hotel Packages =====
   const hotels = [
     { name: 'Hotel Holy Ganga', slug: 'holy-ganga', tagline: 'Riverside Comfort', subtitle: 'Premium Riverside Hotel', description: 'Experience true riverside living at Hotel Holy Ganga. Located in the heart of Rishikesh, this hotel offers stunning Ganga views, modern amenities, and warm hospitality.', price: 2200, image: 'https://drive.google.com/thumbnail?id=1WfJVW2z0lW0P4_m9cvpS31fQ4cHqlTo0&sz=w800', images: JSON.stringify(hotelImages.map(u => u.replace('uc?export=view', 'thumbnail').replace('id=', 'id=') + '&sz=w800')), category: 'stay-hotel', duration: '1 Night', location: 'Rishikesh', rating: 4.0, reviewCount: 12, badge: 'Most Popular', badgeColor: 'bg-brand-orange', gradient: 'from-brand-orange/80 to-amber-600/80', featured: true, active: true },
     { name: 'The Grand Heritage', slug: 'grand-heritage', tagline: 'Luxury Living', subtitle: 'Heritage Hotel', description: 'A luxurious heritage hotel combining traditional architecture with modern comforts. Featuring a rooftop restaurant with panoramic views, spa services, and elegantly appointed rooms.', price: 3500, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80', images: '[]', category: 'stay-hotel', duration: '1 Night', location: 'Rishikesh', rating: 4.5, reviewCount: 8, badge: 'Premium', badgeColor: 'bg-brand-gold', gradient: 'from-brand-gold/80 to-amber-700/80', featured: false, active: true },

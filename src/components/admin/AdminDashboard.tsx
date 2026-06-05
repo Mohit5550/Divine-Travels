@@ -45,6 +45,7 @@ import { AdminReports } from './AdminReports'
 import { AdminTourBookings } from './AdminTourBookings'
 import { AdminTourDestinations } from './AdminTourDestinations'
 import { AdminAvailability } from './AdminAvailability'
+import { AdminNotificationBell } from './AdminNotificationBell'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
@@ -253,12 +254,15 @@ export function AdminDashboard() {
           {!sidebarCollapsed && (
             <span className="font-serif text-lg text-white">Divine Travel</span>
           )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-          >
-            <ChevronLeft className={`w-4 h-4 text-white transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            <AdminNotificationBell />
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            >
+              <ChevronLeft className={`w-4 h-4 text-white transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </div>
         <SidebarContent
           user={user}

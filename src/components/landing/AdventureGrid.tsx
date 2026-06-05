@@ -6,20 +6,34 @@ import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
 import { Loader2 } from 'lucide-react'
 
-const fallbackAdventures = [
-  { id: 'campfire', name: 'Fire Performance', image: 'https://picsum.photos/seed/campfire-night/400/400' },
-  { id: 'rafting', name: 'River Rafting', image: 'https://picsum.photos/seed/river-rafting/400/400' },
-  { id: 'hotels', name: 'Hotels / Stays', image: 'https://picsum.photos/seed/hotel-stay/400/400' },
-  { id: 'balloon', name: 'Hot Air Balloon', image: 'https://picsum.photos/seed/hot-air-balloon/400/400' },
-  { id: 'paragliding', name: 'Paragliding', image: 'https://picsum.photos/seed/paragliding-sky/400/400' },
-  { id: 'beach', name: 'Beach Camping', image: 'https://picsum.photos/seed/beach-camp/400/400' },
-  { id: 'kayaking', name: 'Kayaking', image: 'https://picsum.photos/seed/kayaking-water/400/400' },
-  { id: 'camping', name: 'Camping', image: 'https://picsum.photos/seed/camping-tents/400/400' },
-  { id: 'biking', name: 'Mountain Biking', image: 'https://picsum.photos/seed/mountain-biking/400/400' },
-  { id: 'bungee', name: 'Bungee Jumping', image: 'https://picsum.photos/seed/bungee-jump/400/400' },
-  { id: 'climbing', name: 'Rock Climbing', image: 'https://picsum.photos/seed/rock-climbing/400/400' },
-  { id: 'zipline', name: 'Zip Line', image: 'https://picsum.photos/seed/zipline-adventure/400/400' },
-]
+const companyMap: Record<string, string> = {
+  'indias-highest-bungy': 'Himalayan Bungy',
+  'free-style-bungy': 'Himalayan Bungy',
+  'giant-swing-113': 'Hikers Adventure Park',
+  'premium-giant-swing-140': 'Hikers Adventure Park',
+  'bungee-180-feet': 'Thrill Factory',
+  'splash-bungee-180': 'Thrill Factory',
+  'free-style-bungee-160': 'Thrill Factory',
+  'couple-bungee-jump': 'Thrill Factory',
+  'rope-bungee-160': 'Thrill Factory',
+  'quick-jump-rishikesh': 'Thrill Factory',
+  'reverse-bungee-india': 'Thrill Factory',
+  'zipline-across-ganga': 'Thrill Factory',
+  'rope-course-rishikesh': 'Thrill Factory',
+  'go-kart-rishikesh': 'Hikers Adventure Park',
+  'sky-roller-rishikesh': 'Hikers Adventure Park',
+  'roller-coaster-zipline': 'Hikers Adventure Park',
+  'flyboard-jetovator-tehri': 'Tehri Lake Adventure Sports',
+  'speed-boat-tehri': 'Tehri Lake Adventure Sports',
+  'bumper-ride-tehri': 'Tehri Lake Adventure Sports',
+  'banana-ride-tehri': 'Tehri Lake Adventure Sports',
+  'water-surfing-tehri': 'Tehri Lake Adventure Sports',
+  'jet-ski-tehri': 'Tehri Lake Adventure Sports',
+  'parasailing-tehri': 'Tehri Lake Adventure Sports',
+  'lake-view-paragliding': 'Tehri Lake Paragliding',
+  'rishikesh-paragliding': 'Why Not Fly',
+  'flying-fox-rishikesh': 'Jumping Heights',
+}
 
 export function AdventureGrid() {
   const { navigate } = useAppStore()
@@ -42,17 +56,16 @@ export function AdventureGrid() {
     }
   }
 
-  const displayItems = adventurePkgs.length > 0
-    ? adventurePkgs.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        image: p.image,
-        price: p.price,
-        originalPrice: p.originalPrice,
-        location: p.location,
-        tagline: p.tagline,
-      }))
-    : fallbackAdventures
+  const displayItems = adventurePkgs.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    company: companyMap[p.slug] || '',
+    image: p.image,
+    price: p.price,
+    originalPrice: p.originalPrice,
+    location: p.location,
+    tagline: p.tagline,
+  }))
 
   return (
     <section className="py-12 sm:py-16 bg-brand-teal/90 relative overflow-hidden">
@@ -103,7 +116,10 @@ export function AdventureGrid() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                    <h3 className="text-white font-bold text-sm sm:text-base">{item.name}</h3>
+                    <h3 className="text-white font-bold text-sm sm:text-base">
+                      {item.name}
+                      {item.company && <span className="text-white/40 text-[10px] ml-1.5 font-medium">({item.company})</span>}
+                    </h3>
                     {item.tagline && (
                       <p className="text-white/60 text-xs mt-0.5 hidden sm:block truncate">{item.tagline}</p>
                     )}

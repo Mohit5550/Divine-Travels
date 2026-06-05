@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 // GET /api/package-bookings - List bookings (admin: all, user: own)
 export async function GET(request: Request) {
@@ -100,6 +101,8 @@ export async function POST(request: Request) {
         },
       },
     })
+
+    notifyAdmin('New Package Booking', `${fullName} booked "${pkg.name}" for ${numberOfPeople} person(s) on ${preferredDate}`, 'booking', `/admin?tab=package-bookings`)
 
     return NextResponse.json(booking, { status: 201 })
   } catch (error) {

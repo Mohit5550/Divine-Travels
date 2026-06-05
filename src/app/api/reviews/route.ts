@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin } from '@/lib/notify'
 
 // GET /api/reviews?destinationId=
 export async function GET(request: NextRequest) {
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
       where: { id: destinationId },
       data: { rating: Math.round(avgRating * 10) / 10, reviewCount: reviews.length },
     })
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } })
+    notifyAdmin('New Review', `${user?.name || 'Someone'} left a ${rating}-star review`, 'review')
 
     return NextResponse.json(review, { status: 201 })
   } catch {
