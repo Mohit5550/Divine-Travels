@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(images)
   } catch (error) {
     console.error('Gallery fetch error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: 'Internal server error', debug: message }, { status: 500 })
   }
 }
