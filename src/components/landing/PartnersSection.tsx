@@ -36,6 +36,11 @@ const partners: Partner[] = [
     name: 'Maulik Mansion',
     image: 'https://lh3.googleusercontent.com/d/17lw8UqDCAREliVowzw7fw7a96QvXxRUx',
   },
+  {
+    id: 'trekking-compass',
+    name: 'Trekking Compass',
+    image: '/partners/partner-new.png',
+  },
 ]
 
 const fallbackImage = (name: string) =>
