@@ -1,47 +1,24 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Phone, Instagram, Youtube, Facebook } from 'lucide-react'
+import { Phone, Instagram, Youtube, Facebook, Camera, ArrowRight } from 'lucide-react'
+import { useAppStore } from '@/lib/store'
+import { useQuery } from '@tanstack/react-query'
+
+interface GalleryImage {
+  id: string
+  url: string
+  title: string
+  alt: string
+  category: string
+  featured: boolean
+}
 
 interface SocialLink {
-  platform: 'instagram' | 'youtube' | 'facebook' | 'linkedin'
+  platform: 'instagram' | 'youtube' | 'facebook'
   href: string
 }
 
-const adventureCards = [
-  {
-    image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80',
-    label: 'Paragliding',
-    rotate: -10,
-    zIndex: 1,
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1530541930197-ff16ac917b0e?w=600&q=80',
-    label: 'Rafting',
-    rotate: -5,
-    zIndex: 2,
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80',
-    label: 'Trekking',
-    rotate: 0,
-    zIndex: 3,
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80',
-    label: 'Zipline',
-    rotate: 5,
-    zIndex: 2,
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=600&q=80',
-    label: 'Adventure',
-    rotate: 10,
-    zIndex: 1,
-  },
-]
-
-// TODO: Replace these placeholder social links with your real URLs
 const socialLinks: SocialLink[] = [
   { platform: 'instagram', href: 'https://www.instagram.com/divinetravels.in' },
   { platform: 'youtube', href: 'https://youtube.com/@divinetravelsuk14' },
@@ -63,7 +40,22 @@ const PlatformIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
   }
 }
 
+const cardRotations = [-10, -5, 0, 5, 10]
+const cardZIndices = [1, 2, 3, 2, 1]
+
 export function SocialCTASection() {
+  const { navigate } = useAppStore()
+
+  const { data: featuredImages = [] } = useQuery({
+    queryKey: ['featured-gallery'],
+    queryFn: async () => {
+      const res = await fetch('/api/gallery?featured=true&limit=5')
+      if (!res.ok) throw new Error('Failed to fetch featured images')
+      const data = await res.json()
+      return data as GalleryImage[]
+    },
+  })
+
   return (
     <section className="py-14 sm:py-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,27 +74,61 @@ export function SocialCTASection() {
         </motion.div>
 
         <div className="relative flex items-end justify-center gap-2 sm:gap-3 mb-10 sm:mb-12 min-h-[260px] sm:min-h-[320px]">
-          {adventureCards.map((card, idx) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 60, rotate: 0 }}
-              whileInView={{ opacity: 1, y: 0, rotate: card.rotate }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, duration: 0.6, ease: 'easeOut' }}
-              className="relative w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-2 sm:border-4 border-white"
-              style={{ zIndex: card.zIndex }}
-            >
-              <img
-                src={card.image}
-                alt={card.label}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                draggable={false}
+          {featuredImages.length === 0 ? (
+            Array.from({ length: 5 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-orange/20 to-brand-gold/20 animate-pulse border-2 sm:border-4 border-white"
+                style={{ transform: `rotate(${cardRotations[idx]}deg)`, zIndex: cardZIndices[idx] }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-red-400/40 via-orange-400/30 to-red-500/60" />
-            </motion.div>
-          ))}
+            ))
+          ) : (
+            featuredImages.map((img, idx) => (
+              <motion.button
+                key={img.id}
+                initial={{ opacity: 0, y: 60, rotate: 0 }}
+                whileInView={{ opacity: 1, y: 0, rotate: cardRotations[idx] }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1, duration: 0.6, ease: 'easeOut' }}
+                onClick={() => navigate('gallery')}
+                className="relative w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-2 sm:border-4 border-white hover:shadow-2xl transition-shadow"
+                style={{ zIndex: cardZIndices[idx] }}
+                aria-label={`View ${img.title}`}
+              >
+                <img
+                  src={img.url}
+                  alt={img.alt}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  draggable={false}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-red-400/40 via-orange-400/30 to-red-500/60" />
+                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-left">
+                  <span className="inline-block px-2 py-0.5 rounded-full bg-white/90 text-brand-dark text-[10px] sm:text-xs font-bold">
+                    {img.category}
+                  </span>
+                </div>
+              </motion.button>
+            ))
+          )}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="flex justify-center mb-8 sm:mb-10"
+        >
+          <button
+            onClick={() => navigate('gallery')}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-dark text-white font-semibold hover:bg-brand-orange transition-colors shadow-md group"
+          >
+            <Camera className="w-4 h-4" />
+            See Full Gallery
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

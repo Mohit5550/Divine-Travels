@@ -294,3 +294,16 @@ model TourBooking {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  alt       String?
+  category  String?  // e.g. "Adventure", "Trekking", "Camping", "Sightseeing"
+  featured  Boolean  @default(false) // show on homepage
+  order     Int      @default(0)     // for sorting
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Waves, Mountain, Compass, Bike, Car, Globe, Map, Landmark } from 'lucide-react'
+import { Waves, Mountain, Compass, Bike, Car, Globe, Map, Landmark, Camera } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 
@@ -13,6 +13,7 @@ const activities = [
   { id: 'international-tours', label: 'International', icon: Globe, color: 'bg-indigo-500' },
   { id: 'domestic-tours', label: 'Domestic', icon: Map, color: 'bg-teal-500' },
   { id: 'spiritual-tours', label: 'Spiritual', icon: Landmark, color: 'bg-amber-600' },
+  { id: 'gallery', label: 'Gallery', icon: Camera, color: 'bg-brand-orange' },
 ]
 
 export function ActivityBar() {
@@ -35,6 +36,8 @@ export function ActivityBar() {
       navigate('spiritual-tours')
     } else if (id === 'international-tours') {
       navigate('international-tours')
+    } else if (id === 'gallery') {
+      navigate('gallery')
     }
   }
 

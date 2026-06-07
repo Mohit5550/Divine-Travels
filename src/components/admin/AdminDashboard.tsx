@@ -28,6 +28,7 @@ import {
   FileText,
   Bed,
   Tent,
+  Camera,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
@@ -46,12 +47,13 @@ import { AdminTourBookings } from './AdminTourBookings'
 import { AdminTourDestinations } from './AdminTourDestinations'
 import { AdminAvailability } from './AdminAvailability'
 import { AdminNotificationBell } from './AdminNotificationBell'
+import { AdminGallery } from './AdminGallery'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
-  | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'reports'
+  | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
   | 'tour-bookings' | 'tour-destinations' | 'availability'
 
 const mainTabs = [
@@ -64,6 +66,7 @@ const mainTabs = [
   { id: 'inquiries' as AdminTab, label: 'Inquiries', icon: Mail },
   { id: 'coupons' as AdminTab, label: 'Coupons', icon: Ticket },
   { id: 'media' as AdminTab, label: 'Media', icon: Image },
+  { id: 'gallery' as AdminTab, label: 'Gallery', icon: Camera },
   { id: 'settings' as AdminTab, label: 'Settings', icon: Settings },
   { id: 'reports' as AdminTab, label: 'Reports', icon: FileText },
   { id: 'tour-bookings' as AdminTab, label: 'Tour Bookings', icon: CalendarCheck },
@@ -223,6 +226,8 @@ export function AdminDashboard() {
         return <AdminCoupons />
       case 'media':
         return <AdminMedia />
+      case 'gallery':
+        return <AdminGallery />
       case 'reports':
         return <AdminReports />
       case 'tour-bookings':
