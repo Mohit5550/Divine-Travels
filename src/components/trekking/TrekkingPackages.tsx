@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   Mountain,
-  Clock,
   Route,
   Star,
   ChevronRight,
@@ -16,6 +15,8 @@ import {
   MessageCircle,
   Phone,
   Zap,
+  Calendar,
+  Timer,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -44,6 +45,20 @@ interface PackageData {
   reviewCount: number
   featured: boolean
   location: string
+  routeLength: string
+  maxAltitude: string
+  baseCamp: string
+  pickupPoint: string
+  suitableFor: string
+  experience: string
+  fitness: string
+  bestSeason: string
+  gstRate: number
+  itinerary: string
+  thingsToCarry: string
+  howToReach: string
+  importantInfo: string
+  fixedDepartures: string
 }
 
 const fadeInUp = {
@@ -159,23 +174,23 @@ export function TrekkingPackages() {
 
         {/* Package Cards - 3 Column Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg animate-pulse">
-                <div className="h-48 sm:h-56 bg-muted" />
-                <div className="p-5 sm:p-6 space-y-4">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="h-16 bg-muted rounded-xl" />
-                    <div className="h-16 bg-muted rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg animate-pulse">
+                <div className="h-32 sm:h-48 bg-muted" />
+                <div className="p-3 sm:p-5 space-y-3">
+                  <div className="h-3 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-12 bg-muted rounded-lg" />
+                    <div className="h-12 bg-muted rounded-lg" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
             {packages.map((pkg, index) => {
               const DiffIcon = getDifficultyIcon(pkg.subtitle)
               const isModerate = pkg.badge === 'Moderate'
@@ -200,7 +215,7 @@ export function TrekkingPackages() {
                     isModerate ? 'ring-2 ring-brand-orange' : ''
                   }`}>
                     {/* Image Section */}
-                    <div className="relative h-48 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
+                    <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
                       <img
                         src={pkg.image}
                         alt={pkg.name}
@@ -210,81 +225,91 @@ export function TrekkingPackages() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                       {/* Badge */}
-                      <div className={`absolute top-4 left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
-                        {isModerate && <Star className="w-3 h-3 fill-white" />}
-                        {isDifficult && <Zap className="w-3 h-3" />}
-                        {!isModerate && !isDifficult && <Shield className="w-3 h-3" />}
+                      <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1`}>
+                        {isModerate && <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />}
+                        {isDifficult && <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                        {!isModerate && !isDifficult && <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                         {pkg.badge}
                       </div>
 
                       {/* Price floating badge */}
-                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+                      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
                         {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
                           <div className="flex flex-col items-end">
-                            <span className="line-through text-white/60 text-xs">₹{pkg.originalPrice}</span>
-                            <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
-                            <span className="text-emerald-500 text-[10px] font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
+                            <span className="line-through text-white/60 text-[10px] sm:text-xs">₹{pkg.originalPrice}</span>
+                            <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{pkg.price}</div>
+                            <span className="text-emerald-500 text-[9px] sm:text-[10px] font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
                           </div>
                         ) : (
-                          <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
+                          <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{pkg.price}</div>
                         )}
-                        <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
+                        <div className="text-muted-foreground text-[9px] sm:text-[10px] mt-0.5">per person</div>
                       </div>
 
                       {/* Bottom content on image */}
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-white font-bold text-lg sm:text-xl leading-tight">{pkg.name}</h3>
-                        <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
+                      <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
+                        <h3 className="text-white font-bold text-sm sm:text-xl leading-tight">{pkg.name}</h3>
+                        <p className="text-white/80 text-[11px] sm:text-sm mt-0.5 line-clamp-1">{pkg.subtitle}</p>
                       </div>
                     </div>
 
                     {/* Details Section */}
-                    <div className="p-5 sm:p-6 space-y-4">
+                    <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
                       {/* Key Specs - Grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                          </div>
+                      <div className="grid grid-cols-2 gap-1.5 sm:gap-2.5">
+                        <div className="bg-brand-cream/70 rounded-lg p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2">
+                          <Timer className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
                           <div>
-                            <div className="text-xs text-muted-foreground">Duration</div>
-                            <div className="text-sm font-semibold text-brand-dark">{pkg.duration}</div>
+                            <div className="text-[9px] sm:text-[10px] text-muted-foreground">Duration</div>
+                            <div className="text-[11px] sm:text-xs font-semibold text-brand-dark">{pkg.duration}</div>
                           </div>
                         </div>
-                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                            <MapPin className="w-4 h-4 text-blue-600" />
-                          </div>
+                        <div className="bg-brand-cream/70 rounded-lg p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2">
+                          <Route className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
                           <div>
-                            <div className="text-xs text-muted-foreground">Location</div>
-                            <div className="text-sm font-semibold text-brand-dark">{pkg.location || 'Uttarakhand'}</div>
+                            <div className="text-[9px] sm:text-[10px] text-muted-foreground">{pkg.routeLength ? 'Route Length' : 'Location'}</div>
+                            <div className="text-[11px] sm:text-xs font-semibold text-brand-dark line-clamp-1">{pkg.routeLength || pkg.location || 'Uttarakhand'}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-lg p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2">
+                          <Mountain className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
+                          <div>
+                            <div className="text-[9px] sm:text-[10px] text-muted-foreground">Max Altitude</div>
+                            <div className="text-[11px] sm:text-xs font-semibold text-brand-dark">{pkg.maxAltitude || '—'}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-lg p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2">
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
+                          <div>
+                            <div className="text-[9px] sm:text-[10px] text-muted-foreground">Best Season</div>
+                            <div className="text-[11px] sm:text-xs font-semibold text-brand-dark">{pkg.bestSeason || '—'}</div>
                           </div>
                         </div>
                       </div>
 
                       {/* Description */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mountain className="w-4 h-4 text-brand-orange shrink-0" />
-                        <span className="text-muted-foreground">{pkg.tagline}</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                        <Mountain className="w-3 h-3 sm:w-4 sm:h-4 text-brand-orange shrink-0" />
+                        <span className="text-muted-foreground line-clamp-1">{pkg.tagline}</span>
                       </div>
 
-                      {/* Target Demo */}
-                      <div className="flex items-start gap-2.5 text-sm">
-                        <DiffIcon className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-medium text-brand-dark">Best for: </span>
-                          <span className="text-muted-foreground">{pkg.targetDemo}</span>
+                      {/* Target Demo / Suitable For */}
+                      <div className="flex items-start gap-2 text-xs sm:text-sm">
+                        <DiffIcon className="w-3 h-3 sm:w-4 sm:h-4 text-brand-teal shrink-0 mt-0.5" />
+                        <div className="line-clamp-2">
+                          <span className="font-medium text-brand-dark">{pkg.suitableFor ? 'For: ' : 'Best for: '}</span>
+                          <span className="text-muted-foreground">{pkg.suitableFor || pkg.targetDemo}</span>
                         </div>
                       </div>
 
                       {/* Rating */}
                       {pkg.rating > 0 && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <div className="flex items-center gap-0.5">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-4 h-4 ${
+                                className={`w-3 h-3 sm:w-4 sm:h-4 ${
                                   i < Math.round(pkg.rating)
                                     ? 'fill-brand-gold text-brand-gold'
                                     : 'text-gray-200'
@@ -292,8 +317,8 @@ export function TrekkingPackages() {
                               />
                             ))}
                           </div>
-                          <span className="text-sm font-semibold text-brand-dark">{pkg.rating}</span>
-                          <span className="text-xs text-muted-foreground">({pkg.reviewCount} reviews)</span>
+                          <span className="text-xs sm:text-sm font-semibold text-brand-dark">{pkg.rating}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">({pkg.reviewCount})</span>
                         </div>
                       )}
 
@@ -301,31 +326,31 @@ export function TrekkingPackages() {
                       <div className="border-t border-border/50" />
 
                       {/* Price, View Details & Book */}
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-2">
                         <div>
                           {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>
-                              <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                              <span className="text-emerald-600 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
+                            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                              <span className="text-sm sm:text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>
+                              <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
+                              <span className="text-emerald-600 text-[10px] sm:text-xs font-semibold hidden sm:inline">Save ₹{pkg.originalPrice - pkg.price}</span>
                             </div>
                           ) : (
-                            <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
+                            <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
                           )}
-                          <span className="text-muted-foreground text-sm"> / Person</span>
+                          <span className="text-muted-foreground text-[11px] sm:text-sm"> / Person</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <Button
                             variant="outline"
                             onClick={() => handleViewDetails(pkg)}
-                            className="rounded-full px-4 h-10 text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5"
+                            className="rounded-full px-2.5 sm:px-4 h-8 sm:h-10 text-xs sm:text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5"
                           >
-                            <Eye className="w-4 h-4 mr-1.5" />
-                            Details
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1.5" />
+                            <span className="hidden sm:inline">Details</span>
                           </Button>
                           <Button
                             onClick={() => handleBookTrip(pkg)}
-                            className={`text-white rounded-full px-4 h-10 text-sm font-semibold shadow-lg ${
+                            className={`text-white rounded-full px-3 sm:px-4 h-8 sm:h-10 text-xs sm:text-sm font-semibold shadow-lg ${
                               isDifficult
                                 ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
                                 : isModerate
@@ -335,7 +360,7 @@ export function TrekkingPackages() {
                           >
                             <span className="flex items-center gap-1">
                               Book
-                              <ChevronRight className="w-4 h-4" />
+                              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                             </span>
                           </Button>
                         </div>

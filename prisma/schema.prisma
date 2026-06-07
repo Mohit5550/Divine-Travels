@@ -122,6 +122,21 @@ model Package {
   active             Boolean         @default(true)
   rating             Float           @default(0)
   reviewCount        Int             @default(0)
+  // Trekking-spec fields
+  routeLength        String          @default("")
+  maxAltitude        String          @default("")
+  baseCamp           String          @default("")
+  pickupPoint        String          @default("")
+  suitableFor        String          @default("")
+  experience         String          @default("")
+  fitness            String          @default("")
+  bestSeason         String          @default("")
+  gstRate            Int             @default(5)
+  itinerary          String          @default("[]")
+  thingsToCarry      String          @default("[]")
+  howToReach         String          @default("[]")
+  importantInfo      String          @default("")
+  fixedDepartures    String          @default("[]")
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   reviews            PackageReview[]

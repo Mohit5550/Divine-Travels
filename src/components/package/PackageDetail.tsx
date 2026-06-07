@@ -22,6 +22,10 @@ import {
   UsersRound,
   Timer,
   Phone,
+  Calendar,
+  Info,
+  Map,
+  Car,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +40,24 @@ interface PackageImage {
 interface FAQ {
   question: string
   answer: string
+}
+
+interface ItineraryDay {
+  day: number
+  title: string
+  startTime: string
+  endTime: string
+  altitude: string
+  altitudeGain: string
+  distance: string
+  hours: string
+  description: string
+}
+
+interface FixedDeparture {
+  date: string
+  status: 'available' | 'few-seats' | 'sold-out'
+  notes: string
 }
 
 interface Review {
@@ -76,9 +98,23 @@ interface PackageData {
   rating: number
   reviewCount: number
   reviews: Review[]
+  routeLength: string
+  maxAltitude: string
+  baseCamp: string
+  pickupPoint: string
+  suitableFor: string
+  experience: string
+  fitness: string
+  bestSeason: string
+  gstRate: number
+  itinerary: string
+  thingsToCarry: string
+  howToReach: string
+  importantInfo: string
+  fixedDepartures: string
 }
 
-type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs'
+type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'itinerary' | 'howToReach' | 'thingsToCarry' | 'importantInfo' | 'fixedDepartures'
 
 export function PackageDetail() {
   const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
@@ -106,6 +142,10 @@ export function PackageDetail() {
     inclusions: JSON.parse(pkg.inclusions || '[]') as string[],
     exclusions: JSON.parse(pkg.exclusions || '[]') as string[],
     faqs: JSON.parse(pkg.faqs || '[]') as FAQ[],
+    itinerary: JSON.parse(pkg.itinerary || '[]') as ItineraryDay[],
+    thingsToCarry: JSON.parse(pkg.thingsToCarry || '[]') as string[],
+    howToReach: JSON.parse(pkg.howToReach || '[]') as string[],
+    fixedDepartures: JSON.parse(pkg.fixedDepartures || '[]') as FixedDeparture[],
   } : null
 
   const handleBookNow = () => {
@@ -156,8 +196,13 @@ export function PackageDetail() {
   const sections: { id: DetailSection; label: string }[] = [
     { id: 'about', label: 'About' },
     { id: 'highlights', label: 'Highlights' },
+    { id: 'itinerary', label: 'Itinerary' },
     { id: 'inclusions', label: 'Inclusions' },
     { id: 'exclusions', label: 'Exclusions' },
+    { id: 'thingsToCarry', label: 'Things To Carry' },
+    { id: 'howToReach', label: 'How To Reach' },
+    { id: 'importantInfo', label: 'Important Info' },
+    { id: 'fixedDepartures', label: 'Departures' },
     { id: 'eligibility', label: 'Eligibility' },
     { id: 'location', label: 'Location' },
     { id: 'cancellation', label: 'Cancellation Policy' },
@@ -220,10 +265,19 @@ export function PackageDetail() {
         <Button
           variant="ghost"
           className="text-brand-dark hover:text-brand-orange"
-          onClick={() => navigate('rafting-packages')}
+          onClick={() => {
+            const viewMap: Record<string, string> = {
+              rafting: 'rafting-packages', trekking: 'trekking', adventure: 'adventure',
+              'bike-rental': 'bike-rental', 'taxi-booking': 'taxi-booking',
+              'domestic-tours': 'domestic-tours', international: 'international',
+              'international-tours': 'international', 'spiritual-tours': 'spiritual',
+              stay: 'stay',
+            }
+            navigate(viewMap[pkg.category] || 'rafting-packages')
+          }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Rafting Packages
+          Back to {pkg.category ? pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1).replace(/-/g, ' ') : 'Packages'}
         </Button>
       </div>
 
@@ -317,6 +371,59 @@ export function PackageDetail() {
               </div>
             </motion.div>
 
+            {/* Trekking Specs Strip */}
+            {(pkg.routeLength || pkg.maxAltitude) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 }}
+                className="bg-white rounded-xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+              >
+                {pkg.routeLength && (
+                  <div className="text-center">
+                    <Route className="w-4 h-4 text-blue-500 mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.routeLength}</div>
+                    <div className="text-[10px] text-muted-foreground">Route Length</div>
+                  </div>
+                )}
+                {pkg.maxAltitude && (
+                  <div className="text-center">
+                    <Map className="w-4 h-4 text-purple-500 mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.maxAltitude}</div>
+                    <div className="text-[10px] text-muted-foreground">Max Altitude</div>
+                  </div>
+                )}
+                {pkg.baseCamp && (
+                  <div className="text-center">
+                    <MapPin className="w-4 h-4 text-brand-teal mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.baseCamp}</div>
+                    <div className="text-[10px] text-muted-foreground">Base Camp</div>
+                  </div>
+                )}
+                {pkg.pickupPoint && (
+                  <div className="text-center">
+                    <Car className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.pickupPoint}</div>
+                    <div className="text-[10px] text-muted-foreground">Pickup Point</div>
+                  </div>
+                )}
+                {pkg.suitableFor && (
+                  <div className="text-center">
+                    <UsersRound className="w-4 h-4 text-green-500 mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.suitableFor}</div>
+                    <div className="text-[10px] text-muted-foreground">Suitable For</div>
+                  </div>
+                )}
+                {pkg.bestSeason && (
+                  <div className="text-center">
+                    <Calendar className="w-4 h-4 text-red-500 mx-auto mb-1" />
+                    <div className="text-xs font-semibold text-brand-dark">{pkg.bestSeason}</div>
+                    <div className="text-[10px] text-muted-foreground">Best Season</div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Trust Badges */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -394,16 +501,33 @@ export function PackageDetail() {
                   <div className="text-sm font-semibold text-brand-dark">{pkg.duration}</div>
                   <div className="text-xs text-muted-foreground">Duration</div>
                 </div>
-                <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
-                  <Waves className="w-5 h-5 text-red-500 mx-auto mb-1" />
-                  <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
-                  <div className="text-xs text-muted-foreground">Rapids</div>
-                </div>
-                <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
-                  <Clock className="w-5 h-5 text-green-500 mx-auto mb-1" />
-                  <div className="text-sm font-semibold text-brand-dark">{pkg.timings}</div>
-                  <div className="text-xs text-muted-foreground">Timings</div>
-                </div>
+                {pkg.routeLength ? (
+                  <>
+                    <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
+                      <Map className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+                      <div className="text-sm font-semibold text-brand-dark">{pkg.maxAltitude}</div>
+                      <div className="text-xs text-muted-foreground">Max Altitude</div>
+                    </div>
+                    <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
+                      <Calendar className="w-5 h-5 text-red-500 mx-auto mb-1" />
+                      <div className="text-sm font-semibold text-brand-dark">{pkg.bestSeason}</div>
+                      <div className="text-xs text-muted-foreground">Best Season</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
+                      <Waves className="w-5 h-5 text-red-500 mx-auto mb-1" />
+                      <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
+                      <div className="text-xs text-muted-foreground">Rapids</div>
+                    </div>
+                    <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
+                      <Clock className="w-5 h-5 text-green-500 mx-auto mb-1" />
+                      <div className="text-sm font-semibold text-brand-dark">{pkg.timings}</div>
+                      <div className="text-xs text-muted-foreground">Timings</div>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
 
@@ -429,6 +553,53 @@ export function PackageDetail() {
                     <p className="text-sm text-brand-dark">{highlight}</p>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+
+            {/* Itinerary */}
+            <motion.div
+              id="itinerary"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm"
+            >
+              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                Itinerary
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">Day-by-day plan</p>
+
+              <div className="space-y-3">
+                {parsedData.itinerary.length > 0 ? parsedData.itinerary.map((day: ItineraryDay, i: number) => (
+                  <div key={i} className="border border-border/50 rounded-xl overflow-hidden">
+                    <div className="bg-brand-cream/50 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0">
+                          <span className="text-sm font-bold text-brand-orange">D{day.day}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-brand-dark">{day.title}</p>
+                          {(day.startTime || day.endTime) && (
+                            <p className="text-xs text-muted-foreground">{day.startTime}{day.startTime && day.endTime ? ' - ' : ''}{day.endTime}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        {day.altitude && <span>↑ {day.altitude}</span>}
+                        {day.altitudeGain && <span>↗ {day.altitudeGain}</span>}
+                        {day.distance && <span>Dist: {day.distance}</span>}
+                        {day.hours && <span>Hours: {day.hours}</span>}
+                      </div>
+                    </div>
+                    {day.description && (
+                      <div className="px-4 py-3 text-sm text-muted-foreground leading-relaxed border-t border-border/50">
+                        {day.description}
+                      </div>
+                    )}
+                  </div>
+                )) : (
+                  <p className="text-muted-foreground text-sm">Detailed itinerary coming soon.</p>
+                )}
               </div>
             </motion.div>
 
@@ -474,6 +645,125 @@ export function PackageDetail() {
                 </div>
               </motion.div>
             </div>
+
+            {/* Things To Carry */}
+            <motion.div
+              id="thingsToCarry"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm"
+            >
+              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                Things To Carry
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">Pack these essentials</p>
+
+              {parsedData.thingsToCarry.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {parsedData.thingsToCarry.map((item: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted-foreground">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Packing list coming soon.</p>
+              )}
+            </motion.div>
+
+            {/* How To Reach */}
+            <motion.div
+              id="howToReach"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm"
+            >
+              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                How To Reach
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">Getting to the start point</p>
+
+              {parsedData.howToReach.length > 0 ? (
+                <div className="space-y-3">
+                  {parsedData.howToReach.map((item: string, i: number) => (
+                    <div key={i} className="flex items-start gap-3 p-3 bg-brand-cream/50 rounded-xl">
+                      <Car className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Travel details coming soon.</p>
+              )}
+            </motion.div>
+
+            {/* Important Info */}
+            <motion.div
+              id="importantInfo"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm"
+            >
+              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                Important Info
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">What you need to know</p>
+
+              {pkg.importantInfo ? (
+                <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+                  {pkg.importantInfo.split('\n\n').map((para: string, i: number) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Important information coming soon.</p>
+              )}
+            </motion.div>
+
+            {/* Fixed Departures */}
+            <motion.div
+              id="fixedDepartures"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm"
+            >
+              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                Fixed Departures
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">Guaranteed departure dates</p>
+
+              {parsedData.fixedDepartures.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {parsedData.fixedDepartures.map((dep: FixedDeparture, i: number) => {
+                    const statusColor = dep.status === 'available' ? 'bg-green-500' : dep.status === 'few-seats' ? 'bg-amber-500' : 'bg-red-500'
+                    const statusLabel = dep.status === 'available' ? 'Available' : dep.status === 'few-seats' ? 'Few Seats' : 'Sold Out'
+                    return (
+                      <div key={i} className="border border-border/50 rounded-xl p-4 flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5 text-brand-orange shrink-0" />
+                          <div>
+                            <p className="text-sm font-semibold text-brand-dark">
+                              {new Date(dep.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                            {dep.notes && <p className="text-xs text-muted-foreground mt-0.5">{dep.notes}</p>}
+                          </div>
+                        </div>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full text-white ${statusColor} shrink-0 ml-2`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Fixed departure dates coming soon.</p>
+              )}
+            </motion.div>
 
             {/* Eligibility */}
             <motion.div
@@ -727,14 +1017,29 @@ export function PackageDetail() {
                   <Timer className="w-4 h-4 text-amber-500" />
                   <span className="text-muted-foreground">{pkg.duration}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Waves className="w-4 h-4 text-red-500" />
-                  <span className="text-muted-foreground">{pkg.rapidsLevel} — {pkg.rapidsDescription}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Clock className="w-4 h-4 text-green-500" />
-                  <span className="text-muted-foreground">{pkg.timings}</span>
-                </div>
+                {pkg.routeLength ? (
+                  <>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Map className="w-4 h-4 text-purple-500" />
+                      <span className="text-muted-foreground">{pkg.routeLength}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <MapPin className="w-4 h-4 text-brand-teal" />
+                      <span className="text-muted-foreground">{pkg.baseCamp || '—'}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Waves className="w-4 h-4 text-red-500" />
+                      <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Clock className="w-4 h-4 text-green-500" />
+                      <span className="text-muted-foreground">{pkg.timings}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Book Button */}

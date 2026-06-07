@@ -55,6 +55,9 @@ export async function POST(request: Request) {
       inclusions, exclusions, eligibility, location,
       cancellationPolicy, faqs, badge, badgeColor, gradient,
       featured,
+      routeLength, maxAltitude, baseCamp, pickupPoint,
+      suitableFor, experience, fitness, bestSeason, gstRate,
+      itinerary, thingsToCarry, howToReach, importantInfo, fixedDepartures,
     } = body
 
     if (!name || !slug || !description || !price) {
@@ -90,6 +93,20 @@ export async function POST(request: Request) {
         badgeColor: badgeColor || 'bg-brand-orange',
         gradient: gradient || 'from-brand-orange/80 to-amber-600/80',
         featured: featured || false,
+        routeLength: routeLength || '',
+        maxAltitude: maxAltitude || '',
+        baseCamp: baseCamp || '',
+        pickupPoint: pickupPoint || '',
+        suitableFor: suitableFor || '',
+        experience: experience || '',
+        fitness: fitness || '',
+        bestSeason: bestSeason || '',
+        gstRate: typeof gstRate === 'number' ? gstRate : 5,
+        itinerary: itinerary || '[]',
+        thingsToCarry: thingsToCarry || '[]',
+        howToReach: howToReach || '[]',
+        importantInfo: importantInfo || '',
+        fixedDepartures: fixedDepartures || '[]',
       },
     })
 

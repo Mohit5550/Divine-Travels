@@ -193,11 +193,11 @@ export function RaftingPackages() {
 
         {/* Package Cards */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg animate-pulse">
                 <div className="h-48 sm:h-56 bg-muted" />
-                <div className="p-5 sm:p-6 space-y-4">
+                <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
                   <div className="h-4 bg-muted rounded w-3/4" />
                   <div className="h-4 bg-muted rounded w-1/2" />
                   <div className="grid grid-cols-2 gap-3">
@@ -211,7 +211,7 @@ export function RaftingPackages() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
             {packages.map((pkg, index) => {
               const TargetIcon = getTargetIcon(pkg.subtitle)
               const isPopular = pkg.badge === 'Most Popular'
@@ -235,7 +235,7 @@ export function RaftingPackages() {
                   <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer ${
                     isPopular ? 'ring-2 ring-brand-orange' : ''
                   }`}>
-                    <div className="relative h-48 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
+                    <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
                       <img
                         src={pkg.image}
                         alt={pkg.name}
@@ -244,25 +244,25 @@ export function RaftingPackages() {
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                      <div className={`absolute top-4 left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
+                      <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
                         {isPopular && <Star className="w-3 h-3 fill-white" />}
                         {isExtreme && <Zap className="w-3 h-3" />}
                         {!isPopular && !isExtreme && <Shield className="w-3 h-3" />}
                         {pkg.badge}
                       </div>
 
-                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+                      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
                         <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
                         <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
                       </div>
 
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-white font-bold text-lg sm:text-xl leading-tight">{pkg.name}</h3>
+                      <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
+                        <h3 className="text-white font-bold text-sm sm:text-xl leading-tight">{pkg.name}</h3>
                         <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
                       </div>
                     </div>
 
-                    <div className="p-5 sm:p-6 space-y-4">
+                    <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
                           <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
@@ -408,7 +408,7 @@ export function RaftingPackages() {
           <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">
             Rishikesh Rafting Packages & Pricing 2026
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
               <h3 className="font-bold text-lg text-brand-dark mb-2">1. Brahmpuri Rafting (9 Km)</h3>
               <p className="text-brand-orange font-bold text-xl mb-2">₹399/- Per Person</p>

@@ -24,7 +24,7 @@ export function Footer() {
               <img
                 src="/logo.png"
                 alt="Divine Travel"
-                className="h-14 w-auto object-contain brightness-0 invert"
+                className="h-12 w-auto object-contain invert"
                 draggable={false}
               />
             </div>
