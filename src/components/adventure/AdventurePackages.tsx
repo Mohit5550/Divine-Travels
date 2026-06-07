@@ -306,7 +306,7 @@ export function AdventurePackages() {
             <p className="text-white/60 max-w-lg mx-auto mb-6">Book your adventure today! Contact us for group discounts and custom packages.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a href="https://wa.me/916396919007?text=Hi%20I%20want%20to%20book%20an%20adventure%20activity" target="_blank" rel="noopener noreferrer"><Button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-8 h-12"><MessageCircle className="w-5 h-5 mr-2" />WhatsApp Us</Button></a>
-              <a href="tel:+916396919007"><Button variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-12"><Phone className="w-5 h-5 mr-2" />Call Now</Button></a>
+              <a href="tel:+916396919007"><Button variant="outline" className="border-white/40 bg-white text-brand-dark hover:bg-white/90 rounded-full px-8 h-12"><Phone className="w-5 h-5 mr-2" />Call Now</Button></a>
             </div>
           </div>
         </motion.div>

@@ -344,7 +344,15 @@ export function PackageDetail() {
                 {sections.map((section) => (
                   <button
                     key={section.id}
-                    onClick={() => setActiveSection(section.id)}
+                    onClick={() => {
+                      setActiveSection(section.id)
+                      const el = document.getElementById(section.id)
+                      if (el) {
+                        const offset = 120
+                        const y = el.getBoundingClientRect().top + window.scrollY - offset
+                        window.scrollTo({ top: y, behavior: 'smooth' })
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                       activeSection === section.id
                         ? 'bg-brand-orange text-white'

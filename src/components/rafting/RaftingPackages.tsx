@@ -519,7 +519,7 @@ export function RaftingPackages() {
                 </Button>
               </a>
               <a href="tel:+916396919007">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-12">
+                <Button variant="outline" className="border-white/40 bg-white text-brand-dark hover:bg-white/90 rounded-full px-8 h-12">
                   <Phone className="w-5 h-5 mr-2" />
                   Call Now
                 </Button>

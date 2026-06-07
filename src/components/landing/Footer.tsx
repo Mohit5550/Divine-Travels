@@ -1,6 +1,6 @@
 'use client'
 
-import { Compass, Mail, Phone, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
+import { Mail, Phone, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 
 export function Footer() {
@@ -20,14 +20,13 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-brand-orange flex items-center justify-center">
-                <Compass className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <span className="font-serif text-xl">Divine Travel</span>
-                <p className="text-brand-gold text-[10px] tracking-widest uppercase">Explore the Sacred</p>
-              </div>
+            <div className="mb-4">
+              <img
+                src="/logo.png"
+                alt="Divine Travel"
+                className="h-14 w-auto object-contain brightness-0 invert"
+                draggable={false}
+              />
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
               Your trusted partner for exploring the divine beauty of India. From spiritual pilgrimages to adventure getaways — we craft experiences that stay with you forever.

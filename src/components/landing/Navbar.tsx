@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, User, LogOut, LayoutDashboard, Compass, Heart, ShoppingCart, Loader2 } from 'lucide-react'
+import { Search, Menu, X, User, LogOut, LayoutDashboard, Heart, ShoppingCart, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoginModal } from './LoginModal'
 
@@ -112,12 +112,12 @@ export function Navbar() {
               onClick={() => navigate('landing')}
               className="flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-orange flex items-center justify-center">
-                <Compass className="w-5 h-5 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="font-bold text-lg sm:text-xl text-brand-dark">
-                Divine Travel
-              </span>
+              <img
+                src="/logo.png"
+                alt="Divine Travel"
+                className="h-10 sm:h-12 w-auto object-contain"
+                draggable={false}
+              />
             </button>
 
             <div ref={searchRef} className="hidden md:flex flex-1 max-w-md mx-4 relative">
@@ -354,12 +354,6 @@ export function Navbar() {
                   className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
                 >
                   Home
-                </button>
-                <button
-                  onClick={() => { navigate('landing'); setMobileMenuOpen(false) }}
-                  className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
-                >
-                  Experiences
                 </button>
                 {isAuthenticated ? (
                   <>

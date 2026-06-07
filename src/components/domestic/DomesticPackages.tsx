@@ -2,7 +2,8 @@
 
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Map,
   Clock,
@@ -13,6 +14,7 @@ import {
   MessageCircle,
   Phone,
   Compass,
+  Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -45,15 +47,16 @@ const fadeInUp = {
 }
 
 const regions = [
-  { name: 'North India', color: 'bg-blue-500', states: 'Kashmir, Himachal, Uttarakhand, Ladakh, UP' },
-  { name: 'South India', color: 'bg-green-500', states: 'Kerala, Tamil Nadu, Karnataka, Andhra, Lakshadweep' },
-  { name: 'East India', color: 'bg-purple-500', states: 'Assam, Meghalaya, West Bengal' },
-  { name: 'West India', color: 'bg-amber-500', states: 'Rajasthan, Gujarat, Goa, Maharashtra, MP' },
-  { name: 'Near India', color: 'bg-red-500', states: 'Sri Lanka, Nepal, Bhutan' },
+  { name: 'North India', value: 'North', color: 'bg-blue-500', states: 'Kashmir, Himachal, Uttarakhand, Ladakh, UP' },
+  { name: 'South India', value: 'South', color: 'bg-green-500', states: 'Kerala, Tamil Nadu, Karnataka, Andhra, Lakshadweep' },
+  { name: 'East India', value: 'East', color: 'bg-purple-500', states: 'Assam, Meghalaya, West Bengal' },
+  { name: 'West India', value: 'West', color: 'bg-amber-500', states: 'Rajasthan, Gujarat, Goa, Maharashtra, MP' },
+  { name: 'Near India', value: 'Around', color: 'bg-red-500', states: 'Sri Lanka, Nepal, Bhutan' },
 ]
 
 export function DomesticPackages() {
   const { navigate, isAuthenticated } = useAppStore()
+  const [activeRegion, setActiveRegion] = useState<string>('All')
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['domestic-packages'],
@@ -63,6 +66,11 @@ export function DomesticPackages() {
       return data as PackageData[]
     },
   })
+
+  const filteredPackages = useMemo(() => {
+    if (activeRegion === 'All') return packages
+    return packages.filter((pkg) => pkg.badge === activeRegion)
+  }, [packages, activeRegion])
 
   const handleBookTrip = (pkg: PackageData) => {
     if (!isAuthenticated) {
@@ -129,18 +137,53 @@ export function DomesticPackages() {
           <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">Curated tours across India's most incredible destinations</p>
         </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {regions.map((region, idx) => (
-            <motion.div
-              key={region.name}
+        <div className="flex flex-col items-center gap-4 mb-10">
+          <div className="inline-flex items-center gap-2 text-muted-foreground text-sm">
+            <Filter className="w-4 h-4" />
+            <span>Filter by region</span>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            <motion.button
+              type="button"
+              onClick={() => setActiveRegion('All')}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className={`${region.color} text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md`}
+              transition={{ delay: 0 }}
+              className={`text-sm font-semibold px-4 py-2 rounded-full shadow-md transition-all duration-200 cursor-pointer ${
+                activeRegion === 'All'
+                  ? 'bg-brand-dark text-white ring-2 ring-brand-orange ring-offset-2 scale-105'
+                  : 'bg-white text-brand-dark border border-border hover:border-brand-orange hover:text-brand-orange'
+              }`}
             >
-              {region.name}
-            </motion.div>
-          ))}
+              All India
+              <span className={`ml-1.5 text-xs ${activeRegion === 'All' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                ({packages.length})
+              </span>
+            </motion.button>
+            {regions.map((region, idx) => {
+              const count = packages.filter((p) => p.badge === region.value).length
+              return (
+                <motion.button
+                  key={region.name}
+                  type="button"
+                  onClick={() => setActiveRegion(region.value)}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (idx + 1) * 0.05 }}
+                  className={`text-sm font-semibold px-4 py-2 rounded-full shadow-md transition-all duration-200 cursor-pointer ${
+                    activeRegion === region.value
+                      ? `${region.color} text-white ring-2 ring-brand-orange ring-offset-2 scale-105`
+                      : `${region.color} text-white opacity-60 hover:opacity-100`
+                  }`}
+                >
+                  {region.name}
+                  <span className={`ml-1.5 text-xs ${activeRegion === region.value ? 'text-white/90' : 'text-white/70'}`}>
+                    ({count})
+                  </span>
+                </motion.button>
+              )
+            })}
+          </div>
         </div>
 
         {isLoading ? (
@@ -158,15 +201,31 @@ export function DomesticPackages() {
               </div>
             ))}
           </div>
+        ) : filteredPackages.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-full bg-brand-orange/10 flex items-center justify-center mx-auto mb-4">
+              <Map className="w-8 h-8 text-brand-orange" />
+            </div>
+            <h3 className="text-xl font-semibold text-brand-dark mb-2">No packages in this region yet</h3>
+            <p className="text-muted-foreground">We&apos;re adding new tours to this region soon. Check back later!</p>
+            <Button
+              onClick={() => setActiveRegion('All')}
+              className="mt-6 bg-brand-orange hover:bg-brand-orange/90 text-white rounded-full px-6 h-11"
+            >
+              View All Packages
+            </Button>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {packages.map((pkg, index) => (
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <AnimatePresence mode="popLayout">
+              {filteredPackages.map((pkg, index) => (
               <motion.div
                 key={pkg.id}
+                layout
                 initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: index * 0.05, duration: 0.4 }}
                 className="relative group"
               >
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer">
@@ -258,7 +317,8 @@ export function DomesticPackages() {
                 </div>
               </motion.div>
             ))}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
 
@@ -295,7 +355,7 @@ export function DomesticPackages() {
             <p className="text-white/60 max-w-lg mx-auto mb-6">Book your domestic tour today! Custom itineraries and group discounts available.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a href="https://wa.me/916396919007?text=Hi%20I%20want%20to%20book%20a%20domestic%20tour" target="_blank" rel="noopener noreferrer"><Button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-8 h-12"><MessageCircle className="w-5 h-5 mr-2" />WhatsApp Us</Button></a>
-              <a href="tel:+916396919007"><Button variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8 h-12"><Phone className="w-5 h-5 mr-2" />Call Now</Button></a>
+              <a href="tel:+916396919007"><Button variant="outline" className="border-white/40 bg-white text-brand-dark hover:bg-white/90 rounded-full px-8 h-12"><Phone className="w-5 h-5 mr-2" />Call Now</Button></a>
             </div>
           </div>
         </motion.div>

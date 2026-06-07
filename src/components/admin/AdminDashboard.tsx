@@ -252,7 +252,12 @@ export function AdminDashboard() {
       >
         <div className="p-4 flex items-center justify-between border-b border-white/10">
           {!sidebarCollapsed && (
-            <span className="font-serif text-lg text-white">Divine Travel</span>
+            <img
+              src="/logo.png"
+              alt="Divine Travel"
+              className="h-9 w-auto object-contain brightness-0 invert"
+              draggable={false}
+            />
           )}
           <div className="flex items-center gap-2">
             <button
@@ -300,7 +305,12 @@ export function AdminDashboard() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 border-b border-white/10">
-                <span className="font-serif text-lg text-white">Divine Travel</span>
+                <img
+                  src="/logo.png"
+                  alt="Divine Travel"
+                  className="h-9 w-auto object-contain brightness-0 invert"
+                  draggable={false}
+                />
               </div>
               <SidebarContent
                 user={user}

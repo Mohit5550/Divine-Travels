@@ -2172,6 +2172,63 @@ async function main() {
     })
   }
 
+  // ============ INTERNATIONAL TOUR PACKAGES ============
+  const internationalPackages = [
+    { name: 'Thailand Tour', slug: 'thailand-tour', tagline: 'Land of smiles — Bangkok, Phuket & Krabi paradise', subtitle: 'Southeast Asia', price: 39999, originalPrice: 59999, duration: '5 Nights / 6 Days', location: 'Bangkok, Phuket, Krabi, Pattaya', badge: 'Asia', badgeColor: 'bg-blue-600', gradient: 'from-blue-600/80 to-indigo-700/80', image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?q=80&w=800' },
+    { name: 'Dubai Tour', slug: 'dubai-tour', tagline: 'City of gold — Burj Khalifa, desert safari & luxury shopping', subtitle: 'Middle East', price: 49999, originalPrice: 69999, duration: '4 Nights / 5 Days', location: 'Dubai, Abu Dhabi, Sharjah', badge: 'Middle East', badgeColor: 'bg-amber-600', gradient: 'from-amber-600/80 to-orange-700/80', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=800' },
+    { name: 'Bali Tour', slug: 'bali-tour', tagline: 'Island of gods — temples, rice terraces & pristine beaches', subtitle: 'Southeast Asia', price: 44999, originalPrice: 64999, duration: '4 Nights / 5 Days', location: 'Bali, Ubud, Seminyak, Uluwatu', badge: 'Asia', badgeColor: 'bg-blue-600', gradient: 'from-blue-600/80 to-teal-700/80', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800' },
+    { name: 'Singapore Tour', slug: 'singapore-tour', tagline: 'Garden city — Sentosa, Marina Bay & universal studios', subtitle: 'Southeast Asia', price: 42999, originalPrice: 59999, duration: '4 Nights / 5 Days', location: 'Singapore City, Sentosa, Changi', badge: 'Asia', badgeColor: 'bg-blue-600', gradient: 'from-blue-600/80 to-red-700/80', image: 'https://images.unsplash.com/photo-1569433819547-8a4a67a7fcb0?q=80&w=800' },
+    { name: 'Maldives Tour', slug: 'maldives-tour', tagline: 'Tropical paradise — overwater villas & crystal-clear lagoons', subtitle: 'South Asia', price: 69999, originalPrice: 89999, duration: '4 Nights / 5 Days', location: 'Male, North Malé Atoll, South Malé Atoll', badge: 'Island', badgeColor: 'bg-cyan-600', gradient: 'from-cyan-600/80 to-blue-700/80', image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=800' },
+    { name: 'Sri Lanka Tour', slug: 'sri-lanka-international-tour', tagline: 'Pearl of Indian Ocean — beaches, temples & tea country', subtitle: 'South Asia', price: 24999, originalPrice: 34999, duration: '5 Nights / 6 Days', location: 'Colombo, Kandy, Galle, Nuwara Eliya, Sigiriya', badge: 'South Asia', badgeColor: 'bg-green-600', gradient: 'from-green-600/80 to-emerald-700/80', image: 'https://images.unsplash.com/photo-1540202404-a2f29016b523?q=80&w=800' },
+    { name: 'Nepal Tour', slug: 'nepal-international-tour', tagline: 'Himalayan kingdom — Kathmandu, Pokhara & Chitwan safari', subtitle: 'South Asia', price: 19999, originalPrice: 29999, duration: '5 Nights / 6 Days', location: 'Kathmandu, Pokhara, Chitwan, Nagarkot', badge: 'South Asia', badgeColor: 'bg-green-600', gradient: 'from-green-600/80 to-teal-700/80', image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=800' },
+    { name: 'Bhutan Tour', slug: 'bhutan-international-tour', tagline: 'Land of Thunder Dragon — monasteries, forts & happiness', subtitle: 'South Asia', price: 29999, originalPrice: 39999, duration: '5 Nights / 6 Days', location: 'Paro, Thimphu, Punakha, Phobjikha', badge: 'South Asia', badgeColor: 'bg-green-600', gradient: 'from-green-600/80 to-purple-700/80', image: 'https://images.unsplash.com/photo-1527853787696-f7be74f2e39a?q=80&w=800' },
+    { name: 'Vietnam Tour', slug: 'vietnam-tour', tagline: 'Ha Long Bay, Hanoi & Ho Chi Minh — timeless beauty', subtitle: 'Southeast Asia', price: 34999, originalPrice: 49999, duration: '6 Nights / 7 Days', location: 'Hanoi, Ha Long Bay, Da Nang, Ho Chi Minh', badge: 'Asia', badgeColor: 'bg-blue-600', gradient: 'from-blue-600/80 to-red-700/80', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800' },
+    { name: 'Switzerland Tour', slug: 'switzerland-tour', tagline: 'Alpine paradise — Swiss Alps, Interlaken & Lucerne', subtitle: 'Europe', price: 129999, originalPrice: 159999, duration: '7 Nights / 8 Days', location: 'Zurich, Interlaken, Lucerne, Geneva, Jungfrau', badge: 'Europe', badgeColor: 'bg-purple-600', gradient: 'from-purple-600/80 to-violet-700/80', image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=800' },
+    { name: 'Paris Tour', slug: 'paris-tour', tagline: 'City of love — Eiffel Tower, Louvre & Seine river cruise', subtitle: 'Europe', price: 89999, originalPrice: 119999, duration: '5 Nights / 6 Days', location: 'Paris, Versailles, Disneyland Paris', badge: 'Europe', badgeColor: 'bg-purple-600', gradient: 'from-purple-600/80 to-pink-700/80', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800' },
+    { name: 'London Tour', slug: 'london-tour', tagline: 'Royal capital — Big Ben, Buckingham Palace & London eye', subtitle: 'Europe', price: 94999, originalPrice: 124999, duration: '5 Nights / 6 Days', location: 'London, Windsor, Oxford, Stonehenge', badge: 'Europe', badgeColor: 'bg-purple-600', gradient: 'from-purple-600/80 to-blue-700/80', image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=800' },
+    { name: 'Egypt Tour', slug: 'egypt-tour', tagline: 'Land of pharaohs — pyramids, Nile cruise & luxor temples', subtitle: 'Middle East', price: 59999, originalPrice: 79999, duration: '6 Nights / 7 Days', location: 'Cairo, Luxor, Aswan, Alexandria', badge: 'Middle East', badgeColor: 'bg-amber-600', gradient: 'from-amber-600/80 to-yellow-700/80', image: 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=800' },
+    { name: 'Turkey Tour', slug: 'turkey-tour', tagline: 'Where East meets West — Istanbul, Cappadocia & Pamukkale', subtitle: 'Middle East', price: 69999, originalPrice: 94999, duration: '7 Nights / 8 Days', location: 'Istanbul, Cappadocia, Pamukkale, Antalya, Ephesus', badge: 'Middle East', badgeColor: 'bg-amber-600', gradient: 'from-amber-600/80 to-red-700/80', image: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=800' },
+    { name: 'Malaysia Tour', slug: 'malaysia-tour', tagline: 'Truly Asia — Kuala Lumpur, Langkawi & Genting Highlands', subtitle: 'Southeast Asia', price: 38000, originalPrice: 52999, duration: '5 Nights / 6 Days', location: 'Kuala Lumpur, Langkawi, Genting Highlands, Penang', badge: 'Asia', badgeColor: 'bg-blue-600', gradient: 'from-blue-600/80 to-indigo-700/80', image: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=800' },
+  ]
+
+  for (const i of internationalPackages) {
+    await prisma.package.create({
+      data: {
+        name: i.name,
+        slug: i.slug,
+        tagline: i.tagline,
+        subtitle: i.subtitle,
+        description: `${i.name} — ${i.tagline}. Explore the world with Divine Travels. Package includes ${i.duration} of curated international experiences, comfortable accommodations, expert guides, and seamless transfers.`,
+        price: i.price,
+        originalPrice: i.originalPrice || null,
+        image: i.image,
+        images: JSON.stringify([i.image, 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800']),
+        category: 'international-tours',
+        distance: '',
+        duration: i.duration,
+        timings: 'Flexible departure',
+        highlights: JSON.stringify([`Destination: ${i.location}`, `${i.duration} curated tour`, 'Comfortable accommodations', 'Expert local guide', 'All transfers included', 'Visa assistance provided']),
+        inclusions: JSON.stringify(['Hotel accommodation as per itinerary', 'Daily breakfast', 'All transfers by private vehicle', 'English-speaking tour guide', 'All permits and entry fees', 'Visa assistance', '24/7 customer support']),
+        exclusions: JSON.stringify(['International airfare', 'Personal expenses', 'Travel insurance', 'Meals not mentioned in itinerary', 'Tips and gratuities', 'Visa fees']),
+        eligibility: 'Valid passport required with minimum 6 months validity. Minors must be accompanied by adults.',
+        location: i.location,
+        cancellationPolicy: '100% refund if cancelled 30 days before departure. 50% refund if cancelled 15-30 days before. No refund within 15 days of departure.',
+        faqs: JSON.stringify([
+          { question: 'Is this a group or private tour?', answer: 'We offer both group and private tour options. Private tours can be customized to your preferences.' },
+          { question: 'Do I need a visa?', answer: 'Visa requirements vary by destination. We provide visa assistance for all our international packages.' },
+          { question: 'Is airfare included?', answer: 'International airfare is not included in the package price. We can assist with flight bookings separately.' },
+          { question: 'What is the group size?', answer: 'Group tours typically have 10-20 travelers. Private tours are for your group only.' },
+        ]),
+        badge: i.badge,
+        badgeColor: i.badgeColor,
+        gradient: i.gradient,
+        featured: true,
+        rating: 4.7,
+        reviewCount: Math.floor(Math.random() * 25) + 8,
+      },
+    })
+  }
+
   // ============ COUPONS ============
   await prisma.coupon.createMany({
     data: [
@@ -2196,7 +2253,7 @@ async function main() {
   console.log('Seed data created successfully!')
   console.log(`Admin: divinetravels.in.info@gmail.com / Divine@198#`)
   console.log(`User: user@test.com / user123`)
-  console.log(`16 destinations, 85 packages (3 rafting + 7 bike + 7 taxi + 10 trekking + 26 adventure + 21 domestic + 11 spiritual + 3 hotel + 3 camping)`)
+  console.log(`16 destinations, 100 packages (3 rafting + 7 bike + 7 taxi + 10 trekking + 26 adventure + 21 domestic + 11 spiritual + 3 hotel + 3 camping + 15 international)`)
   console.log(`9 site settings, 4 coupons, 6 media items`)
 }
 

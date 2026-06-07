@@ -33,6 +33,8 @@ export function ActivityBar() {
       navigate('domestic-tours')
     } else if (id === 'spiritual-tours') {
       navigate('spiritual-tours')
+    } else if (id === 'international-tours') {
+      navigate('international-tours')
     }
   }
 

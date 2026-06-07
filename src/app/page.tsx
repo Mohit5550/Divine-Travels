@@ -11,6 +11,8 @@ import { AdventureGrid } from '@/components/landing/AdventureGrid'
 import { StaySection } from '@/components/landing/StaySection'
 import { CTABanner } from '@/components/landing/CTABanner'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
+import { PartnersSection } from '@/components/landing/PartnersSection'
+import { SocialCTASection } from '@/components/landing/SocialCTASection'
 import { Footer } from '@/components/landing/Footer'
 import { UserDashboard } from '@/components/user/UserDashboard'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
@@ -23,6 +25,7 @@ import { TrekkingPackages } from '@/components/trekking/TrekkingPackages'
 import { AdventurePackages } from '@/components/adventure/AdventurePackages'
 import { DomesticPackages } from '@/components/domestic/DomesticPackages'
 import { SpiritualPackages } from '@/components/spiritual/SpiritualPackages'
+import { InternationalPackages } from '@/components/international/InternationalPackages'
 import { RishikeshTour } from '@/components/tours/RishikeshTour'
 import { HaridwarTour } from '@/components/tours/HaridwarTour'
 import { MussoorieTour } from '@/components/tours/MussoorieTour'
@@ -67,6 +70,8 @@ export default function Home() {
         return <DomesticPackages />
       case 'spiritual-tours':
         return <SpiritualPackages />
+      case 'international-tours':
+        return <InternationalPackages />
       case 'rishikesh-tour':
         return <RishikeshTour />
       case 'haridwar-tour':
@@ -107,10 +112,12 @@ export default function Home() {
             <ActivityBar />
             <HeroBanner />
             <DestinationCarousel />
-            <TopDestinations />
             <AdventureGrid />
+            <TopDestinations />
             <StaySection />
             <TestimonialsSection />
+            <PartnersSection />
+            <SocialCTASection />
             <CTABanner />
             <Footer />
           </>
@@ -119,7 +126,7 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar (handled internally)
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
 
   return (
     <main className="min-h-screen flex flex-col">

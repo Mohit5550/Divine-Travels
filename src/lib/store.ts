@@ -66,6 +66,9 @@ export const useAppStore = create<AppStore>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         isAdmin: state.isAdmin,
+        currentView: state.currentView,
+        selectedDestinationId: state.selectedDestinationId,
+        selectedPackageId: state.selectedPackageId,
       }),
     }
   )
