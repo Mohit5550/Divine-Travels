@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Phone, Instagram, Youtube, Facebook, Linkedin } from 'lucide-react'
+import { Phone, Instagram, Youtube, Facebook } from 'lucide-react'
 
 interface SocialLink {
   platform: 'instagram' | 'youtube' | 'facebook' | 'linkedin'
@@ -43,17 +43,15 @@ const adventureCards = [
 
 // TODO: Replace these placeholder social links with your real URLs
 const socialLinks: SocialLink[] = [
-  { platform: 'instagram', href: 'https://instagram.com/' },
-  { platform: 'youtube', href: 'https://youtube.com/' },
-  { platform: 'facebook', href: 'https://facebook.com/' },
-  { platform: 'linkedin', href: 'https://linkedin.com/' },
+  { platform: 'instagram', href: 'https://www.instagram.com/divinetravels.in' },
+  { platform: 'youtube', href: 'https://youtube.com/@divinetravelsuk14' },
+  { platform: 'facebook', href: 'https://www.facebook.com/share/1ERbuic1Zk/' },
 ]
 
 const platformColors: Record<SocialLink['platform'], string> = {
   instagram: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',
-  linkedin: 'bg-sky-700',
 }
 
 const PlatformIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
@@ -62,7 +60,6 @@ const PlatformIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
     case 'instagram': return <Instagram {...iconProps} />
     case 'youtube': return <Youtube {...iconProps} />
     case 'facebook': return <Facebook {...iconProps} />
-    case 'linkedin': return <Linkedin {...iconProps} />
   }
 }
 
