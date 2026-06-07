@@ -355,12 +355,6 @@ export function Navbar() {
                 >
                   Home
                 </button>
-                <button
-                  onClick={() => { navigate('gallery'); setMobileMenuOpen(false) }}
-                  className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
-                >
-                  Gallery
-                </button>
                 {isAuthenticated ? (
                   <>
                     <button
