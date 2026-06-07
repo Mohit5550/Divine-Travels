@@ -54,7 +54,9 @@ export function DestinationCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const [isPaused, setIsPaused] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const { data: destinations = [], isLoading } = useQuery({
     queryKey: ['destinations-carousel'],
@@ -94,6 +96,24 @@ export function DestinationCarousel() {
   useEffect(() => {
     updateScrollButtons()
   }, [destinations])
+
+  useEffect(() => {
+    if (destinations.length === 0) return
+    autoScrollRef.current = setInterval(() => {
+      if (isPaused) return
+      if (!scrollRef.current) return
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      const cardWidth = scrollRef.current.children[0]?.clientWidth || 280
+      const gap = 16
+      const maxScroll = scrollWidth - clientWidth
+      if (scrollLeft + cardWidth + gap >= maxScroll - 5) {
+        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        scrollRef.current.scrollBy({ left: cardWidth + gap, behavior: 'smooth' })
+      }
+    }, 3000)
+    return () => { if (autoScrollRef.current) clearInterval(autoScrollRef.current) }
+  }, [destinations.length, isPaused])
 
   const scrollBy = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -169,6 +189,8 @@ export function DestinationCarousel() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
               className="flex gap-4 overflow-x-auto overflow-y-hidden hide-scrollbar scroll-smooth snap-x snap-mandatory px-2"
             >
               {destinations.map((dest, index) => (
