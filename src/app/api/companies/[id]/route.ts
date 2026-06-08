@@ -36,6 +36,7 @@ export async function PUT(
         name: body.name,
         slug: body.slug,
         logo: body.logo,
+        photo: body.photo,
         description: body.description,
         website: body.website,
         order: body.order,

@@ -7,7 +7,7 @@ import { ActivityBar } from '@/components/landing/ActivityBar'
 import { HeroBanner } from '@/components/landing/HeroBanner'
 import { DestinationCarousel } from '@/components/landing/DestinationCarousel'
 import { TopDestinations } from '@/components/landing/TopDestinations'
-import { AdventureGrid } from '@/components/landing/AdventureGrid'
+import { CompanySection } from '@/components/landing/CompanySection'
 import { StaySection } from '@/components/landing/StaySection'
 import { CTABanner } from '@/components/landing/CTABanner'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
@@ -121,7 +121,7 @@ export default function Home() {
             <ActivityBar />
             <HeroBanner />
             <DestinationCarousel />
-            <AdventureGrid />
+            <CompanySection />
             <TopDestinations />
             <StaySection />
             <TestimonialsSection />

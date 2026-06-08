@@ -22,6 +22,7 @@ interface Company {
   name: string
   slug: string
   logo: string | null
+  photo: string | null
   description: string | null
   website: string | null
   active: boolean
@@ -44,7 +45,7 @@ interface CompanyPlan {
   order: number
 }
 
-const emptyCompany = { name: '', slug: '', logo: '', description: '', website: '' }
+const emptyCompany = { name: '', slug: '', logo: '', photo: '', description: '', website: '' }
 const emptyPlan = { name: '', description: '', price: 0, category: '', duration: '', highlights: '' }
 
 export function AdminCompanyPlans() {
@@ -241,7 +242,7 @@ export function AdminCompanyPlans() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setEditingCompany(company); setCompanyForm({ name: company.name, slug: company.slug, logo: company.logo || '', description: company.description || '', website: company.website || '' }); setShowCompanyForm(true) }}>
+                <Button variant="ghost" size="sm" onClick={() => { setEditingCompany(company); setCompanyForm({ name: company.name, slug: company.slug, logo: company.logo || '', photo: company.photo || '', description: company.description || '', website: company.website || '' }); setShowCompanyForm(true) }}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
                 <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteCompany(company.id)}>
@@ -313,6 +314,7 @@ function CompanyFormModal({ form, setForm, editing, onSave, onClose }: {
           <Input label="Company Name" value={form.name} onChange={(v) => setForm({ ...form, name: v, slug: editing ? form.slug : v.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })} />
           <Input label="Slug" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} />
           <Input label="Logo URL" value={form.logo} onChange={(v) => setForm({ ...form, logo: v })} />
+          <Input label="Photo URL (card background)" value={form.photo} onChange={(v) => setForm({ ...form, photo: v })} />
           <Input label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
           <Input label="Website" value={form.website} onChange={(v) => setForm({ ...form, website: v })} />
         </div>

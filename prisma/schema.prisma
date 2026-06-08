@@ -287,6 +287,7 @@ model Company {
   name        String
   slug        String         @unique
   logo        String?
+  photo       String?
   description String?
   website     String?
   order       Int            @default(0)

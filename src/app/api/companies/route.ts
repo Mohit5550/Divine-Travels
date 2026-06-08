@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, slug, logo, description, website } = body
+    const { name, slug, logo, photo, description, website } = body
 
     if (!name || !slug) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const company = await db.company.create({
-      data: { name, slug, logo, description, website },
+      data: { name, slug, logo, photo, description, website },
     })
 
     return NextResponse.json(company, { status: 201 })

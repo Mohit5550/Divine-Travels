@@ -24,6 +24,14 @@ async function migrate() {
     console.log('Company table may already exist:', e)
   }
 
+  // Add photo column if not exists
+  try {
+    await db.$executeRawUnsafe(`ALTER TABLE Company ADD COLUMN photo TEXT`)
+    console.log('✓ Added photo column to Company')
+  } catch (e) {
+    console.log('Photo column may already exist:', e)
+  }
+
   // Create CompanyPlan table
   try {
     await db.$executeRawUnsafe(`

@@ -1,17 +1,17 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { Building2, ChevronRight, Loader2 } from 'lucide-react'
+import { Loader2, Building2 } from 'lucide-react'
 
 interface Company {
   id: string
   name: string
   slug: string
   logo: string | null
-  description: string | null
-  _count: { plans: number }
+  photo: string | null
+  _count?: { plans: number }
 }
 
 export function CompanySection() {
@@ -22,78 +22,97 @@ export function CompanySection() {
     queryFn: async () => {
       const res = await fetch('/api/companies')
       if (!res.ok) return []
-      return res.json() as Promise<Company[]>
+      const data = await res.json()
+      return data as Company[]
     },
+    staleTime: 60000,
   })
 
-  if (isLoading) {
-    return (
-      <section className="py-16 sm:py-20 bg-brand-cream">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-brand-orange mx-auto" />
-        </div>
-      </section>
-    )
+  const handleClick = (slug: string) => {
+    navigate('company-detail', null, slug)
   }
 
-  if (companies.length === 0) return null
-
-  const brandColors = [
-    'from-brand-orange/20 to-brand-orange/5 border-brand-orange/20',
-    'from-brand-teal/20 to-brand-teal/5 border-brand-teal/20',
-    'from-brand-gold/20 to-brand-gold/5 border-brand-gold/20',
-    'from-purple-500/20 to-purple-500/5 border-purple-500/20',
-    'from-blue-500/20 to-blue-500/5 border-blue-500/20',
-    'from-pink-500/20 to-pink-500/5 border-pink-500/20',
-    'from-green-500/20 to-green-500/5 border-green-500/20',
-  ]
-
   return (
-    <section className="py-16 sm:py-20 bg-brand-cream">
-      <div className="max-w-7xl mx-auto px-4">
+    <section className="py-12 sm:py-16 bg-brand-teal/90 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-full h-full" style={{
+          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+          backgroundSize: '30px 30px'
+        }} />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-10"
         >
-          <span className="text-brand-orange text-sm font-semibold tracking-wider uppercase">
-            Thrill & Fun
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-dark mt-2">
+          <span className="text-white/80 text-sm font-semibold tracking-wider uppercase">Thrill & Fun</span>
+          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white mt-1">
             Choose Your Adventure
           </h2>
-          <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-            From bungee jumping to water sports — pick your thrill now
-          </p>
+          <p className="text-white/60 mt-2 max-w-xl mx-auto">From bungee jumping to water sports — pick your thrill</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {companies.map((company, i) => (
-            <motion.button
-              key={company.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => navigate('company-detail', null, company.slug)}
-              className={`group relative bg-white rounded-2xl border-2 ${brandColors[i % brandColors.length]} p-5 sm:p-6 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
-            >
-              <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${brandColors[i % brandColors.length]} flex items-center justify-center mb-3`}>
-                {company.logo ? (
-                  <img src={company.logo} alt={company.name} className="w-10 h-10 object-contain" />
-                ) : (
-                  <Building2 className="w-6 h-6 text-brand-orange" />
-                )}
-              </div>
-              <h3 className="font-semibold text-brand-dark text-sm sm:text-base leading-tight">{company.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{company._count?.plans || 0} {company._count?.plans === 1 ? 'plan' : 'plans'}</p>
-              <div className="mt-3 inline-flex items-center gap-1 text-brand-orange text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                View Plans <ChevronRight className="w-3 h-3" />
-              </div>
-            </motion.button>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+        ) : companies.length === 0 ? null : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
+            {companies.map((company, index) => {
+              const isLast = index === companies.length - 1
+              const isOdd = companies.length % 2 === 1
+              return (
+                <motion.div
+                  key={company.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4 }}
+                  className={`cursor-pointer group ${isLast && isOdd ? 'sm:col-span-2 lg:col-span-1 sm:max-w-[50%] sm:mx-auto lg:max-w-none lg:mx-0' : ''}`}
+                  onClick={() => handleClick(company.slug)}
+                >
+                  <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                    {company.photo ? (
+                      <img
+                        src={company.photo}
+                        alt={company.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-brand-dark/60 flex items-center justify-center">
+                        <Building2 className="w-12 h-12 text-white/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                      <div className="flex items-center gap-3">
+                        {company.logo && (
+                          <img src={company.logo} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 object-contain p-1" />
+                        )}
+                        <div>
+                          <h3 className="text-white font-bold text-base sm:text-lg leading-tight">{company.name}</h3>
+                          {company._count?.plans != null && (
+                            <p className="text-white/50 text-xs">{company._count.plans} {company._count.plans === 1 ? 'activity' : 'activities'}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="bg-white/90 text-brand-dark rounded-full px-5 py-2 text-xs sm:text-sm font-semibold shadow-lg">
+                        Explore Plans
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </section>
   )

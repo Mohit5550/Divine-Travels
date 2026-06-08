@@ -5,6 +5,7 @@ const companies = [
     name: 'Himalayan Bungy',
     slug: 'himalayan-bungy',
     logo: '/partners/partner-new.png',
+    photo: '/gallery/img-01.jpg',
     description: 'India\'s premier bungy jumping destination with world-class safety standards and breathtaking views.',
     plans: [
       { name: "India's Highest Bungy Jump", category: 'Bungee', duration: '1 Session', highlights: '["83 meters","India\'s highest","Certified instructors"]' },
@@ -17,6 +18,7 @@ const companies = [
     name: 'Hikers Adventure Park',
     slug: 'hikers-adventure-park',
     logo: '',
+    photo: '/gallery/img-02.jpg',
     description: 'Adventure park with thrilling rides and activities for all ages.',
     plans: [
       { name: 'Go-Kart', category: 'Go Karting', duration: '1 Session' },
@@ -28,6 +30,7 @@ const companies = [
     name: 'Thrill Factory',
     slug: 'thrill-factory',
     logo: '',
+    photo: '/gallery/img-03.jpg',
     description: 'One of the leading adventure companies in Rishikesh offering extreme sports experiences.',
     plans: [
       { name: 'Bungee Jump - 180 Feet', category: 'Bungee', duration: '1 Session', highlights: '["180 feet","Professional gear","Safety certified"]' },
@@ -45,6 +48,7 @@ const companies = [
     name: 'Tehri Lake Adventure Sports',
     slug: 'tehri-lake-adventure-sports',
     logo: '',
+    photo: '/gallery/img-04.jpg',
     description: 'Water sports and adventure activities at the beautiful Tehri Lake.',
     plans: [
       { name: 'FLYBOARD & JETOVATOR', category: 'Water Sports', duration: '15-20 Mins' },
@@ -60,6 +64,7 @@ const companies = [
     name: 'Tehri Lake Paragliding',
     slug: 'tehri-lake-paragliding',
     logo: '',
+    photo: '/gallery/img-05.jpg',
     description: 'Experience the thrill of paragliding over the stunning Tehri Lake.',
     plans: [
       { name: 'Lake View Paragliding | Per Fly', category: 'Paragliding', duration: '1 Session' },
@@ -69,6 +74,7 @@ const companies = [
     name: 'Why Not Fly',
     slug: 'why-not-fly',
     logo: '',
+    photo: '/gallery/img-06.jpg',
     description: 'Professional paragliding services in Rishikesh with experienced pilots.',
     plans: [
       { name: 'Rishikesh Paragliding | Per Fly', category: 'Paragliding', duration: '1 Session' },
@@ -78,6 +84,7 @@ const companies = [
     name: 'Jumping Heights',
     slug: 'jumping-heights',
     logo: '',
+    photo: '/gallery/img-07.jpg',
     description: 'Premium adventure sports company offering flying fox and other thrilling activities.',
     plans: [
       { name: 'Flying Fox | Solo / Tandem or Triple Ride', category: 'Flying Fox', duration: '1 Session' },
@@ -101,6 +108,7 @@ async function seed() {
         name: c.name,
         slug: c.slug,
         logo: c.logo || null,
+        photo: c.photo || null,
         description: c.description || null,
         active: true,
         order: 0,
