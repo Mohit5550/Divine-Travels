@@ -21,6 +21,7 @@ import { BookingSuccess } from '@/components/booking/BookingSuccess'
 import { RaftingPackages } from '@/components/rafting/RaftingPackages'
 import { BikePackages } from '@/components/bike-rental/BikePackages'
 import { TaxiPackages } from '@/components/taxi-booking/TaxiPackages'
+import { TaxiBookingForm } from '@/components/taxi-booking/TaxiBookingForm'
 import { TrekkingPackages } from '@/components/trekking/TrekkingPackages'
 import { AdventurePackages } from '@/components/adventure/AdventurePackages'
 import { DomesticPackages } from '@/components/domestic/DomesticPackages'
@@ -63,6 +64,8 @@ export default function Home() {
         return <BikePackages />
       case 'taxi-booking':
         return <TaxiPackages />
+      case 'taxi-booking-form':
+        return <TaxiBookingForm />
       case 'trekking':
         return <TrekkingPackages />
       case 'adventure':
@@ -129,7 +132,7 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar (handled internally)
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
 
   return (
     <main className="min-h-screen flex flex-col">

@@ -28,11 +28,10 @@ interface DayBasedTourProps {
   heroSubtitle: string
   heroTag: string
   sectionTitle: string
-  sectionSubtitle: string
+  sectionSubtitle?: string
   programs: Record<number, Program>
   programList: { id: number; title: string; img: string }[]
   dayConfigs: DayConfig[]
-  formspreeEndpoint?: string
   destinationName: string
 }
 
@@ -52,7 +51,6 @@ export function DayBasedTour({
   programs,
   programList,
   dayConfigs,
-  formspreeEndpoint = 'https://formspree.io/f/mpwokdbv',
   destinationName,
 }: DayBasedTourProps) {
   const [selected, setSelected] = useState<number[][]>(

@@ -157,6 +157,13 @@ export function TaxiPackages() {
           <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
             From budget sedans to luxury innovas and group travellers — pick the vehicle that suits your group
           </p>
+          <Button
+            onClick={() => navigate('taxi-booking-form')}
+            className="mt-6 bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 rounded-xl font-semibold"
+          >
+            <Car className="w-4 h-4 mr-2" />
+            Post a Booking
+          </Button>
         </motion.div>
 
         {/* Package Cards - 3 Column Grid */}

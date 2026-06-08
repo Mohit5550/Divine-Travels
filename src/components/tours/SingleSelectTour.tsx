@@ -22,7 +22,6 @@ interface SingleSelectTourProps {
   heroSubtitle: string
   heroTag: string
   sectionTitle: string
-  formspreeEndpoint?: string
   destinationName: string
   packageTypeLabel: string
   tours: TourItem[]
@@ -40,7 +39,6 @@ export function SingleSelectTour({
   heroSubtitle,
   heroTag,
   sectionTitle,
-  formspreeEndpoint = 'https://formspree.io/f/mpwokdbv',
   destinationName,
   packageTypeLabel,
   tours,

@@ -48,13 +48,14 @@ import { AdminTourDestinations } from './AdminTourDestinations'
 import { AdminAvailability } from './AdminAvailability'
 import { AdminNotificationBell } from './AdminNotificationBell'
 import { AdminGallery } from './AdminGallery'
+import { AdminTaxiBookings } from './AdminTaxiBookings'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability'
+  | 'tour-bookings' | 'tour-destinations' | 'availability' | 'taxi-bookings'
 
 const mainTabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
@@ -72,6 +73,7 @@ const mainTabs = [
   { id: 'tour-bookings' as AdminTab, label: 'Tour Bookings', icon: CalendarCheck },
   { id: 'tour-destinations' as AdminTab, label: 'Tour Content', icon: Map },
   { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
+  { id: 'taxi-bookings' as AdminTab, label: 'Taxi Bookings', icon: Car },
 ]
 
 const serviceTabs = [
@@ -236,6 +238,8 @@ export function AdminDashboard() {
         return <AdminTourDestinations />
       case 'availability':
         return <AdminAvailability />
+      case 'taxi-bookings':
+        return <AdminTaxiBookings />
 
       default:
         if (activeTab.startsWith('svc-')) {
