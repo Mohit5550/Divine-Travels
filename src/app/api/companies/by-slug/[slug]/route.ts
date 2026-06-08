@@ -16,7 +16,21 @@ export async function GET(
     if (!company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
-    return NextResponse.json(company)
+
+    const plansWithPackages = await Promise.all(
+      company.plans.map(async (plan) => {
+        let pkg = null
+        if (plan.packageSlug) {
+          pkg = await db.package.findUnique({
+            where: { slug: plan.packageSlug },
+            select: { id: true, name: true, image: true, price: true, originalPrice: true, slug: true, location: true },
+          }).catch(() => null)
+        }
+        return { ...plan, package: pkg }
+      })
+    )
+
+    return NextResponse.json({ ...company, plans: plansWithPackages })
   } catch (error) {
     console.error('Error fetching company by slug:', error)
     return NextResponse.json({ error: 'Failed to fetch company' }, { status: 500 })

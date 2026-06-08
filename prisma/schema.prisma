@@ -307,6 +307,7 @@ model CompanyPlan {
   category     String?  // e.g. "Bungee", "Water Sports", "Zipline", "Paragliding"
   duration     String?
   highlights   String?  // JSON array of highlights
+  packageSlug  String?  // links to Package.slug for image/navigation
   active       Boolean  @default(true)
   order        Int      @default(0)
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)

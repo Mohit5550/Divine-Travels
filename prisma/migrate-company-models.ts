@@ -32,6 +32,14 @@ async function migrate() {
     console.log('Photo column may already exist:', e)
   }
 
+  // Add packageSlug column to CompanyPlan if not exists
+  try {
+    await db.$executeRawUnsafe(`ALTER TABLE CompanyPlan ADD COLUMN packageSlug TEXT`)
+    console.log('✓ Added packageSlug column to CompanyPlan')
+  } catch (e) {
+    console.log('packageSlug column may already exist:', e)
+  }
+
   // Create CompanyPlan table
   try {
     await db.$executeRawUnsafe(`

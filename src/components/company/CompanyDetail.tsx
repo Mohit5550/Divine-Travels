@@ -5,19 +5,27 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   Building2,
-  ChevronLeft,
+  ArrowLeft,
+  Loader2,
   Clock,
   Tag,
-  Check,
-  Loader2,
-  ArrowLeft,
+  MapPin,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 
-interface CompanyPlan {
+interface PlanPackage {
+  id: string
+  name: string
+  image: string
+  price: number | null
+  originalPrice: number | null
+  slug: string
+  location: string | null
+}
+
+interface Plan {
   id: string
   name: string
   description: string | null
@@ -26,6 +34,8 @@ interface CompanyPlan {
   category: string | null
   duration: string | null
   highlights: string | null
+  packageSlug: string | null
+  package: PlanPackage | null
 }
 
 interface Company {
@@ -33,16 +43,14 @@ interface Company {
   name: string
   slug: string
   logo: string | null
+  photo: string | null
   description: string | null
-  website: string | null
-  plans: CompanyPlan[]
+  plans: Plan[]
 }
 
 const categoryIcons: Record<string, string> = {
   Bungee: '🪢',
   Swing: '🎯',
-  'Go Karting': '🏎️',
-  Zipline: '🪢',
   'Water Sports': '🌊',
   Parasailing: '🪂',
   Paragliding: '🪂',
@@ -50,6 +58,8 @@ const categoryIcons: Record<string, string> = {
   Roller: '🎢',
   Jump: '⬇️',
   Rope: '🧗',
+  'Go Karting': '🏎️',
+  Zipline: '🪢',
 }
 
 export function CompanyDetail() {
@@ -65,6 +75,12 @@ export function CompanyDetail() {
     },
     enabled: !!slug,
   })
+
+  const handlePlanClick = (plan: Plan) => {
+    if (plan.package?.id) {
+      navigate('package-detail', null, plan.package.id)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -87,19 +103,18 @@ export function CompanyDetail() {
           <div className="text-center">
             <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h2 className="font-serif text-2xl text-brand-dark mb-2">Company not found</h2>
-            <Button onClick={() => navigate('landing')} variant="outline">Go Home</Button>
+            <button onClick={() => navigate('landing')} className="text-brand-orange hover:underline text-sm">Go Home</button>
           </div>
         </div>
-        <Footer />
       </div>
     )
   }
 
-  const groupedPlans: Record<string, CompanyPlan[]> = {}
+  const grouped: Record<string, Plan[]> = {}
   for (const plan of company.plans) {
     const cat = plan.category || 'Other'
-    if (!groupedPlans[cat]) groupedPlans[cat] = []
-    groupedPlans[cat].push(plan)
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(plan)
   }
 
   return (
@@ -107,13 +122,12 @@ export function CompanyDetail() {
       <Navbar />
       <ActivityBar />
 
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-brand-dark via-brand-dark/95 to-brand-dark/90 py-16 sm:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-dark via-brand-dark/95 to-brand-dark/90 py-12 sm:py-16 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-brand-orange blur-3xl" />
           <div className="absolute bottom-10 right-10 w-32 h-32 rounded-full bg-brand-gold blur-3xl" />
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
+        <div className="relative max-w-5xl mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => navigate('landing')}
@@ -121,80 +135,115 @@ export function CompanyDetail() {
             >
               <ArrowLeft className="w-4 h-4" /> Back to Home
             </button>
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-orange/20 flex items-center justify-center mb-4">
-              {company.logo ? (
-                <img src={company.logo} alt={company.name} className="w-10 h-10 object-contain" />
-              ) : (
-                <Building2 className="w-8 h-8 text-brand-orange" />
+            <div className="flex items-center gap-4">
+              {company.logo && (
+                <img src={company.logo} alt="" className="w-12 h-12 rounded-xl bg-white/10 object-contain p-1" />
               )}
+              <div>
+                <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-white">{company.name}</h1>
+                {company.description && (
+                  <p className="text-white/50 text-sm mt-1 max-w-xl">{company.description}</p>
+                )}
+              </div>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white mb-3">{company.name}</h1>
-            {company.description && (
-              <p className="text-white/60 text-base max-w-xl mx-auto">{company.description}</p>
-            )}
-            <div className="inline-flex items-center gap-2 mt-4 text-white/40 text-sm">
+            <div className="inline-flex items-center gap-2 mt-3 text-white/40 text-sm">
               <Tag className="w-4 h-4" />
-              {company.plans.length} {company.plans.length === 1 ? 'Plan' : 'Plans'} Available
+              {company.plans.length} {company.plans.length === 1 ? 'Activity' : 'Activities'} Available
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Plans by Category */}
-      <section className="max-w-6xl mx-auto px-4 py-12 sm:py-16">
-        {Object.entries(groupedPlans).map(([category, plans]) => (
+      <section className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+        {Object.entries(grouped).map(([category, plans]) => (
           <div key={category} className="mb-10">
-            <h2 className="font-serif text-xl sm:text-2xl text-brand-dark mb-4 flex items-center gap-2">
+            <h2 className="font-serif text-xl sm:text-2xl text-brand-dark mb-5 flex items-center gap-2">
               {categoryIcons[category] || '🎯'} {category}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {plans.map((plan, i) => (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-brand-orange/30 transition-all duration-300"
-                >
-                  {plan.image && (
-                    <img src={plan.image} alt={plan.name} className="w-full h-36 object-cover rounded-lg mb-3" />
-                  )}
-                  <h3 className="font-semibold text-brand-dark">{plan.name}</h3>
-                  {plan.description && (
-                    <p className="text-xs text-gray-500 mt-1">{plan.description}</p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    {plan.duration && (
-                      <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                        <Clock className="w-3 h-3" /> {plan.duration}
-                      </span>
-                    )}
-                    {plan.price && (
-                      <span className="inline-flex items-center gap-1 text-xs bg-brand-orange/10 text-brand-orange font-medium px-2 py-1 rounded-full">
-                        ₹{plan.price}
-                      </span>
-                    )}
-                  </div>
-                  {plan.highlights && (() => {
-                    try {
-                      const highlights = JSON.parse(plan.highlights)
-                      if (Array.isArray(highlights) && highlights.length > 0) {
-                        return (
-                          <div className="mt-3 pt-3 border-t border-gray-100 space-y-1">
-                            {highlights.slice(0, 3).map((h: string, j: number) => (
-                              <p key={j} className="flex items-center gap-1.5 text-xs text-gray-500">
-                                <Check className="w-3 h-3 text-green-500 flex-shrink-0" /> {h}
-                              </p>
-                            ))}
+              {plans.map((plan, i) => {
+                const pkg = plan.package
+                const hasImage = pkg?.image
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                    whileHover={{ y: -4 }}
+                    className={`rounded-xl sm:rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-white transition-all duration-300 ${
+                      pkg ? 'cursor-pointer hover:shadow-xl hover:border-brand-orange/30' : ''
+                    }`}
+                    onClick={() => handlePlanClick(plan)}
+                  >
+                    {hasImage ? (
+                      <div className="relative aspect-[16/9] overflow-hidden">
+                        <img
+                          src={pkg!.image}
+                          alt={plan.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        {pkg?.price && (
+                          <div className="absolute top-3 right-3 bg-brand-orange text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
+                            ₹{pkg.price}
                           </div>
-                        )
-                      }
-                    } catch {}
-                    return null
-                  })()}
-                </motion.div>
-              ))}
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <h3 className="text-white font-bold text-sm sm:text-base leading-tight">{plan.name}</h3>
+                          {pkg?.location && (
+                            <p className="text-white/70 text-xs mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> {pkg.location}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 sm:p-5">
+                        <h3 className="font-semibold text-brand-dark text-sm sm:text-base">{plan.name}</h3>
+                        {plan.description && (
+                          <p className="text-xs text-gray-500 mt-1">{plan.description}</p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="p-3 sm:p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {plan.duration && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            <Clock className="w-3 h-3" /> {plan.duration}
+                          </span>
+                        )}
+                      </div>
+                      {pkg && (
+                        <span className="text-brand-orange text-xs font-semibold group-hover:underline">
+                          View Details →
+                        </span>
+                      )}
+                    </div>
+
+                    {plan.highlights && (() => {
+                      try {
+                        const highlights = JSON.parse(plan.highlights)
+                        if (Array.isArray(highlights) && highlights.length > 0) {
+                          return (
+                            <div className="px-4 pb-4 flex flex-wrap gap-1.5">
+                              {highlights.slice(0, 3).map((h: string, j: number) => (
+                                <span key={j} className="text-[11px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full">
+                                  {h}
+                                </span>
+                              ))}
+                            </div>
+                          )
+                        }
+                      } catch {}
+                      return null
+                    })()}
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
         ))}
@@ -202,7 +251,7 @@ export function CompanyDetail() {
         {company.plans.length === 0 && (
           <div className="text-center py-16">
             <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No plans available for this company yet</p>
+            <p className="text-gray-500">No activities available yet</p>
           </div>
         )}
       </section>
