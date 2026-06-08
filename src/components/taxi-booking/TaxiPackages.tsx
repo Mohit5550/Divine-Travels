@@ -74,11 +74,7 @@ export function TaxiPackages() {
   })
 
   const handleBookTrip = (pkg: PackageData) => {
-    if (!isAuthenticated) {
-      toast.error('Please login to book a taxi')
-      return
-    }
-    navigate('package-booking', null, pkg.id)
+    navigate('taxi-booking-form')
   }
 
   const handleViewDetails = (pkg: PackageData) => {
