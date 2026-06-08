@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAppStore } from '@/lib/store'
+import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -29,6 +30,8 @@ import {
   Bed,
   Tent,
   Camera,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
@@ -49,19 +52,21 @@ import { AdminAvailability } from './AdminAvailability'
 import { AdminNotificationBell } from './AdminNotificationBell'
 import { AdminGallery } from './AdminGallery'
 import { AdminTaxiBookings } from './AdminTaxiBookings'
+import { AdminBookingsPanel } from './AdminBookingsPanel'
 
-export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages' | 'package-bookings'
+export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability' | 'taxi-bookings'
+  | 'tour-bookings' | 'tour-destinations' | 'availability'
+  | 'bkg-rafting' | 'bkg-trekking' | 'bkg-adventure' | 'bkg-bike-rental' | 'bkg-taxi'
+  | 'bkg-domestic-tours' | 'bkg-spiritual-tours' | 'bkg-international-tours'
+  | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour'
 
 const mainTabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
   { id: 'destinations' as AdminTab, label: 'Destinations', icon: MapPin },
-  { id: 'bookings' as AdminTab, label: 'Bookings', icon: CalendarCheck },
-  { id: 'package-bookings' as AdminTab, label: 'Pkg Bookings', icon: Waves },
   { id: 'users' as AdminTab, label: 'Users', icon: Users },
   { id: 'reviews' as AdminTab, label: 'Reviews', icon: Star },
   { id: 'inquiries' as AdminTab, label: 'Inquiries', icon: Mail },
@@ -70,11 +75,37 @@ const mainTabs = [
   { id: 'gallery' as AdminTab, label: 'Gallery', icon: Camera },
   { id: 'settings' as AdminTab, label: 'Settings', icon: Settings },
   { id: 'reports' as AdminTab, label: 'Reports', icon: FileText },
-  { id: 'tour-bookings' as AdminTab, label: 'Tour Bookings', icon: CalendarCheck },
   { id: 'tour-destinations' as AdminTab, label: 'Tour Content', icon: Map },
   { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
-  { id: 'taxi-bookings' as AdminTab, label: 'Taxi Bookings', icon: Car },
 ]
+
+const bookingSubTabs = [
+  { id: 'bkg-bike-rental' as AdminTab, label: 'Bike Rental', icon: Bike, serviceType: 'package' as const, category: 'bike-rental', color: 'bg-orange-600' },
+  { id: 'bkg-rafting' as AdminTab, label: 'Rafting', icon: Waves, serviceType: 'package' as const, category: 'rafting', color: 'bg-blue-500' },
+  { id: 'bkg-trekking' as AdminTab, label: 'Trekking', icon: Mountain, serviceType: 'package' as const, category: 'trekking', color: 'bg-emerald-500' },
+  { id: 'bkg-adventure' as AdminTab, label: 'Adventure', icon: Package, serviceType: 'package' as const, category: 'adventure', color: 'bg-red-500' },
+  { id: 'bkg-taxi' as AdminTab, label: 'Taxi', icon: Car, serviceType: 'taxi' as const, color: 'bg-amber-500' },
+  { id: 'bkg-domestic-tours' as AdminTab, label: 'Domestic Tours', icon: Map, serviceType: 'package' as const, category: 'domestic-tours', color: 'bg-teal-500' },
+  { id: 'bkg-spiritual-tours' as AdminTab, label: 'Spiritual Tours', icon: Landmark, serviceType: 'package' as const, category: 'spiritual-tours', color: 'bg-amber-600' },
+  { id: 'bkg-international-tours' as AdminTab, label: 'International', icon: Globe, serviceType: 'package' as const, category: 'international-tours', color: 'bg-indigo-500' },
+  { id: 'bkg-stay-hotel' as AdminTab, label: 'Hotel', icon: Bed, serviceType: 'package' as const, category: 'stay-hotel', color: 'bg-amber-600' },
+  { id: 'bkg-stay-camping' as AdminTab, label: 'Camping', icon: Tent, serviceType: 'package' as const, category: 'stay-camping', color: 'bg-emerald-600' },
+  { id: 'bkg-tour' as AdminTab, label: 'Day Tours', icon: CalendarCheck, serviceType: 'tour' as const, color: 'bg-brand-orange' },
+]
+
+const bookingCountKeys: Record<string, string> = {
+  'bkg-bike-rental': 'package-bike-rental',
+  'bkg-rafting': 'package-rafting',
+  'bkg-trekking': 'package-trekking',
+  'bkg-adventure': 'package-adventure',
+  'bkg-taxi': 'taxi',
+  'bkg-domestic-tours': 'package-domestic-tours',
+  'bkg-spiritual-tours': 'package-spiritual-tours',
+  'bkg-international-tours': 'package-international-tours',
+  'bkg-stay-hotel': 'package-stay-hotel',
+  'bkg-stay-camping': 'package-stay-camping',
+  'bkg-tour': 'tour',
+}
 
 const serviceTabs = [
   { id: 'svc-rafting' as AdminTab, label: 'Rafting', icon: Waves, color: 'bg-blue-500' },
@@ -110,9 +141,15 @@ interface SidebarContentProps {
   setMobileMenuOpen: (open: boolean) => void
   navigate: (view: string) => void
   logout: () => void
+  bookingsExpanded: boolean
+  setBookingsExpanded: (v: boolean) => void
+  bookingCounts: Record<string, number>
+  searchParams?: string
 }
 
-function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMobileMenuOpen, navigate, logout }: SidebarContentProps) {
+function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMobileMenuOpen, navigate, logout, bookingsExpanded, setBookingsExpanded, bookingCounts }: SidebarContentProps) {
+  const totalPending = Object.values(bookingCounts).reduce((a, b) => a + b, 0)
+
   return (
     <>
       <div className="p-4 border-b border-white/10">
@@ -132,7 +169,73 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto custom-scrollbar">
+        {/* Bookings Collapsible */}
+        <div>
+          <button
+            onClick={() => setBookingsExpanded(!bookingsExpanded)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              activeTab.startsWith('bkg-')
+                ? 'bg-brand-orange/20 text-brand-orange'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <CalendarCheck className="w-4 h-4" />
+              {totalPending > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[8px] font-bold leading-none">
+                  {totalPending > 9 ? '9+' : totalPending}
+                </span>
+              )}
+            </div>
+            {!sidebarCollapsed && (
+              <>
+                <span className="flex-1 text-left">Bookings</span>
+                {bookingsExpanded ? <ChevronDown className="w-3 h-3 text-white/40" /> : <ChevronRight className="w-3 h-3 text-white/40" />}
+              </>
+            )}
+          </button>
+
+          {!sidebarCollapsed && bookingsExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="pl-2 mt-0.5 space-y-0.5 border-l border-white/10 ml-[18px]">
+                {bookingSubTabs.map((tab) => {
+                  const Icon = tab.icon
+                  const countKey = bookingCountKeys[tab.id]
+                  const count = countKey ? bookingCounts[countKey] || 0 : 0
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false) }}
+                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        activeTab === tab.id
+                          ? 'bg-brand-orange/20 text-brand-orange'
+                          : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <div className={`w-3.5 h-3.5 rounded ${tab.color || 'bg-gray-500'} flex items-center justify-center flex-shrink-0`}>
+                        <Icon className="w-2.5 h-2.5 text-white" />
+                      </div>
+                      <span className="flex-1 text-left truncate">{tab.label}</span>
+                      {count > 0 && (
+                        <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Main Tabs */}
         {mainTabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -203,6 +306,22 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [bookingsExpanded, setBookingsExpanded] = useState(true)
+
+  const { data: countsData } = useQuery({
+    queryKey: ['admin-booking-counts', user?.id],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/booking-counts', {
+        headers: { 'x-user-id': user?.id || '' },
+      })
+      if (!res.ok) return { counts: {} }
+      const data = await res.json()
+      return data as { counts: Record<string, number> }
+    },
+    refetchInterval: 10000,
+  })
+
+  const bookingCounts = countsData?.counts || {}
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -214,8 +333,6 @@ export function AdminDashboard() {
         return <AdminBookings />
       case 'packages':
         return <AdminPackages />
-      case 'package-bookings':
-        return <AdminPackageBookings />
       case 'users':
         return <AdminUsers />
       case 'reviews':
@@ -238,8 +355,30 @@ export function AdminDashboard() {
         return <AdminTourDestinations />
       case 'availability':
         return <AdminAvailability />
-      case 'taxi-bookings':
-        return <AdminTaxiBookings />
+
+      // Booking sub-tabs
+      case 'bkg-rafting':
+        return <AdminBookingsPanel serviceType="package" category="rafting" />
+      case 'bkg-trekking':
+        return <AdminBookingsPanel serviceType="package" category="trekking" />
+      case 'bkg-adventure':
+        return <AdminBookingsPanel serviceType="package" category="adventure" />
+      case 'bkg-bike-rental':
+        return <AdminBookingsPanel serviceType="package" category="bike-rental" />
+      case 'bkg-domestic-tours':
+        return <AdminBookingsPanel serviceType="package" category="domestic-tours" />
+      case 'bkg-spiritual-tours':
+        return <AdminBookingsPanel serviceType="package" category="spiritual-tours" />
+      case 'bkg-international-tours':
+        return <AdminBookingsPanel serviceType="package" category="international-tours" />
+      case 'bkg-stay-hotel':
+        return <AdminBookingsPanel serviceType="package" category="stay-hotel" />
+      case 'bkg-stay-camping':
+        return <AdminBookingsPanel serviceType="package" category="stay-camping" />
+      case 'bkg-taxi':
+        return <AdminBookingsPanel serviceType="taxi" />
+      case 'bkg-tour':
+        return <AdminBookingsPanel serviceType="tour" />
 
       default:
         if (activeTab.startsWith('svc-')) {
@@ -285,6 +424,9 @@ export function AdminDashboard() {
           setMobileMenuOpen={setMobileMenuOpen}
           navigate={navigate}
           logout={logout}
+          bookingsExpanded={bookingsExpanded}
+          setBookingsExpanded={setBookingsExpanded}
+          bookingCounts={bookingCounts}
         />
       </div>
 
@@ -329,6 +471,9 @@ export function AdminDashboard() {
                 setMobileMenuOpen={setMobileMenuOpen}
                 navigate={navigate}
                 logout={logout}
+                bookingsExpanded={bookingsExpanded}
+                setBookingsExpanded={setBookingsExpanded}
+                bookingCounts={bookingCounts}
               />
             </motion.div>
           </motion.div>
@@ -355,6 +500,7 @@ export function AdminDashboard() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
             >
               {renderTabContent()}
             </motion.div>

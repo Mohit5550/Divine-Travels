@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { notifyAdmin, notifyUser } from '@/lib/notify'
 
 // GET /api/package-bookings/[id] - Get booking details
 export async function GET(
@@ -67,13 +68,26 @@ export async function PUT(
       data: { status },
       include: {
         package: {
-          select: { name: true, subtitle: true, image: true },
+          select: { name: true, category: true, subtitle: true, image: true },
         },
         user: {
-          select: { name: true, email: true },
+          select: { id: true, name: true, email: true },
         },
       },
     })
+
+    // Notify customer about status change
+    if (user?.role === 'admin' && booking.user.id !== userId) {
+      const statusMessages: Record<string, string> = {
+        confirmed: `Your booking for "${booking.package.name}" has been confirmed!`,
+        cancelled: `Your booking for "${booking.package.name}" has been cancelled.`,
+        completed: `Your booking for "${booking.package.name}" has been marked as completed.`,
+      }
+      const msg = statusMessages[status]
+      if (msg) {
+        notifyUser(booking.user.id, 'Booking Update', msg, 'booking')
+      }
+    }
 
     return NextResponse.json(booking)
   } catch (error: unknown) {

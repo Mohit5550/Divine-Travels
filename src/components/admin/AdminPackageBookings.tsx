@@ -27,6 +27,7 @@ interface PackageBookingData {
     subtitle: string
     image: string
     price: number
+    category: string
   }
   user: {
     id: string
@@ -36,10 +37,27 @@ interface PackageBookingData {
   }
 }
 
-export function AdminPackageBookings() {
+interface Props {
+  categoryFilter?: string
+}
+
+const serviceLabels: Record<string, string> = {
+  rafting: 'Rafting',
+  trekking: 'Trekking',
+  adventure: 'Adventure',
+  'bike-rental': 'Bike Rental',
+  'domestic-tours': 'Domestic Tours',
+  'spiritual-tours': 'Spiritual Tours',
+  'international-tours': 'International Tours',
+  'stay-hotel': 'Hotel',
+  'stay-camping': 'Camping',
+}
+
+export function AdminPackageBookings({ categoryFilter }: Props) {
   const { user } = useAppStore()
   const queryClient = useQueryClient()
   const [selectedBooking, setSelectedBooking] = useState<PackageBookingData | null>(null)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['admin-package-bookings', user?.id],
@@ -50,6 +68,16 @@ export function AdminPackageBookings() {
       return res.json() as Promise<PackageBookingData[]>
     },
   })
+
+  const filtered = categoryFilter
+    ? bookings.filter((b) => b.package.category === categoryFilter)
+    : bookings
+
+  const displayBookings = statusFilter === 'all'
+    ? filtered
+    : filtered.filter((b) => b.status === statusFilter)
+
+  const pendingCount = filtered.filter((b) => b.status === 'pending').length
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -85,9 +113,39 @@ export function AdminPackageBookings() {
     }
   }
 
+  const statuses = ['all', 'pending', 'confirmed', 'cancelled', 'completed']
+  const label = categoryFilter ? serviceLabels[categoryFilter] || categoryFilter : 'Package'
+
   return (
     <div>
-      <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">Package Bookings</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-serif text-xl sm:text-2xl text-brand-dark">
+          {label} Bookings
+          {pendingCount > 0 && (
+            <span className="ml-2 text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+              {pendingCount} pending
+            </span>
+          )}
+        </h2>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4 overflow-x-auto">
+        {statuses.map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              statusFilter === s
+                ? 'bg-white text-brand-dark shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+            {s !== 'all' && ` (${filtered.filter((b) => b.status === s).length})`}
+          </button>
+        ))}
+      </div>
 
       {/* Booking Detail Modal */}
       <AnimatePresence>
@@ -114,6 +172,11 @@ export function AdminPackageBookings() {
               </div>
 
               <div className="p-6 space-y-4">
+                {/* Service Badge */}
+                <div className="inline-flex items-center gap-1.5 bg-brand-orange/10 text-brand-orange text-xs font-medium px-2.5 py-1 rounded-full">
+                  {serviceLabels[selectedBooking.package.category] || selectedBooking.package.category}
+                </div>
+
                 {/* Package Info */}
                 <div className="flex items-center gap-3 p-3 bg-brand-cream/70 rounded-xl">
                   <img
@@ -236,8 +299,8 @@ export function AdminPackageBookings() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Loading bookings...</div>
-        ) : bookings.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No package bookings found</div>
+        ) : displayBookings.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No {label.toLowerCase()} bookings found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -249,12 +312,13 @@ export function AdminPackageBookings() {
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">People</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Service</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking) => (
+                {displayBookings.map((booking) => (
                   <tr key={booking.id} className="border-b border-border/50 hover:bg-brand-cream/30">
                     <td className="py-3 px-4 font-mono text-xs">{booking.id.slice(0, 8)}...</td>
                     <td className="py-3 px-4">
@@ -277,6 +341,11 @@ export function AdminPackageBookings() {
                     </td>
                     <td className="py-3 px-4">{booking.numberOfPeople}</td>
                     <td className="py-3 px-4 font-medium">₹{booking.totalPrice.toLocaleString()}</td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full font-medium">
+                        {serviceLabels[booking.package.category] || booking.package.category}
+                      </span>
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(booking.status)}`}>
                         {booking.status}

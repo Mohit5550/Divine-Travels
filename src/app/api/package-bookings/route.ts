@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const all = searchParams.get('all')
+    const category = searchParams.get('category')
 
     const user = await db.user.findUnique({ where: { id: userId } })
 
@@ -32,6 +33,7 @@ export async function GET(request: Request) {
             price: true,
             duration: true,
             distance: true,
+            category: true,
           },
         },
         user: {
@@ -41,7 +43,12 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(bookings)
+    let result = bookings
+    if (category && user?.role === 'admin') {
+      result = bookings.filter((b) => b.package.category === category)
+    }
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Error fetching package bookings:', error)
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
@@ -102,7 +109,8 @@ export async function POST(request: Request) {
       },
     })
 
-    notifyAdmin('New Package Booking', `${fullName} booked "${pkg.name}" for ${numberOfPeople} person(s) on ${preferredDate}`, 'booking', `/admin?tab=package-bookings`)
+    const serviceLabel = (pkg.category || 'Package').replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+    notifyAdmin('New Package Booking', `${serviceLabel}: ${fullName} booked "${pkg.name}" for ${numberOfPeople} person(s) on ${preferredDate}`, 'booking', `/admin?tab=${pkg.category || 'package-bookings'}`)
 
     return NextResponse.json(booking, { status: 201 })
   } catch (error) {
