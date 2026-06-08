@@ -3,33 +3,56 @@
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { Loader2, Building2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
-interface Company {
-  id: string
-  name: string
-  slug: string
-  logo: string | null
-  photo: string | null
-  _count?: { plans: number }
+const companyMap: Record<string, { name: string; slug: string }> = {
+  'indias-highest-bungy': { name: 'Himalayan Bungy', slug: 'himalayan-bungy' },
+  'free-style-bungy': { name: 'Himalayan Bungy', slug: 'himalayan-bungy' },
+  'giant-swing-113': { name: 'Hikers Adventure Park', slug: 'hikers-adventure-park' },
+  'premium-giant-swing-140': { name: 'Hikers Adventure Park', slug: 'hikers-adventure-park' },
+  'bungee-180-feet': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'splash-bungee-180': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'free-style-bungee-160': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'couple-bungee-jump': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'rope-bungee-160': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'quick-jump-rishikesh': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'reverse-bungee-india': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'zipline-across-ganga': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'rope-course-rishikesh': { name: 'Thrill Factory', slug: 'thrill-factory' },
+  'go-kart-rishikesh': { name: 'Hikers Adventure Park', slug: 'hikers-adventure-park' },
+  'sky-roller-rishikesh': { name: 'Hikers Adventure Park', slug: 'hikers-adventure-park' },
+  'roller-coaster-zipline': { name: 'Hikers Adventure Park', slug: 'hikers-adventure-park' },
+  'flyboard-jetovator-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'speed-boat-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'bumper-ride-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'banana-ride-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'water-surfing-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'jet-ski-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'parasailing-tehri': { name: 'Tehri Lake Adventure Sports', slug: 'tehri-lake-adventure-sports' },
+  'lake-view-paragliding': { name: 'Tehri Lake Paragliding', slug: 'tehri-lake-paragliding' },
+  'rishikesh-paragliding': { name: 'Why Not Fly', slug: 'why-not-fly' },
+  'flying-fox-rishikesh': { name: 'Jumping Heights', slug: 'jumping-heights' },
 }
 
 export function CompanySection() {
   const { navigate } = useAppStore()
 
-  const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['landing-companies'],
+  const { data: packages = [], isLoading } = useQuery({
+    queryKey: ['adventure-packages-home'],
     queryFn: async () => {
-      const res = await fetch('/api/companies')
+      const res = await fetch('/api/packages?category=adventure')
       if (!res.ok) return []
       const data = await res.json()
-      return data as Company[]
+      return data.slice(0, 20)
     },
     staleTime: 60000,
   })
 
-  const handleClick = (slug: string) => {
-    navigate('company-detail', null, slug)
+  const handleCardClick = (pkg: any) => {
+    const company = companyMap[pkg.slug]
+    if (company?.slug) {
+      navigate('company-detail', null, company.slug)
+    }
   }
 
   return (
@@ -59,52 +82,45 @@ export function CompanySection() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
-        ) : companies.length === 0 ? null : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
-            {companies.map((company, index) => {
-              const isLast = index === companies.length - 1
-              const isOdd = companies.length % 2 === 1
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {packages.map((pkg: any, index: number) => {
+              const company = companyMap[pkg.slug]
               return (
                 <motion.div
-                  key={company.id}
+                  key={pkg.id || index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.03 }}
                   whileHover={{ y: -4 }}
-                  className={`cursor-pointer group ${isLast && isOdd ? 'sm:col-span-2 lg:col-span-1 sm:max-w-[50%] sm:mx-auto lg:max-w-none lg:mx-0' : ''}`}
-                  onClick={() => handleClick(company.slug)}
+                  className="cursor-pointer group"
+                  onClick={() => handleCardClick(pkg)}
                 >
-                  <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
-                    {company.photo ? (
-                      <img
-                        src={company.photo}
-                        alt={company.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-brand-dark/60 flex items-center justify-center">
-                        <Building2 className="w-12 h-12 text-white/30" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                      <div className="flex items-center gap-3">
-                        {company.logo && (
-                          <img src={company.logo} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 object-contain p-1" />
-                        )}
-                        <div>
-                          <h3 className="text-white font-bold text-base sm:text-lg leading-tight">{company.name}</h3>
-                          {company._count?.plans != null && (
-                            <p className="text-white/50 text-xs">{company._count.plans} {company._count.plans === 1 ? 'activity' : 'activities'}</p>
-                          )}
-                        </div>
-                      </div>
+                  <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                    <img
+                      src={pkg.image}
+                      alt={pkg.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                      <h3 className="text-white font-bold text-sm sm:text-base leading-tight">
+                        {pkg.name}
+                      </h3>
+                      {company && (
+                        <span className="text-brand-orange text-[11px] sm:text-xs font-semibold">
+                          {company.name}
+                        </span>
+                      )}
+                      {pkg.location && (
+                        <p className="text-white/50 text-[10px] sm:text-xs mt-0.5">{pkg.location}</p>
+                      )}
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className="bg-white/90 text-brand-dark rounded-full px-5 py-2 text-xs sm:text-sm font-semibold shadow-lg">
-                        Explore Plans
+                        View Details
                       </span>
                     </div>
                   </div>
