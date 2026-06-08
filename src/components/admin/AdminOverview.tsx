@@ -63,11 +63,15 @@ export function AdminOverview() {
   const { data: countsData } = useQuery({
     queryKey: ['admin-booking-counts', user?.id],
     queryFn: async () => {
+      if (!user?.id) return { counts: {} as Record<string, number> }
       const res = await fetch('/api/admin/booking-counts', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { 'x-user-id': user.id },
       })
-      return res.json() as Promise<{ counts: Record<string, number>; services: { key: string; label: string }[] }>
+      if (!res.ok) return { counts: {} as Record<string, number> }
+      const data = await res.json()
+      return { counts: (data.counts || {}) as Record<string, number> }
     },
+    enabled: !!user?.id,
     refetchInterval: 15000,
   })
 
