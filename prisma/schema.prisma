@@ -277,9 +277,40 @@ model StayContent {
   images      String   @default("[]") // JSON array of Google Drive file IDs
   features    String   @default("[]") // JSON array of feature/amenity names
   pricings    String   @default("[]") // JSON array of {label, sublabel, price, unit, highlighted}
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Company {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  logo        String?
+  description String?
+  website     String?
+  order       Int            @default(0)
+  active      Boolean        @default(true)
+  plans       CompanyPlan[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model CompanyPlan {
+  id           String   @id @default(cuid())
+  companyId    String
+  name         String
+  description  String?
+  price        Int?
+  image        String?
+  category     String?  // e.g. "Bungee", "Water Sports", "Zipline", "Paragliding"
+  duration     String?
+  highlights   String?  // JSON array of highlights
+  active       Boolean  @default(true)
+  order        Int      @default(0)
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model DateAvailability {

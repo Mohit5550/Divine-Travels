@@ -13,6 +13,7 @@ import { CTABanner } from '@/components/landing/CTABanner'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { PartnersSection } from '@/components/landing/PartnersSection'
 import { SocialCTASection } from '@/components/landing/SocialCTASection'
+import { CompanySection } from '@/components/landing/CompanySection'
 import { Footer } from '@/components/landing/Footer'
 import { UserDashboard } from '@/components/user/UserDashboard'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
@@ -40,6 +41,7 @@ import { PackageDetail } from '@/components/package/PackageDetail'
 import { PackageBookingForm } from '@/components/package/PackageBookingForm'
 import { AboutUs } from '@/components/pages/AboutUs'
 import { Contact } from '@/components/pages/Contact'
+import { CompanyDetail } from '@/components/company/CompanyDetail'
 import { PrivacyPolicy } from '@/components/pages/PrivacyPolicy'
 import { TermsOfService } from '@/components/pages/TermsOfService'
 import { RefundPolicy } from '@/components/pages/RefundPolicy'
@@ -102,6 +104,8 @@ export default function Home() {
         return <AboutUs />
       case 'contact':
         return <Contact />
+      case 'company-detail':
+        return <CompanyDetail />
       case 'privacy-policy':
         return <PrivacyPolicy />
       case 'terms-of-service':
@@ -119,6 +123,7 @@ export default function Home() {
             <HeroBanner />
             <DestinationCarousel />
             <AdventureGrid />
+            <CompanySection />
             <TopDestinations />
             <StaySection />
             <TestimonialsSection />
@@ -132,7 +137,7 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar (handled internally)
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail']
 
   return (
     <main className="min-h-screen flex flex-col">
