@@ -403,7 +403,7 @@ export function AdminDashboard() {
             <img
               src="/logo.png"
               alt="Divine Travel"
-              className="h-9 w-auto object-contain brightness-0 invert"
+              className="h-9 w-auto object-contain invert"
               draggable={false}
             />
           )}
@@ -459,7 +459,7 @@ export function AdminDashboard() {
                 <img
                   src="/logo.png"
                   alt="Divine Travel"
-                  className="h-9 w-auto object-contain brightness-0 invert"
+                  className="h-9 w-auto object-contain invert"
                   draggable={false}
                 />
               </div>
