@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
+import { BackButton } from '@/components/ui/BackButton'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 
@@ -102,6 +103,9 @@ export function TrekkingPackages() {
     <div className="min-h-screen bg-brand-cream">
       <Navbar />
       <ActivityBar />
+      <div className="max-w-7xl mx-auto px-4 pt-3">
+        <BackButton />
+      </div>
 
       {/* Hero Section */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">

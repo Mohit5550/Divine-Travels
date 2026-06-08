@@ -14,6 +14,7 @@ import {
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
+import { BackButton } from '@/components/ui/BackButton'
 
 interface PlanPackage {
   id: string
@@ -129,12 +130,7 @@ export function CompanyDetail() {
         </div>
         <div className="relative max-w-5xl mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <button
-              onClick={() => navigate('landing')}
-              className="inline-flex items-center gap-1 text-white/50 hover:text-white text-sm mb-6 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back to Home
-            </button>
+            <BackButton className="mb-4 text-white/50 hover:text-white" />
             <div className="flex items-center gap-4">
               {company.logo && (
                 <img src={company.logo} alt="" className="w-12 h-12 rounded-xl bg-white/10 object-contain p-1" />

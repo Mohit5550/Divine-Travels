@@ -28,6 +28,9 @@ import {
   Car,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Navbar } from '@/components/landing/Navbar'
+import { Footer } from '@/components/landing/Footer'
+import { BackButton } from '@/components/ui/BackButton'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
@@ -213,15 +216,22 @@ export function PackageDetail() {
   if (isLoading || !pkg || !parsedData) {
     return (
       <div className="min-h-screen bg-brand-cream">
+        <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-8">
+          <BackButton className="mb-4" />
           <div className="h-96 bg-muted rounded-2xl animate-pulse" />
         </div>
+        <Footer />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <BackButton className="mb-2" />
+      </div>
       {/* Image Gallery Modal */}
       <AnimatePresence>
         {showGallery && (
@@ -1093,6 +1103,7 @@ export function PackageDetail() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

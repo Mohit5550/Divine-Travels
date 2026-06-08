@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Camera, Filter, X, ChevronLeft, ChevronRight, Tag, ArrowLeft, ImageOff } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
+import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -93,6 +94,9 @@ export function GalleryPage() {
     <div className="min-h-screen flex flex-col bg-brand-cream">
       <Navbar />
       <ActivityBar />
+      <div className="max-w-7xl mx-auto px-4 pt-3">
+        <BackButton />
+      </div>
 
       <section className="relative py-16 md:py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-dark via-brand-dark to-brand-teal opacity-95" />
