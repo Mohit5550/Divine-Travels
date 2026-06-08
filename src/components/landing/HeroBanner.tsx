@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
+import { HeroNotice } from './HeroNotice'
 
 export function HeroBanner() {
   const { navigate } = useAppStore()
@@ -56,6 +57,8 @@ export function HeroBanner() {
           </Button>
         </motion.div>
       </div>
+
+      <HeroNotice />
     </section>
   )
 }

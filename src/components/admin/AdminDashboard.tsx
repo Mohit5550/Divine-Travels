@@ -33,6 +33,7 @@ import {
   ChevronDown,
   ChevronRight,
   Building2,
+  Bell,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
@@ -54,6 +55,7 @@ import { AdminNotificationBell } from './AdminNotificationBell'
 import { AdminGallery } from './AdminGallery'
 import { AdminTaxiBookings } from './AdminTaxiBookings'
 import { AdminCompanyPlans } from './AdminCompanyPlans'
+import { AdminHeroNotices } from './AdminHeroNotices'
 import { AdminBookingsPanel } from './AdminBookingsPanel'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages'
@@ -61,7 +63,7 @@ export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'pac
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability' | 'company-plans'
+  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices'
   | 'bkg-rafting' | 'bkg-trekking' | 'bkg-adventure' | 'bkg-bike-rental' | 'bkg-taxi'
   | 'bkg-domestic-tours' | 'bkg-spiritual-tours' | 'bkg-international-tours'
   | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour'
@@ -80,6 +82,7 @@ const mainTabs = [
   { id: 'tour-destinations' as AdminTab, label: 'Tour Content', icon: Map },
   { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
   { id: 'company-plans' as AdminTab, label: 'Company Plans', icon: Building2 },
+  { id: 'hero-notices' as AdminTab, label: 'Hero Notices', icon: Bell },
 ]
 
 const bookingSubTabs = [
@@ -360,6 +363,8 @@ export function AdminDashboard() {
         return <AdminAvailability />
       case 'company-plans':
         return <AdminCompanyPlans />
+      case 'hero-notices':
+        return <AdminHeroNotices />
 
       // Booking sub-tabs
       case 'bkg-rafting':
