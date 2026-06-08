@@ -13,7 +13,6 @@ import { CTABanner } from '@/components/landing/CTABanner'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { PartnersSection } from '@/components/landing/PartnersSection'
 import { SocialCTASection } from '@/components/landing/SocialCTASection'
-import { CompanySection } from '@/components/landing/CompanySection'
 import { Footer } from '@/components/landing/Footer'
 import { UserDashboard } from '@/components/user/UserDashboard'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
@@ -123,7 +122,6 @@ export default function Home() {
             <HeroBanner />
             <DestinationCarousel />
             <AdventureGrid />
-            <CompanySection />
             <TopDestinations />
             <StaySection />
             <TestimonialsSection />

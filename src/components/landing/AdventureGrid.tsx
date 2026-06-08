@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
 import { Loader2 } from 'lucide-react'
 
@@ -35,28 +34,6 @@ const companyMap: Record<string, string> = {
   'flying-fox-rishikesh': 'Jumping Heights',
 }
 
-const activityGroups: { name: string; keywords: string[] }[] = [
-  { name: 'Bungee Jumping', keywords: ['bungy', 'bungee', 'quick jump', 'reverse bungee', 'couple bungee'] },
-  { name: 'Giant Swing', keywords: ['giant swing', 'swing'] },
-  { name: 'Zip Line & Flying Fox', keywords: ['zipline', 'zip line', 'flying fox', 'roller coaster'] },
-  { name: 'Water Sports', keywords: ['water sport', 'jet ski', 'bumper', 'banana', 'speed boat', 'flyboard', 'jetovator', 'surfing', 'parasailing', 'tehri'] },
-  { name: 'Paragliding', keywords: ['paragliding', 'paraglider'] },
-  { name: 'Rope Course & Activities', keywords: ['rope course', 'sky roller', 'rope bungee', 'freestyle'] },
-  { name: 'Go Karting', keywords: ['go kart'] },
-  { name: 'Adventure Park', keywords: ['hikers', 'park', 'adventure park'] },
-]
-
-function getGroup(name: string, slug: string): string {
-  const lower = name.toLowerCase()
-  const lowerSlug = slug.toLowerCase()
-  for (const group of activityGroups) {
-    for (const kw of group.keywords) {
-      if (lower.includes(kw) || lowerSlug.includes(kw)) return group.name
-    }
-  }
-  return 'Other Adventures'
-}
-
 export function AdventureGrid() {
   const { navigate } = useAppStore()
 
@@ -73,8 +50,6 @@ export function AdventureGrid() {
   const handleCardClick = (pkg: any) => {
     if (pkg.id) {
       navigate('package-detail', null, pkg.id)
-    } else if (pkg.action) {
-      navigate(pkg.action)
     }
   }
 
@@ -85,24 +60,8 @@ export function AdventureGrid() {
     company: companyMap[p.slug] || '',
     image: p.image,
     price: p.price,
-    originalPrice: p.originalPrice,
     location: p.location,
-    tagline: p.tagline,
-    group: getGroup(p.name, p.slug || ''),
   }))
-
-  const grouped: Record<string, typeof displayItems> = displayItems.reduce((acc, item) => {
-    if (!acc[item.group]) acc[item.group] = []
-    acc[item.group].push(item)
-    return acc
-  }, {} as Record<string, typeof displayItems>)
-
-  const groupOrder = activityGroups.map(g => g.name)
-  const sortedGroups = Object.keys(grouped).sort((a, b) => {
-    const ai = groupOrder.indexOf(a)
-    const bi = groupOrder.indexOf(b)
-    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-  })
 
   return (
     <section className="py-12 sm:py-16 bg-brand-teal/90 relative overflow-hidden">
@@ -132,86 +91,44 @@ export function AdventureGrid() {
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
         ) : (
-          <div className="space-y-8 sm:space-y-10">
-            {sortedGroups.map((groupName) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {displayItems.map((item: any, index: number) => (
               <motion.div
-                key={groupName}
+                key={item.id || index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
+                transition={{ delay: index * 0.03 }}
+                whileHover={{ y: -4 }}
+                className="cursor-pointer group"
+                onClick={() => handleCardClick(item)}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
-                    <div className="w-1 h-6 bg-brand-orange rounded-full" />
-                    {groupName}
-                  </h3>
-                  <span className="text-white/50 text-xs sm:text-sm">{grouped[groupName].length} options</span>
-                </div>
-
-                <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory">
-                  {grouped[groupName].map((item: any, index: number) => (
-                    <motion.div
-                      key={item.id || index}
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.05 }}
-                      whileHover={{ y: -4 }}
-                      className="cursor-pointer group flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[260px] snap-start"
-                      onClick={() => handleCardClick(item)}
-                    >
-                      <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                          <h3 className="text-white font-bold text-sm sm:text-base">
-                            {item.name}
-                            {item.company && (
-                              <span className="block text-red-400 text-[11px] sm:text-xs mt-0.5 font-semibold">
-                                ({item.company})
-                              </span>
-                            )}
-                          </h3>
-                          {item.tagline && (
-                            <p className="text-white/60 text-xs mt-0.5 hidden sm:block truncate">{item.tagline}</p>
-                          )}
-                          {item.price && (
-                            <p className="text-brand-orange font-bold text-xs sm:text-sm mt-1">
-                              {item.originalPrice != null && item.originalPrice > item.price ? (
-                                <>
-                                  <span className="line-through text-white/60 text-[10px]">₹{item.originalPrice}</span>
-                                  {' '}₹{item.price}
-                                  <span className="text-emerald-300 text-[10px] font-semibold ml-1">Save ₹{item.originalPrice - item.price}</span>
-                                </>
-                              ) : (
-                                <>₹{item.price}</>
-                              )}
-                            </p>
-                          )}
-                          {item.location && (
-                            <p className="text-white/50 text-[10px] mt-0.5">{item.location}</p>
-                          )}
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <Button
-                            size="sm"
-                            className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-full px-4 sm:px-6 text-xs sm:text-sm font-medium shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleCardClick(item)
-                            }}
-                          >
-                            Book Now
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                    <h3 className="text-white font-bold text-sm sm:text-base leading-tight">
+                      {item.name}
+                    </h3>
+                    {item.company && (
+                      <span className="text-red-400 text-[11px] sm:text-xs font-semibold">
+                        {item.company}
+                      </span>
+                    )}
+                    {item.location && (
+                      <p className="text-white/50 text-[10px] mt-0.5">{item.location}</p>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="bg-white/90 text-brand-dark rounded-full px-5 py-2 text-xs sm:text-sm font-semibold shadow-lg">
+                      View Details
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             ))}
