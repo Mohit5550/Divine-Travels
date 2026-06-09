@@ -4,9 +4,9 @@ import { useAppStore } from '@/lib/store'
 import { ArrowLeft } from 'lucide-react'
 
 export function BackButton({ className = '' }: { className?: string }) {
-  const { goBack, history } = useAppStore()
+  const { goBack, currentView } = useAppStore()
 
-  if (history.length === 0) return null
+  if (currentView === 'landing') return null
 
   return (
     <button
