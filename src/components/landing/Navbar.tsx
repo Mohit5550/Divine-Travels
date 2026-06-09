@@ -113,7 +113,7 @@ export function Navbar() {
               className="flex items-center gap-2 cursor-pointer shrink-0"
             >
               <img
-                src="/logo.png"
+                src="/logo.png?v=2"
                 alt="Divine Travel"
                 className="h-10 sm:h-12 w-auto object-contain"
                 draggable={false}
