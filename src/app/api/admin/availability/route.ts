@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get('date')
+    const service = searchParams.get('service')
 
-    const where: Record<string, string> = {}
-    if (date) where.date = date
-
-    const records = await db.dateAvailability.findMany({ where, orderBy: { service: 'asc' } })
+    const records = await db.dateAvailability.findMany({
+      where: service ? { service } : {},
+      orderBy: [{ date: 'asc' }, { service: 'asc' }],
+    })
 
     const parsed = records.map((r) => ({
       ...r,
@@ -45,29 +45,62 @@ export async function POST(request: NextRequest) {
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const body = await request.json()
-    const { date, service, subOptions, allDay } = body
+    const { id, date, dateTo, service, subOptions, allDay, price, slots } = body
 
     if (!date || !service) {
       return NextResponse.json({ error: 'Date and service are required' }, { status: 400 })
     }
 
-    const record = await db.dateAvailability.upsert({
-      where: { date_service: { date, service } },
-      update: {
-        subOptions: JSON.stringify(subOptions || []),
-        allDay: allDay || false,
-      },
-      create: {
-        date,
-        service,
-        subOptions: JSON.stringify(subOptions || []),
-        allDay: allDay || false,
-      },
-    })
+    let record
+    if (id) {
+      record = await db.dateAvailability.update({
+        where: { id },
+        data: {
+          date,
+          dateTo: dateTo || null,
+          service,
+          subOptions: JSON.stringify(subOptions || []),
+          allDay: allDay || false,
+          price: price ? parseInt(price) : null,
+          slots: slots ? parseInt(slots) : null,
+        },
+      })
+    } else {
+      record = await db.dateAvailability.create({
+        data: {
+          date,
+          dateTo: dateTo || null,
+          service,
+          subOptions: JSON.stringify(subOptions || []),
+          allDay: allDay || false,
+          price: price ? parseInt(price) : null,
+          slots: slots ? parseInt(slots) : null,
+        },
+      })
+    }
 
     return NextResponse.json({ ...record, subOptions: JSON.parse(record.subOptions) })
   } catch (error) {
     console.error('Availability save error:', error)
     return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const userId = request.headers.get('x-user-id')
+    if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    const user = await db.user.findUnique({ where: { id: userId } })
+    if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Record ID required' }, { status: 400 })
+
+    await db.dateAvailability.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Availability delete error:', error)
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
 }

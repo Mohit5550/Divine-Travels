@@ -328,14 +328,15 @@ model HeroNotice {
 
 model DateAvailability {
   id         String   @id @default(cuid())
-  date       String   // "2026-06-05" format
+  date       String   // start date "2026-06-05"
+  dateTo     String?  // end date (null = single date)
   service    String   // "rafting", "trekking", "taxi", "bike", "stay", "tour-packages"
-  subOptions String   @default("[]") // JSON array of available sub-options, e.g. ["hunter","activa"]
+  subOptions String   @default("[]") // JSON array of available sub-options
   allDay     Boolean  @default(false) // if true, everything for this service is available
+  price      Int?     // price per person/unit for this date range
+  slots      Int?     // available slots/quantity
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  @@unique([date, service])
 }
 
 model TourBooking {
