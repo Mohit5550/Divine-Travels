@@ -469,7 +469,7 @@ export function AdminDashboard() {
                 <img
                   src="/logo.png?v=2"
                   alt="Divine Travel"
-                  className="h-9 w-auto object-contain invert"
+className="h-9 w-auto object-contain"
                   draggable={false}
                 />
               </div>
