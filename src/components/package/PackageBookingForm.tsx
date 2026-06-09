@@ -29,11 +29,45 @@ interface PackageData {
   name: string
   subtitle: string
   price: number
+  category: string
   distance: string
   duration: string
   image: string
   timings: string
   rapidsLevel: string
+}
+
+const SUBOPTION_MAP: Record<string, string> = {
+  brahmpuri: 'Brahmpuri 9km',
+  shivpuri: 'Shivpuri 16km',
+  'marine drive': 'Marine Drive 26km',
+  'valley of flowers': 'Valley of Flowers',
+  'nag tibba': 'Nag Tibba',
+  kedarkantha: 'Kedarkantha',
+  'har ki dun': 'Har Ki Dun',
+  sedan: 'Sedan',
+  suv: 'SUV',
+  'tempo traveller': 'Tempo Traveller',
+  bus: 'Bus',
+  hunter: 'Hunter 350',
+  activa: 'Activa',
+  splendor: 'Splendor',
+  'royal enfield': 'Royal Enfield',
+  'access 125': 'Access 125',
+  rishikesh: 'Rishikesh Tour',
+  haridwar: 'Haridwar Tour',
+  mussoorie: 'Mussoorie Tour',
+  nainital: 'Nainital Tour',
+  'hill stations': 'Hill Stations',
+  'char dham': 'Char Dham',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
 }
 
 export function PackageBookingForm() {
@@ -58,6 +92,26 @@ export function PackageBookingForm() {
     },
     enabled: !!selectedPackageId,
   })
+
+  const { data: effectivePrice } = useQuery({
+    queryKey: ['effective-price', selectedPackageId, pkg?.category],
+    queryFn: async () => {
+      if (!pkg) return null
+      const service = pkg.category || ''
+      const res = await fetch(`/api/public/availability?service=${service}`)
+      const data = await res.json()
+      const records = data.records || []
+      const subOption = getSubOptionFromName(pkg.name)
+      const match = records.find((r: any) => {
+        if (r.allDay) return true
+        return (r.subOptions || []).includes(subOption)
+      })
+      return match?.price ?? pkg.price
+    },
+    enabled: !!pkg,
+  })
+
+  const displayPrice = effectivePrice ?? pkg?.price ?? 0
 
   // If not authenticated, show login prompt
   if (!isAuthenticated) {
@@ -163,7 +217,7 @@ export function PackageBookingForm() {
     )
   }
 
-  const totalPrice = pkg.price * form.numberOfPeople
+  const totalPrice = displayPrice * form.numberOfPeople
   const timeSlots = [
     'No preference',
     'Early Morning (7-8 AM)',
@@ -209,7 +263,7 @@ export function PackageBookingForm() {
             </div>
             {/* Price Badge */}
             <div className="absolute top-4 right-4 bg-brand-teal text-white rounded-xl px-3.5 py-2 shadow-lg">
-              <div className="font-bold text-lg leading-none">₹{pkg.price}</div>
+              <div className="font-bold text-lg leading-none">₹{displayPrice}</div>
               <div className="text-white/70 text-[10px] mt-0.5">/ person</div>
             </div>
           </div>
@@ -326,7 +380,7 @@ export function PackageBookingForm() {
             {/* Price Summary */}
             <div className="bg-brand-cream/70 rounded-xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">₹{pkg.price} × {form.numberOfPeople} {form.numberOfPeople === 1 ? 'person' : 'people'}</span>
+                <span className="text-muted-foreground">₹{displayPrice} × {form.numberOfPeople} {form.numberOfPeople === 1 ? 'person' : 'people'}</span>
                 <span className="text-brand-dark font-medium">₹{totalPrice.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">

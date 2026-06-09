@@ -93,6 +93,20 @@ const faqs = [
   },
 ]
 
+const SUBOPTION_MAP: Record<string, string> = {
+  brahmpuri: 'Brahmpuri 9km',
+  shivpuri: 'Shivpuri 16km',
+  'marine drive': 'Marine Drive 26km',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
+}
+
 export function RaftingPackages() {
   const { navigate, isAuthenticated, user } = useAppStore()
 
@@ -104,6 +118,25 @@ export function RaftingPackages() {
       return data as PackageData[]
     },
   })
+
+  const { data: availabilityRecords = [] } = useQuery({
+    queryKey: ['availability', 'rafting'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/availability?service=rafting')
+      const data = await res.json()
+      return data.records || []
+    },
+  })
+
+  const getEffectivePrice = (pkg: PackageData) => {
+    const subOption = getSubOptionFromName(pkg.name)
+    if (!subOption) return pkg.price
+    const match = availabilityRecords.find((r: any) => {
+      if (r.allDay) return true
+      return (r.subOptions || []).includes(subOption)
+    })
+    return match?.price ?? pkg.price
+  }
 
   const handleBookTrip = (pkg: PackageData) => {
     if (!isAuthenticated) {
@@ -256,7 +289,7 @@ export function RaftingPackages() {
                       </div>
 
                       <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-                        <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
+                        <div className="text-brand-orange font-bold text-lg leading-none">₹{getEffectivePrice(pkg)}</div>
                         <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
                       </div>
 
@@ -342,7 +375,7 @@ export function RaftingPackages() {
 
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
+                          <span className="text-2xl font-bold text-brand-dark">₹{getEffectivePrice(pkg)}</span>
                           <span className="text-muted-foreground text-sm"> / Person</span>
                         </div>
                         <div className="flex items-center gap-2">
