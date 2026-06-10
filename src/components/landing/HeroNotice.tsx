@@ -58,7 +58,7 @@ export function HeroNotice() {
   }
 
   return (
-    <div className="absolute top-2 right-2 sm:top-6 sm:right-6 z-20 w-[200px] sm:w-[300px]">
+    <div className="absolute bottom-2 right-2 sm:top-6 sm:right-6 z-20 w-[200px] sm:w-[300px]">
       <AnimatePresence mode="wait">
         <motion.div
           key={notice.id}

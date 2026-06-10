@@ -373,7 +373,7 @@ export function TrekkingPackages() {
 
                       {/* Price, View Details & Book */}
                       <div className="flex items-center justify-between gap-2">
-                        <div>
+                        <div className="hidden sm:block">
                           {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                               <span className="text-sm sm:text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>

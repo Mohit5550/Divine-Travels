@@ -292,7 +292,7 @@ export function AdventurePackages() {
                       )}
                       <div className="border-t border-border/50" />
                       <div className="flex items-center justify-between gap-3">
-                        <div>
+                        <div className="hidden sm:block">
                           {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>

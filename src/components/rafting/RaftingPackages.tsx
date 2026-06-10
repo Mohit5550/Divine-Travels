@@ -377,7 +377,7 @@ export function RaftingPackages() {
                       <div className="border-t border-border/50" />
 
                       <div className="flex items-center justify-between gap-3">
-                        <div>
+                        <div className="hidden sm:block">
                           <span className="text-2xl font-bold text-brand-dark">₹{getEffectivePrice(pkg)}</span>
                           <span className="text-muted-foreground text-sm"> / Person</span>
                         </div>
