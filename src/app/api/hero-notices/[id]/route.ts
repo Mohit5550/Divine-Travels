@@ -14,6 +14,7 @@ export async function PUT(
         image: body.image,
         heading: body.heading,
         description: body.description,
+        link: body.link || null,
         order: body.order,
         active: body.active,
       },

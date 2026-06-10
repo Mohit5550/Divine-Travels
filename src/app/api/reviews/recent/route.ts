@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 export async function GET() {
   try {
     const reviews = await db.packageReview.findMany({
+      where: { approved: true },
       include: {
         user: { select: { id: true, name: true, avatar: true } },
         package: { select: { name: true } },

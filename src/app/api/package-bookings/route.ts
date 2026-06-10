@@ -66,7 +66,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       packageId, fullName, mobile, numberOfPeople,
-      preferredDate, preferredTime, additionalNotes,
+      preferredDate, preferredTime, additionalNotes, couponCode,
+      paymentId, paymentOrderId, paymentStatus, paymentAmount,
     } = body
 
     if (!packageId || !fullName || !mobile || !preferredDate) {
@@ -82,7 +83,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Package not found or inactive' }, { status: 404 })
     }
 
-    const totalPrice = pkg.price * (numberOfPeople || 1)
+    let baseTotal = pkg.price * (numberOfPeople || 1)
+    let discountAmount = 0
+    let couponId: string | null = null
+
+    // Validate and apply coupon if provided
+    if (couponCode) {
+      const coupon = await db.coupon.findUnique({ where: { code: couponCode.toUpperCase() } })
+      if (!coupon) {
+        return NextResponse.json({ error: 'Invalid coupon code' }, { status: 400 })
+      }
+      if (!coupon.active) {
+        return NextResponse.json({ error: 'Coupon is no longer active' }, { status: 400 })
+      }
+      if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+        return NextResponse.json({ error: 'Coupon has expired' }, { status: 400 })
+      }
+      if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+        return NextResponse.json({ error: 'Coupon usage limit reached' }, { status: 400 })
+      }
+      if (coupon.minAmount && baseTotal < coupon.minAmount) {
+        return NextResponse.json({ error: `Minimum order amount of ₹${coupon.minAmount} required` }, { status: 400 })
+      }
+
+      discountAmount = Math.round(baseTotal * (coupon.discountPct / 100))
+      if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
+        discountAmount = coupon.maxDiscount
+      }
+      couponId = coupon.id
+
+      await db.coupon.update({
+        where: { id: coupon.id },
+        data: { usedCount: { increment: 1 } },
+      })
+    }
+
+    const totalPrice = baseTotal - discountAmount
 
     const booking = await db.packageBooking.create({
       data: {
@@ -95,7 +131,14 @@ export async function POST(request: Request) {
         preferredTime: preferredTime || null,
         additionalNotes: additionalNotes || null,
         totalPrice,
-        status: 'pending',
+        couponId,
+        discountAmount,
+        status: paymentStatus === 'completed' ? 'confirmed' : 'pending',
+        paymentId: paymentId || null,
+        paymentOrderId: paymentOrderId || null,
+        paymentStatus: paymentStatus || 'pending',
+        paymentAmount: paymentAmount ? Number(paymentAmount) : null,
+        paymentCompletedAt: paymentStatus === 'completed' ? new Date() : null,
       },
       include: {
         package: {

@@ -35,6 +35,7 @@ interface CompanyPlan {
   id: string
   companyId: string
   name: string
+  packageSlug: string | null
   description: string | null
   price: number | null
   image: string | null
@@ -46,7 +47,7 @@ interface CompanyPlan {
 }
 
 const emptyCompany = { name: '', slug: '', logo: '', photo: '', description: '', website: '' }
-const emptyPlan = { name: '', description: '', price: 0, category: '', duration: '', highlights: '' }
+const emptyPlan = { name: '', packageSlug: '', description: '', price: 0, category: '', duration: '', highlights: '' }
 
 export function AdminCompanyPlans() {
   const [companies, setCompanies] = useState<Company[]>([])
@@ -265,11 +266,11 @@ export function AdminCompanyPlans() {
                         <Package className="w-4 h-4 text-brand-orange flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-brand-dark truncate">{plan.name}</p>
-                          <p className="text-xs text-gray-500">{plan.category}{plan.duration ? ` · ${plan.duration}` : ''}{plan.price ? ` · ₹${plan.price}` : ''}</p>
+                          <p className="text-xs text-gray-500">{plan.category}{plan.duration ? ` · ${plan.duration}` : ''}{plan.price ? ` · ₹${plan.price}` : ''}{plan.packageSlug ? ` · 📦 ${plan.packageSlug}` : ''}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => { setEditingPlan(plan); setPlanForm({ name: plan.name, description: plan.description || '', price: plan.price || 0, category: plan.category || '', duration: plan.duration || '', highlights: plan.highlights || '' }); setShowPlanForm(true) }}>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditingPlan(plan); setPlanForm({ name: plan.name, packageSlug: plan.packageSlug || '', description: plan.description || '', price: plan.price || 0, category: plan.category || '', duration: plan.duration || '', highlights: plan.highlights || '' }); setShowPlanForm(true) }}>
                           <Pencil className="w-3 h-3" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deletePlan(plan.id, company.id)}>
@@ -358,6 +359,7 @@ function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, edit
           <Input label="Category" value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
           <Input label="Duration" value={form.duration} onChange={(v) => setForm({ ...form, duration: v })} />
           <Input label="Price (₹)" value={String(form.price)} onChange={(v) => setForm({ ...form, price: Number(v) || 0 })} type="number" />
+          <Input label="Package Slug" value={form.packageSlug} onChange={(v) => setForm({ ...form, packageSlug: v })} placeholder="e.g. brahmpuri-9km-rafting" />
           <Input label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
           <Input label="Highlights (JSON array)" value={form.highlights} onChange={(v) => setForm({ ...form, highlights: v })} />
         </div>
@@ -370,7 +372,7 @@ function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, edit
   )
 }
 
-function Input({ label, value, onChange, textarea, type }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean; type?: string }) {
+function Input({ label, value, onChange, textarea, type, placeholder }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean; type?: string; placeholder?: string }) {
   const cls = "w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
   return (
     <div>
@@ -378,7 +380,7 @@ function Input({ label, value, onChange, textarea, type }: { label: string; valu
       {textarea ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cls} />
       ) : (
-        <input type={type || 'text'} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />
+        <input type={type || 'text'} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={cls} />
       )}
     </div>
   )

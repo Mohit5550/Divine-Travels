@@ -43,29 +43,39 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { status } = body
-
-    if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
-      return NextResponse.json({ error: 'Valid status is required (pending, confirmed, cancelled, completed)' }, { status: 400 })
-    }
+    const { status, paymentId, paymentOrderId, paymentStatus, paymentAmount, paymentCompletedAt } = body
 
     const user = await db.user.findUnique({ where: { id: userId } })
 
-    // Only admin can confirm/cancel/complete bookings
-    if (user?.role !== 'admin') {
-      // Regular users can only cancel their own bookings
-      if (status !== 'cancelled') {
-        return NextResponse.json({ error: 'Only admin can update booking status' }, { status: 403 })
+    // If updating status, validate it
+    if (status) {
+      if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+        return NextResponse.json({ error: 'Valid status is required (pending, confirmed, cancelled, completed)' }, { status: 400 })
       }
-      const existing = await db.packageBooking.findUnique({ where: { id } })
-      if (!existing || existing.userId !== userId) {
-        return NextResponse.json({ error: 'You can only cancel your own bookings' }, { status: 403 })
+
+      // Only admin can confirm/cancel/complete bookings
+      if (user?.role !== 'admin') {
+        if (status !== 'cancelled') {
+          return NextResponse.json({ error: 'Only admin can update booking status' }, { status: 403 })
+        }
+        const existing = await db.packageBooking.findUnique({ where: { id } })
+        if (!existing || existing.userId !== userId) {
+          return NextResponse.json({ error: 'You can only cancel your own bookings' }, { status: 403 })
+        }
       }
     }
 
+    const updateData: Record<string, any> = {}
+    if (status) updateData.status = status
+    if (paymentId) updateData.paymentId = paymentId
+    if (paymentOrderId) updateData.paymentOrderId = paymentOrderId
+    if (paymentStatus) updateData.paymentStatus = paymentStatus
+    if (paymentAmount !== undefined) updateData.paymentAmount = paymentAmount
+    if (paymentCompletedAt) updateData.paymentCompletedAt = new Date(paymentCompletedAt)
+
     const booking = await db.packageBooking.update({
       where: { id },
-      data: { status },
+      data: updateData,
       include: {
         package: {
           select: { name: true, category: true, subtitle: true, image: true },
@@ -77,15 +87,16 @@ export async function PUT(
     })
 
     // Notify customer about status change
-    if (user?.role === 'admin' && booking.user.id !== userId) {
+    if (status && user?.role === 'admin' && booking.user.id !== userId) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002'
       const statusMessages: Record<string, string> = {
-        confirmed: `Your booking for "${booking.package.name}" has been confirmed!`,
+        confirmed: `Your booking for "${booking.package.name}" has been confirmed! Pay now: ${baseUrl}/payment/return?booking_id=${id}&service=package`,
         cancelled: `Your booking for "${booking.package.name}" has been cancelled.`,
         completed: `Your booking for "${booking.package.name}" has been marked as completed.`,
       }
       const msg = statusMessages[status]
       if (msg) {
-        notifyUser(booking.user.id, 'Booking Update', msg, 'booking')
+        notifyUser(booking.user.id, 'Booking Update', msg, 'booking', `/payment/return?booking_id=${id}&service=package`)
       }
     }
 

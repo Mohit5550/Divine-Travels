@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from '@/components/landing/Navbar'
@@ -48,6 +49,14 @@ import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
 
 export default function Home() {
   const { currentView, navigate } = useAppStore()
+
+  useEffect(() => {
+    const redirect = localStorage.getItem('dt_redirect')
+    if (redirect) {
+      localStorage.removeItem('dt_redirect')
+      navigate(redirect)
+    }
+  }, [navigate])
 
   const renderView = () => {
     switch (currentView) {
@@ -135,7 +144,7 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar (handled internally)
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail', 'package-detail']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail', 'package-detail', 'package-booking']
 
   return (
     <main className="min-h-screen flex flex-col">

@@ -2,9 +2,11 @@
 
 import { Mail, Phone, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
+import { useSettings } from '@/lib/useSettings'
 
 export function Footer() {
   const { navigate } = useAppStore()
+  const s = useSettings()
 
   const handleDestClick = () => {
     navigate('landing')
@@ -32,7 +34,7 @@ export function Footer() {
               Your trusted partner for exploring the divine beauty of India. From spiritual pilgrimages to adventure getaways — we craft experiences that stay with you forever.
             </p>
             <a
-              href="https://wa.me/916396919007"
+              href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-4 text-sm text-green-400 hover:text-green-300 transition-colors"
@@ -100,15 +102,15 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-white/60 text-sm">
                 <Phone className="w-4 h-4 text-brand-orange" />
-                <a href="tel:+916396919007" className="hover:text-brand-orange transition-colors">+91 63969 19007</a>
+                <a href={`tel:${s.phone}`} className="hover:text-brand-orange transition-colors">{s.phone}</a>
               </div>
               <div className="flex items-center gap-2 text-white/60 text-sm">
                 <Mail className="w-4 h-4 text-brand-orange" />
-                <a href="mailto:info@divinetravels.in" className="hover:text-brand-orange transition-colors">info@divinetravels.in</a>
+                <a href={`mailto:${s.email}`} className="hover:text-brand-orange transition-colors">{s.email}</a>
               </div>
               <div className="flex items-start gap-2 text-white/60 text-sm">
                 <MapPin className="w-4 h-4 text-brand-orange mt-0.5" />
-                <span>Near Swami Narayan Ashram, Muni Ki Reti, Rishikesh - 249137</span>
+                <span>{s.address}</span>
               </div>
               <button
                 onClick={() => navigate('contact')}
@@ -121,13 +123,13 @@ export function Footer() {
             {/* Social / WhatsApp */}
             <div className="mt-4 pt-4 border-t border-white/10">
               <a
-                href="https://wa.me/916396919007"
+                href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-white/60 hover:text-green-400 transition-colors"
               >
                 <MessageCircle className="w-4 h-4 text-green-400" />
-                WhatsApp: +91 63969 19007
+                WhatsApp: {s.whatsapp}
               </a>
             </div>
           </div>

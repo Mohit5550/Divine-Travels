@@ -56,6 +56,25 @@ interface StayPackageViewProps {
   faqs: { question: string; answer: string }[]
 }
 
+const SUBOPTION_MAP: Record<string, string> = {
+  deluxe: 'Deluxe',
+  suite: 'Suite',
+  standard: 'Standard',
+  premium: 'Premium',
+  cottage: 'Cottage',
+  tent: 'Tent',
+  dormitory: 'Dormitory',
+  'swiss tent': 'Swiss Tent',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
+}
+
 export function StayPackageView({
   category,
   heroImage,
@@ -81,6 +100,25 @@ export function StayPackageView({
       return data as PackageData[]
     },
   })
+
+  const { data: availabilityRecords = [] } = useQuery({
+    queryKey: ['availability', category],
+    queryFn: async () => {
+      const res = await fetch(`/api/public/availability?service=${category}`)
+      const data = await res.json()
+      return data.records || []
+    },
+  })
+
+  const getEffectivePrice = (pkg: PackageData) => {
+    const subOption = getSubOptionFromName(pkg.name)
+    if (!subOption) return pkg.price
+    const match = availabilityRecords.find((r: any) => {
+      if (r.allDay) return true
+      return (r.subOptions || []).includes(subOption)
+    })
+    return match?.price ?? pkg.price
+  }
 
   const handleBook = (pkg: PackageData) => {
     if (!isAuthenticated) {
@@ -182,7 +220,7 @@ export function StayPackageView({
                         </div>
                       )}
                       <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-                        <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
+                        <div className="text-brand-orange font-bold text-lg leading-none">₹{getEffectivePrice(pkg)}</div>
                         <div className="text-muted-foreground text-[10px] mt-0.5">per night</div>
                       </div>
                       <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
@@ -226,7 +264,7 @@ export function StayPackageView({
                       <div className="border-t border-border/50" />
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
+                          <span className="text-2xl font-bold text-brand-dark">₹{getEffectivePrice(pkg)}</span>
                           <span className="text-muted-foreground text-sm"> / night</span>
                         </div>
                         <div className="flex items-center gap-2">

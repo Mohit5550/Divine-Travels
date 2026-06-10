@@ -1,0 +1,171 @@
+'use client'
+
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+
+function PaymentContent() {
+  const searchParams = useSearchParams()
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [message, setMessage] = useState('Processing your payment...')
+
+  useEffect(() => {
+    const processPayment = async () => {
+      try {
+        const paymentId =
+          searchParams.get('payment_id') ||
+          searchParams.get('pay_id') ||
+          searchParams.get('id') ||
+          searchParams.get('txn_id') ||
+          sessionStorage.getItem('dt_payment_id')
+
+        const bookingId = searchParams.get('booking_id') || sessionStorage.getItem('dt_booking_id')
+        const service = searchParams.get('service') || sessionStorage.getItem('dt_service') || 'package'
+        const pendingApp = sessionStorage.getItem('dt_pending_app')
+
+        if (!paymentId) {
+          setStatus('error')
+          setMessage('No payment reference found. Please contact support.')
+          return
+        }
+
+        const verifyRes = await fetch(`/api/kwikupi/verify-payment?payment_id=${paymentId}`)
+        if (!verifyRes.ok) {
+          setStatus('error')
+          setMessage('Failed to verify payment. Please contact support.')
+          return
+        }
+
+        const verifyData = await verifyRes.json()
+        const paymentSuccess = verifyData.status === 'TXN_SUCCESS' || verifyData.status === 'PENDING'
+
+        if (paymentSuccess) {
+          if (pendingApp) {
+            // Adventure flow: pending app in sessionStorage — create booking now
+            const formData = JSON.parse(pendingApp)
+            const createRes = await fetch('/api/package-bookings', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': formData.userId || '',
+              },
+              body: JSON.stringify({
+                ...formData,
+                paymentId: verifyData.payment_id,
+                paymentOrderId: verifyData.order_id,
+                paymentStatus: verifyData.status === 'TXN_SUCCESS' ? 'completed' : 'pending',
+                paymentAmount: verifyData.amount,
+              }),
+            })
+
+            if (createRes.ok) {
+              sessionStorage.removeItem('dt_pending_app')
+              sessionStorage.removeItem('dt_payment_id')
+              sessionStorage.removeItem('dt_booking_id')
+              sessionStorage.removeItem('dt_service')
+              setStatus('success')
+              setMessage(`Payment successful! Your booking has been submitted. Reference: ${verifyData.order_id}`)
+            } else {
+              setStatus('error')
+              setMessage('Payment was processed but booking creation failed. Please contact support.')
+            }
+          } else if (bookingId && service === 'package') {
+            // Non-adventure flow: booking already exists, update payment status
+            const updateRes = await fetch(`/api/package-bookings/${bookingId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': sessionStorage.getItem('dt_user_id') || '',
+              },
+              body: JSON.stringify({
+                paymentId: verifyData.payment_id,
+                paymentOrderId: verifyData.order_id,
+                paymentStatus: 'completed',
+                paymentAmount: verifyData.amount,
+                paymentCompletedAt: new Date().toISOString(),
+              }),
+            })
+
+            if (updateRes.ok) {
+              sessionStorage.removeItem('dt_payment_id')
+              sessionStorage.removeItem('dt_booking_id')
+              sessionStorage.removeItem('dt_service')
+              setStatus('success')
+              setMessage(`Payment successful! Booking confirmed. Reference: ${verifyData.order_id}`)
+            } else {
+              setStatus('success')
+              setMessage('Payment received but status update pending. Admin will verify shortly.')
+            }
+          } else {
+            setStatus('success')
+            setMessage(`Payment successful! Reference: ${verifyData.order_id}`)
+          }
+        } else {
+          setStatus('error')
+          setMessage('Payment was not completed. Please try again.')
+        }
+      } catch (err) {
+        console.error('Payment return error:', err)
+        setStatus('error')
+        setMessage('Something went wrong. Please contact support.')
+      }
+    }
+
+    processPayment()
+  }, [searchParams])
+
+  return (
+    <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        {status === 'loading' && (
+          <>
+            <Loader2 className="w-16 h-16 text-brand-orange mx-auto mb-4 animate-spin" />
+            <h2 className="font-serif text-2xl text-brand-dark mb-2">Processing Payment</h2>
+            <p className="text-muted-foreground">{message}</p>
+          </>
+        )}
+        {status === 'success' && (
+          <>
+            <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h2 className="font-serif text-2xl text-brand-dark mb-2">Payment Successful!</h2>
+            <p className="text-muted-foreground mb-6">{message}</p>
+            <button
+              onClick={() => { localStorage.setItem('dt_redirect', 'user-dashboard'); window.location.href = '/' }}
+              className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl px-6 py-3 font-semibold"
+            >
+              Go to Dashboard
+            </button>
+          </>
+        )}
+        {status === 'error' && (
+          <>
+            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="font-serif text-2xl text-brand-dark mb-2">Payment Issue</h2>
+            <p className="text-muted-foreground mb-6">{message}</p>
+            <button
+              onClick={() => { localStorage.setItem('dt_redirect', 'user-dashboard'); window.location.href = '/' }}
+              className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl px-6 py-3 font-semibold"
+            >
+              Go to Dashboard
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function PaymentReturnPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-brand-orange mx-auto mb-4 animate-spin" />
+          <h2 className="font-serif text-2xl text-brand-dark mb-2">Loading...</h2>
+        </div>
+      </div>
+    }>
+      <PaymentContent />
+    </Suspense>
+  )
+}

@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
-import { Package, MapPin, Calendar, Users, X, Eye, ArrowRight } from 'lucide-react'
+import { Package, MapPin, Calendar, Users, X, Eye, ArrowRight, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -33,6 +33,31 @@ export function UserPackageBookings() {
       toast.success('Booking cancelled')
       queryClient.invalidateQueries({ queryKey: ['user-package-bookings'] })
     } catch { toast.error('Failed to cancel booking') }
+  }
+
+  const handlePayNow = async (booking: any) => {
+    try {
+      const res = await fetch('/api/kwikupi/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        body: JSON.stringify({
+          customer_name: booking.fullName || user?.name,
+          customer_email: user?.email,
+          booking_id: booking.id,
+          service: 'package',
+          amount: booking.totalPrice || 500,
+        }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
+      const payData = await res.json()
+      sessionStorage.setItem('dt_payment_id', payData.payment_id)
+      sessionStorage.setItem('dt_booking_id', booking.id)
+      sessionStorage.setItem('dt_user_id', user?.id || '')
+      sessionStorage.setItem('dt_service', 'package')
+      window.location.href = payData.payment_page
+    } catch {
+      toast.error('Failed to initiate payment')
+    }
   }
 
   const getCategoryIcon = (cat: string) => {
@@ -92,11 +117,22 @@ export function UserPackageBookings() {
                       {booking.discountAmount > 0 && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Saved ₹{booking.discountAmount}</span>
                       )}
+                      {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Unpaid</span>
+                      )}
+                      {booking.paymentStatus === 'completed' && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Paid</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="sm" onClick={() => navigate('package-detail', null, booking.packageId)}>
                         <Eye className="w-3 h-3 mr-1" /> View
                       </Button>
+                      {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (
+                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white" onClick={() => handlePayNow(booking)}>
+                          <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{booking.totalPrice?.toLocaleString()}
+                        </Button>
+                      )}
                       {(booking.status === 'pending' || booking.status === 'confirmed') && (
                         <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => cancelBooking(booking.id)}>
                           <X className="w-3 h-3 mr-1" /> Cancel

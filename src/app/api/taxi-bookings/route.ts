@@ -2,6 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const all = searchParams.get('all') === 'true'
+
+    const where: any = {
+      adminNotes: { contains: 'taxi-booking' },
+    }
+    if (!all) {
+      where.status = 'pending'
+    }
+
+    const bookings = await db.tourBooking.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return NextResponse.json(bookings)
+  } catch (error) {
+    console.error('Error fetching taxi bookings:', error)
+    return NextResponse.json({ error: 'Failed to fetch taxi bookings' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

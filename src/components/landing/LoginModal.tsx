@@ -50,6 +50,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
       }
 
       setUser(data.user)
+      sessionStorage.setItem('dt_user_id', data.user.id)
       toast.success(data.message || `Welcome, ${data.user.name}!`)
       onClose()
       if (data.user.role === 'admin') {

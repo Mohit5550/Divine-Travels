@@ -3,15 +3,15 @@ import { db } from '@/lib/db'
 
 const serviceCategories = [
   { key: 'taxi', label: 'Taxi Bookings' },
-  { key: 'package-rafting', label: 'Rafting Bookings', category: 'rafting' },
-  { key: 'package-trekking', label: 'Trekking Bookings', category: 'trekking' },
-  { key: 'package-adventure', label: 'Adventure Bookings', category: 'adventure' },
-  { key: 'package-bike-rental', label: 'Bike Rental Bookings', category: 'bike-rental' },
-  { key: 'package-domestic-tours', label: 'Domestic Tour Bookings', category: 'domestic-tours' },
-  { key: 'package-spiritual-tours', label: 'Spiritual Tour Bookings', category: 'spiritual-tours' },
-  { key: 'package-international-tours', label: 'International Tour Bookings', category: 'international-tours' },
-  { key: 'package-stay-hotel', label: 'Hotel Bookings', category: 'stay-hotel' },
-  { key: 'package-stay-camping', label: 'Camping Bookings', category: 'stay-camping' },
+  { key: 'rafting', label: 'Rafting Bookings', category: 'rafting' },
+  { key: 'trekking', label: 'Trekking Bookings', category: 'trekking' },
+  { key: 'adventure', label: 'Adventure Bookings', category: 'adventure' },
+  { key: 'bike-rental', label: 'Bike Rental Bookings', category: 'bike-rental' },
+  { key: 'domestic-tours', label: 'Domestic Tour Bookings', category: 'domestic-tours' },
+  { key: 'spiritual-tours', label: 'Spiritual Tour Bookings', category: 'spiritual-tours' },
+  { key: 'international-tours', label: 'International Tour Bookings', category: 'international-tours' },
+  { key: 'stay-hotel', label: 'Hotel Bookings', category: 'stay-hotel' },
+  { key: 'stay-camping', label: 'Camping Bookings', category: 'stay-camping' },
   { key: 'tour', label: 'Day Tour Bookings' },
 ]
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         counts[svc.key] = taxiCount
       } else if (svc.key === 'tour') {
         counts[svc.key] = tourCount
-      } else if (svc.key.startsWith('package-') && svc.category) {
+      } else if (svc.category) {
         counts[svc.key] = packageCounts[svc.category] || 0
       }
     }

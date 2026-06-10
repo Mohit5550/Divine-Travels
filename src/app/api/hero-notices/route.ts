@@ -17,10 +17,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { image, heading, description, order } = body
+    const { image, heading, description, link, order } = body
     if (!heading) return NextResponse.json({ error: 'Heading required' }, { status: 400 })
     const notice = await db.heroNotice.create({
-      data: { image, heading, description, order: order || 0 },
+      data: { image, heading, description, link: link || null, order: order || 0 },
     })
     return NextResponse.json(notice, { status: 201 })
   } catch (error) {

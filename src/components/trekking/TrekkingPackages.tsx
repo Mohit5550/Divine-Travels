@@ -75,6 +75,27 @@ function getDifficultyIcon(subtitle: string) {
   return Mountain
 }
 
+const SUBOPTION_MAP: Record<string, string> = {
+  'valley of flowers': 'Valley of Flowers',
+  'nag tibba': 'Nag Tibba',
+  kedarkantha: 'Kedarkantha',
+  'har ki dun': 'Har Ki Dun',
+  brahmatal: 'Brahmatal',
+  dayara: 'Dayara Bugyal',
+  tungnath: 'Tungnath',
+  chandrashila: 'Chandrashila',
+  kauri: 'Kauri Pass',
+  rupin: 'Rupin Pass',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
+}
+
 export function TrekkingPackages() {
   const { navigate, isAuthenticated } = useAppStore()
 
@@ -86,6 +107,25 @@ export function TrekkingPackages() {
       return data as PackageData[]
     },
   })
+
+  const { data: availabilityRecords = [] } = useQuery({
+    queryKey: ['availability', 'trekking'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/availability?service=trekking')
+      const data = await res.json()
+      return data.records || []
+    },
+  })
+
+  const getEffectivePrice = (pkg: PackageData) => {
+    const subOption = getSubOptionFromName(pkg.name)
+    if (!subOption) return pkg.price
+    const match = availabilityRecords.find((r: any) => {
+      if (r.allDay) return true
+      return (r.subOptions || []).includes(subOption)
+    })
+    return match?.price ?? pkg.price
+  }
 
   const handleBookTrip = (pkg: PackageData) => {
     if (!isAuthenticated) {
@@ -238,15 +278,15 @@ export function TrekkingPackages() {
 
                       {/* Price floating badge */}
                       <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-                        {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
+                        {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                           <div className="flex flex-col items-end">
                             <span className="line-through text-white/60 text-[10px] sm:text-xs">₹{pkg.originalPrice}</span>
-                            <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{pkg.price}</div>
-                            <span className="text-emerald-500 text-[9px] sm:text-[10px] font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
+                            <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{ep}</div>
+                            <span className="text-emerald-500 text-[9px] sm:text-[10px] font-semibold">Save ₹{pkg.originalPrice - ep}</span>
                           </div>
                         ) : (
-                          <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{pkg.price}</div>
-                        )}
+                          <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{ep}</div>
+                        ) })()}
                         <div className="text-muted-foreground text-[9px] sm:text-[10px] mt-0.5">per person</div>
                       </div>
 
@@ -259,6 +299,7 @@ export function TrekkingPackages() {
 
                     {/* Details Section */}
                     <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
+                      <div className="hidden sm:block">
                       {/* Key Specs - Grid */}
                       <div className="grid grid-cols-2 gap-1.5 sm:gap-2.5">
                         <div className="bg-brand-cream/70 rounded-lg p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2">
@@ -305,6 +346,7 @@ export function TrekkingPackages() {
                           <span className="text-muted-foreground">{pkg.suitableFor || pkg.targetDemo}</span>
                         </div>
                       </div>
+                      </div>
 
                       {/* Rating */}
                       {pkg.rating > 0 && (
@@ -332,15 +374,15 @@ export function TrekkingPackages() {
                       {/* Price, View Details & Book */}
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
+                          {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                               <span className="text-sm sm:text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>
-                              <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                              <span className="text-emerald-600 text-[10px] sm:text-xs font-semibold hidden sm:inline">Save ₹{pkg.originalPrice - pkg.price}</span>
+                              <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{ep}</span>
+                              <span className="text-emerald-600 text-[10px] sm:text-xs font-semibold hidden sm:inline">Save ₹{pkg.originalPrice - ep}</span>
                             </div>
                           ) : (
-                            <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                          )}
+                            <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{ep}</span>
+                          ) })()}
                           <span className="text-muted-foreground text-[11px] sm:text-sm"> / Person</span>
                         </div>
                         <div className="flex items-center gap-1.5 sm:gap-2">

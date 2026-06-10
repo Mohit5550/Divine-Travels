@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     })
 
     notifyAdmin('New Contact Inquiry', `${name} (${email}) sent an inquiry: ${message.substring(0, 100)}`, 'inquiry')
+    return NextResponse.json({ success: true }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Failed to submit inquiry' }, { status: 500 })
   }

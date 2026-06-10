@@ -15,16 +15,24 @@ export async function GET(request: NextRequest) {
     }
 
     const [
-      totalBookings,
+      totalDestinationBookings,
+      totalPackageBookings,
+      totalTourBookings,
       totalUsers,
       totalDestinations,
-      allBookings,
-      recentBookings,
+      allDestinationBookings,
+      allPackageBookings,
+      allTourBookings,
+      recentDestinationBookings,
     ] = await Promise.all([
       db.booking.count(),
+      db.packageBooking.count(),
+      db.tourBooking.count(),
       db.user.count(),
       db.destination.count({ where: { active: true } }),
-      db.booking.findMany({ select: { totalPrice: true, status: true, createdAt: true } }),
+      db.booking.findMany({ select: { totalPrice: true, status: true, createdAt: true, paymentStatus: true } }),
+      db.packageBooking.findMany({ select: { totalPrice: true, status: true, createdAt: true } }),
+      db.tourBooking.findMany({ select: { createdAt: true }, orderBy: { createdAt: 'desc' } }),
       db.booking.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
@@ -35,31 +43,45 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
-    const totalRevenue = allBookings
-      .filter((b) => b.paymentStatus === 'paid')
-      .reduce((sum: number, b) => sum + b.totalPrice, 0)
+    const totalBookings = totalDestinationBookings + totalPackageBookings + totalTourBookings
+
+    const totalRevenue = allDestinationBookings
+      .filter((b: { paymentStatus: string }) => b.paymentStatus === 'paid')
+      .reduce((sum: number, b: { totalPrice: number }) => sum + b.totalPrice, 0) +
+      allPackageBookings
+        .filter((b: { status: string }) => b.status === 'confirmed')
+        .reduce((sum: number, b: { totalPrice: number }) => sum + b.totalPrice, 0)
 
     // Monthly data for chart (last 6 months)
-    const monthlyData = []
+    const monthlyData: { month: string; bookings: number; revenue: number }[] = []
     const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
-      const monthBookings = allBookings.filter(
-        (b) => b.createdAt >= month && b.createdAt < nextMonth
+      const destMonth = allDestinationBookings.filter(
+        (b: { createdAt: Date }) => b.createdAt >= month && b.createdAt < nextMonth
       )
-      const revenue = monthBookings
-        .filter((b) => b.paymentStatus === 'paid')
-        .reduce((sum: number, b) => sum + b.totalPrice, 0)
+      const pkgMonth = allPackageBookings.filter(
+        (b: { createdAt: Date }) => b.createdAt >= month && b.createdAt < nextMonth
+      )
+      const tourMonth = allTourBookings.filter(
+        (b: { createdAt: Date }) => b.createdAt >= month && b.createdAt < nextMonth
+      )
+      const revenue = destMonth
+        .filter((b: { paymentStatus: string }) => b.paymentStatus === 'paid')
+        .reduce((sum: number, b: { totalPrice: number }) => sum + b.totalPrice, 0) +
+        pkgMonth
+          .filter((b: { status: string }) => b.status === 'confirmed')
+          .reduce((sum: number, b: { totalPrice: number }) => sum + b.totalPrice, 0)
       monthlyData.push({
         month: month.toLocaleString('default', { month: 'short' }),
-        bookings: monthBookings.length,
+        bookings: destMonth.length + pkgMonth.length + tourMonth.length,
         revenue,
       })
     }
 
-    const confirmedBookings = allBookings.filter((b) => b.status === 'confirmed').length
-    const pendingBookings = allBookings.filter((b) => b.status === 'pending').length
+    const confirmedBookings = allDestinationBookings.filter((b: { status: string }) => b.status === 'confirmed').length
+    const pendingBookings = allDestinationBookings.filter((b: { status: string }) => b.status === 'pending').length
 
     return NextResponse.json({
       totalBookings,
@@ -68,7 +90,7 @@ export async function GET(request: NextRequest) {
       totalDestinations,
       confirmedBookings,
       pendingBookings,
-      recentBookings,
+      recentBookings: recentDestinationBookings,
       monthlyData,
     })
   } catch {

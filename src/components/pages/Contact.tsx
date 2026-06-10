@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useAppStore } from '@/lib/store'
+import { useSettings } from '@/lib/useSettings'
 import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { Phone, Mail, MapPin, Clock, Send, ArrowLeft, MessageCircle } from 'lucide-react'
@@ -12,6 +13,7 @@ import { toast } from 'sonner'
 
 export function Contact() {
   const { navigate } = useAppStore()
+  const s = useSettings()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -97,21 +99,21 @@ export function Contact() {
                   <Phone className="w-5 h-5 text-brand-orange mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-brand-dark">Phone / WhatsApp</p>
-                    <a href="tel:+916396919007" className="text-sm text-muted-foreground hover:text-brand-orange">+91 63969 19007</a>
+                    <a href={`tel:${s.phone}`} className="text-sm text-muted-foreground hover:text-brand-orange">{s.phone}</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-brand-orange mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-brand-dark">Email</p>
-                    <a href="mailto:info@divinetravels.in" className="text-sm text-muted-foreground hover:text-brand-orange">info@divinetravels.in</a>
+                    <a href={`mailto:${s.email}`} className="text-sm text-muted-foreground hover:text-brand-orange">{s.email}</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-brand-orange mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-brand-dark">Address</p>
-                    <p className="text-sm text-muted-foreground">Near Swami Narayan Ashram, Muni Ki Reti, Rishikesh - 249137</p>
+                    <p className="text-sm text-muted-foreground">{s.address}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -125,7 +127,7 @@ export function Contact() {
               </div>
             </div>
 
-            <a href="https://wa.me/916396919007" target="_blank" rel="noopener noreferrer"
+            <a href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl p-4 transition-colors">
               <MessageCircle className="w-5 h-5" />
               <span className="font-medium">Chat on WhatsApp</span>

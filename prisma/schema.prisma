@@ -26,6 +26,7 @@ model User {
   packageWishlist PackageWishlist[]
   notifications   Notification[]
   payments        Payment[]
+  tourBookings    TourBooking[]
 }
 
 model Destination {
@@ -157,24 +158,29 @@ model PackageReview {
 }
 
 model PackageBooking {
-  id              String   @id @default(cuid())
-  userId          String
-  packageId       String
-  user            User     @relation(fields: [userId], references: [id])
-  package         Package  @relation(fields: [packageId], references: [id])
-  fullName        String
-  mobile          String
-  numberOfPeople  Int      @default(1)
-  preferredDate   DateTime
-  preferredTime   String?
-  additionalNotes String?
-  totalPrice      Int
-  couponId        String?
-  discountAmount  Int      @default(0)
-  status          String   @default("pending")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  coupon          Coupon?  @relation(fields: [couponId], references: [id])
+  id                String     @id @default(cuid())
+  userId            String
+  packageId         String
+  user              User       @relation(fields: [userId], references: [id])
+  package           Package    @relation(fields: [packageId], references: [id])
+  fullName          String
+  mobile            String
+  numberOfPeople    Int        @default(1)
+  preferredDate     DateTime
+  preferredTime     String?
+  additionalNotes   String?
+  totalPrice        Int
+  couponId          String?
+  discountAmount    Int        @default(0)
+  status            String     @default("pending")
+  paymentId         String?
+  paymentOrderId    String?
+  paymentStatus     String     @default("pending")
+  paymentAmount     Int?
+  paymentCompletedAt DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  coupon            Coupon?    @relation(fields: [couponId], references: [id])
 }
 
 model PackageWishlist {
@@ -320,6 +326,7 @@ model HeroNotice {
   image       String?
   heading     String
   description String?
+  link        String?  // URL to redirect when clicked
   active      Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -340,7 +347,8 @@ model DateAvailability {
 }
 
 model TourBooking {
-  id               String   @id @default(cuid())
+  id                String   @id @default(cuid())
+  userId            String?  // nullable for non-logged-in users
   destination      String   // "Rishikesh", "Haridwar", etc.
   dayLabel         String?  // "Day 1", "Day 2", "Day 3", "Master", or null for single-select
   packageType      String   // "Rishikesh Day 1", "Hill Station Tour", etc.
@@ -351,6 +359,12 @@ model TourBooking {
   travelers        Int      @default(1)
   status           String   @default("pending") // "pending", "approved", "rejected"
   adminNotes       String?
+  paymentId        String?
+  paymentOrderId   String?
+  paymentStatus    String   @default("pending")
+  paymentAmount    Int?
+  paymentCompletedAt DateTime?
+  user             User?    @relation(fields: [userId], references: [id])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

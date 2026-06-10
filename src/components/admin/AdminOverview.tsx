@@ -2,50 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { CalendarCheck, DollarSign, MapPin, Users, TrendingUp, ArrowUpRight, Car, Bike, Mountain, Waves, Compass, Globe, Map, Landmark, Bed, Tent, Loader2 } from 'lucide-react'
+import { CalendarCheck, DollarSign, MapPin, Users, TrendingUp, ArrowUpRight, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const serviceIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  rafting: Waves,
-  trekking: Mountain,
-  adventure: Compass,
-  'bike-rental': Bike,
-  taxi: Car,
-  'domestic-tours': Map,
-  'spiritual-tours': Landmark,
-  'international-tours': Globe,
-  'stay-hotel': Bed,
-  'stay-camping': Tent,
-  tour: CalendarCheck,
-}
-
-const serviceLabels: Record<string, string> = {
-  rafting: 'Rafting',
-  trekking: 'Trekking',
-  adventure: 'Adventure',
-  'bike-rental': 'Bike Rental',
-  taxi: 'Taxi',
-  'domestic-tours': 'Domestic Tours',
-  'spiritual-tours': 'Spiritual Tours',
-  'international-tours': 'International Tours',
-  'stay-hotel': 'Hotel',
-  'stay-camping': 'Camping',
-  tour: 'Day Tours',
-}
-
-const serviceColors: Record<string, string> = {
-  rafting: 'text-blue-600 bg-blue-100',
-  trekking: 'text-emerald-600 bg-emerald-100',
-  adventure: 'text-red-600 bg-red-100',
-  'bike-rental': 'text-orange-600 bg-orange-100',
-  taxi: 'text-amber-600 bg-amber-100',
-  'domestic-tours': 'text-teal-600 bg-teal-100',
-  'spiritual-tours': 'text-amber-700 bg-amber-100',
-  'international-tours': 'text-indigo-600 bg-indigo-100',
-  'stay-hotel': 'text-amber-600 bg-amber-100',
-  'stay-camping': 'text-emerald-600 bg-emerald-100',
-  tour: 'text-brand-orange bg-brand-orange/10',
-}
 
 export function AdminOverview() {
   const { user } = useAppStore()
@@ -58,21 +16,6 @@ export function AdminOverview() {
       })
       return res.json()
     },
-  })
-
-  const { data: countsData } = useQuery({
-    queryKey: ['admin-booking-counts', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return { counts: {} as Record<string, number> }
-      const res = await fetch('/api/admin/booking-counts', {
-        headers: { 'x-user-id': user.id },
-      })
-      if (!res.ok) return { counts: {} as Record<string, number> }
-      const data = await res.json()
-      return { counts: (data.counts || {}) as Record<string, number> }
-    },
-    enabled: !!user?.id,
-    refetchInterval: 15000,
   })
 
   if (isLoading) {
@@ -119,8 +62,6 @@ export function AdminOverview() {
     },
   ]
 
-  const counts = countsData?.counts || {}
-
   return (
     <div>
       <div className="mb-8">
@@ -148,37 +89,6 @@ export function AdminOverview() {
             </div>
           )
         })}
-      </div>
-
-      {/* Service Booking Counts - iPhone-style notification badges */}
-      <div className="mb-8">
-        <h3 className="font-semibold text-brand-dark mb-3 text-sm">Pending Bookings by Service</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {Object.entries(serviceLabels).map(([key, label]) => {
-            const Icon = serviceIcons[key] || CalendarCheck
-            const count = counts[key] || 0
-            const colorClasses = serviceColors[key] || 'text-gray-600 bg-gray-100'
-            return (
-              <div
-                key={key}
-                className="relative bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-8 h-8 rounded-lg ${colorClasses} flex items-center justify-center`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  {count > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
-                      {count}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground truncate">{label}</p>
-                <p className="text-lg font-bold text-brand-dark">{count}</p>
-              </div>
-            )
-          })}
-        </div>
       </div>
 
       {/* Charts Row */}

@@ -20,6 +20,7 @@ interface PackageBookingData {
   additionalNotes: string | null
   totalPrice: number
   status: string
+  paymentStatus: string
   createdAt: string
   package: {
     id: string
@@ -248,12 +249,21 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                 </div>
 
                 {/* Status */}
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <div>
-                    <span className="text-xs text-muted-foreground">Status: </span>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(selectedBooking.status)}`}>
+                <div className="flex items-center justify-between pt-3 border-t border-border flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(selectedBooking.status)}">
                       {selectedBooking.status}
                     </span>
+                    {selectedBooking.paymentStatus === 'completed' && (
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-green-100 text-green-700">
+                        ✅ Payment Done
+                      </span>
+                    )}
+                    {selectedBooking.paymentStatus === 'pending' && selectedBooking.status === 'confirmed' && (
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-amber-100 text-amber-700">
+                        Payment Pending
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     {selectedBooking.status === 'pending' && (
@@ -347,9 +357,14 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(booking.status)}`}>
-                        {booking.status}
-                      </span>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(booking.status)}`}>
+                          {booking.status}
+                        </span>
+                        {booking.paymentStatus === 'completed' && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">Paid</span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">

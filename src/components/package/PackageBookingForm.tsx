@@ -22,13 +22,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 interface PackageData {
   id: string
   name: string
   subtitle: string
   price: number
+  originalPrice: number | null
   category: string
   distance: string
   duration: string
@@ -82,6 +83,9 @@ export function PackageBookingForm() {
     additionalNotes: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPct: number; discountAmount: number } | null>(null)
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
 
   const { data: pkg, isLoading } = useQuery({
     queryKey: ['package-booking', selectedPackageId],
@@ -155,6 +159,98 @@ export function PackageBookingForm() {
     setForm({ ...form, numberOfPeople: newVal })
   }
 
+  const handleApplyCoupon = useCallback(async () => {
+    if (!couponCode.trim()) return
+    if (!pkg) return
+
+    setValidatingCoupon(true)
+    try {
+      const res = await fetch('/api/coupons/active')
+      const coupons = await res.json()
+      const match = coupons.find((c: any) => c.code === couponCode.trim().toUpperCase())
+
+      if (!match) {
+        toast.error('Invalid coupon code')
+        setAppliedCoupon(null)
+        return
+      }
+
+      const baseTotal = (effectivePrice ?? pkg.price) * form.numberOfPeople
+      let discount = Math.round(baseTotal * (match.discountPct / 100))
+      if (match.maxDiscount && discount > match.maxDiscount) {
+        discount = match.maxDiscount
+      }
+
+      setAppliedCoupon({ code: match.code, discountPct: match.discountPct, discountAmount: discount })
+      toast.success(`Coupon applied! You save ₹${discount}`)
+    } catch {
+      toast.error('Failed to validate coupon')
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }, [couponCode, pkg, effectivePrice, form.numberOfPeople])
+
+  const isAdventure = pkg?.category === 'adventure'
+
+  const handleProceedToPay = async () => {
+    if (!form.fullName.trim() || !form.mobile.trim() || form.mobile.length < 10 || !form.preferredDate) {
+      toast.error('Please fill all required fields')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const actualPrice = pkg?.originalPrice && pkg.originalPrice > pkg.price ? pkg.originalPrice : (pkg?.price || 0)
+      const pricePerPerson = effectivePrice || actualPrice
+
+      const formData = {
+        packageId: selectedPackageId,
+        fullName: form.fullName,
+        mobile: form.mobile,
+        numberOfPeople: form.numberOfPeople,
+        preferredDate: form.preferredDate,
+        preferredTime: form.preferredTime,
+        additionalNotes: form.additionalNotes,
+        couponCode: appliedCoupon?.code || '',
+        userId: user?.id || '',
+      }
+
+      sessionStorage.setItem('dt_pending_app', JSON.stringify(formData))
+
+      const payRes = await fetch('/api/kwikupi/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
+        },
+        body: JSON.stringify({
+          customer_name: form.fullName,
+          customer_email: user?.email,
+          booking_id: 'pending',
+          service: 'package',
+          amount: pricePerPerson * (form.numberOfPeople || 1),
+        }),
+      })
+
+      if (!payRes.ok) {
+        const d = await payRes.json()
+        toast.error(d.error || 'Failed to create payment')
+        sessionStorage.removeItem('dt_pending_app')
+        return
+      }
+
+      const payData = await payRes.json()
+      sessionStorage.setItem('dt_payment_id', payData.payment_id)
+      sessionStorage.setItem('dt_service', 'package')
+      window.location.href = payData.payment_page
+    } catch {
+      toast.error('Failed to process payment')
+      sessionStorage.removeItem('dt_pending_app')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -168,6 +264,11 @@ export function PackageBookingForm() {
     }
     if (!form.preferredDate) {
       toast.error('Please select a preferred date')
+      return
+    }
+
+    if (isAdventure) {
+      handleProceedToPay()
       return
     }
 
@@ -187,6 +288,7 @@ export function PackageBookingForm() {
           preferredDate: form.preferredDate,
           preferredTime: form.preferredTime,
           additionalNotes: form.additionalNotes,
+          couponCode: appliedCoupon?.code || '',
         }),
       })
 
@@ -377,19 +479,65 @@ export function PackageBookingForm() {
               </div>
             </div>
 
+            {/* Coupon Code */}
+            <div>
+              <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                Coupon Code <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="flex-1 h-11 rounded-xl uppercase"
+                  disabled={!!appliedCoupon}
+                />
+                {appliedCoupon ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => { setAppliedCoupon(null); setCouponCode('') }}
+                    className="h-11 rounded-xl text-red-500 border-red-200 hover:bg-red-50"
+                  >
+                    Remove
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={!couponCode.trim() || validatingCoupon}
+                    className="h-11 rounded-xl bg-brand-orange hover:bg-brand-orange/90 text-white"
+                  >
+                    {validatingCoupon ? '...' : 'Apply'}
+                  </Button>
+                )}
+              </div>
+              {appliedCoupon && (
+                <p className="text-xs text-green-600 mt-1">
+                  Coupon {appliedCoupon.code} applied — {appliedCoupon.discountPct}% off (save ₹{appliedCoupon.discountAmount})
+                </p>
+              )}
+            </div>
+
             {/* Price Summary */}
             <div className="bg-brand-cream/70 rounded-xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">₹{displayPrice} × {form.numberOfPeople} {form.numberOfPeople === 1 ? 'person' : 'people'}</span>
-                <span className="text-brand-dark font-medium">₹{totalPrice.toLocaleString()}</span>
+                <span className="text-brand-dark font-medium">₹{(displayPrice * form.numberOfPeople).toLocaleString()}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Discount ({appliedCoupon.code})</span>
+                  <span className="text-green-600 font-medium">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Shield className="w-3 h-3" />
                 <span>Booking goes to pending — admin will confirm</span>
               </div>
               <div className="flex justify-between font-bold text-lg pt-2 border-t border-border/50">
                 <span>Total</span>
-                <span className="text-brand-orange">₹{totalPrice.toLocaleString()}</span>
+                <span className="text-brand-orange">₹{(totalPrice - (appliedCoupon?.discountAmount || 0)).toLocaleString()}</span>
               </div>
             </div>
 
@@ -406,7 +554,7 @@ export function PackageBookingForm() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-brand-teal hover:bg-brand-teal/90 text-white h-11 rounded-xl font-semibold"
+                className={`flex-1 h-11 rounded-xl font-semibold ${isAdventure ? 'bg-brand-orange hover:bg-brand-orange/90 text-white' : 'bg-brand-teal hover:bg-brand-teal/90 text-white'}`}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
@@ -415,11 +563,11 @@ export function PackageBookingForm() {
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                     />
-                    Sending...
+                    {isAdventure ? 'Redirecting...' : 'Sending...'}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
-                    Send Enquiry
+                    {isAdventure ? `Pay ₹${effectivePrice || pkg?.price || 0}` : 'Send Enquiry'}
                     <ChevronRight className="w-4 h-4" />
                   </span>
                 )}

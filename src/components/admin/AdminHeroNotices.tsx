@@ -11,11 +11,12 @@ interface HeroNoticeItem {
   image: string | null
   heading: string
   description: string | null
+  link: string | null
   order: number
   active: boolean
 }
 
-const emptyForm = { image: '', heading: '', description: '', order: 0 }
+const emptyForm = { image: '', heading: '', description: '', link: '', order: 0 }
 
 export function AdminHeroNotices() {
   const [notices, setNotices] = useState<HeroNoticeItem[]>([])
@@ -98,7 +99,7 @@ export function AdminHeroNotices() {
                 {notice.description && <p className="text-xs text-gray-400 truncate">{notice.description}</p>}
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={() => { setEditing(notice); setForm({ image: notice.image || '', heading: notice.heading, description: notice.description || '', order: notice.order }); setShowForm(true) }}>
+                <Button variant="ghost" size="sm" onClick={() => { setEditing(notice); setForm({ image: notice.image || '', heading: notice.heading, description: notice.description || '', link: notice.link || '', order: notice.order }); setShowForm(true) }}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
                 <Button variant="ghost" size="sm" className="text-red-500" onClick={() => del(notice.id)}>
@@ -132,6 +133,12 @@ export function AdminHeroNotices() {
                   <input value={form.heading} onChange={(e) => setForm({ ...form, heading: e.target.value })}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange"
                     placeholder="e.g. Travel Mart 2026" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Link URL (redirect on click)</label>
+                  <input value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange"
+                    placeholder="https://example.com/package" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
