@@ -96,7 +96,7 @@ export function InternationalPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=2070"
+            src="https://travelistaan.com/wp-content/uploads/2026/05/image-31.png"
             alt="International Tours"
             className="w-full h-full object-cover"
           />

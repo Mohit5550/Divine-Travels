@@ -133,7 +133,7 @@ export function BikePackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://divinetravels.in/wp-content/uploads/2025/11/bike-rental-hero.jpg"
+            src="https://www.andamantourism.org/wp-content/uploads/2023/12/Renting-Bikes-in-Port-Blair.jpg"
             alt="Bike Rental in Rishikesh"
             className="w-full h-full object-cover"
           />

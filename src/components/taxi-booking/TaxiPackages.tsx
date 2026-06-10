@@ -131,7 +131,7 @@ export function TaxiPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://divinetravels.in/wp-content/uploads/2025/11/taxi-booking-hero.jpg"
+            src="https://www.rajasthantourpackages.in/_next/image?url=https%3A%2F%2Fik.imagekit.io%2Fx7ulapdbp%2F8361a72a-edcb-4f94-9512-fe8bb70ab914-rajasthan-cab-rental.jpg&w=3840&q=75"
             alt="Taxi Booking in Rishikesh"
             className="w-full h-full object-cover"
           />

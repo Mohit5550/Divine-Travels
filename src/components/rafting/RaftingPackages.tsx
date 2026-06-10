@@ -162,7 +162,7 @@ export function RaftingPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://divinetravels.in/wp-content/uploads/2025/11/photo_2025-11-01_19-11-58.jpg"
+            src="https://www.justahotels.com/wp-content/uploads/2024/01/stock-photo-rafting-stunt-while-whitewater-rafting-rishikesh-india-1372981319-transformed.jpeg"
             alt="White Water Rafting in Rishikesh"
             className="w-full h-full object-cover"
           />

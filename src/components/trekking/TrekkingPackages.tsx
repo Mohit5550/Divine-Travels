@@ -151,7 +151,7 @@ export function TrekkingPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://www.enlivetrips.com/uploads/posts/kedarkantha%20trek.jpg"
+            src="https://vl-prod-static.b-cdn.net/system/images/000/097/753/aeb47db7532b7691e18a1e981e3c95ca/original/Himalaya-Destination-1.jpg"
             alt="Trekking in Uttarakhand"
             className="w-full h-full object-cover"
           />

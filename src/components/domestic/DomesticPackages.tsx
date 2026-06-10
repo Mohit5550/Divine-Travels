@@ -96,7 +96,7 @@ export function DomesticPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1477587458883-47145edc745f?q=80&w=2070"
+            src="https://5.imimg.com/data5/SELLER/Default/2023/4/297084493/HK/AM/CF/9160165/domestic-tour-package.jpg"
             alt="Domestic Tours India"
             className="w-full h-full object-cover"
           />

@@ -88,7 +88,7 @@ export function SpiritualPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1566837945700-30057527ade0?q=80&w=2070"
+            src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/0b/31/b3/53.jpg"
             alt="Spiritual Tours India"
             className="w-full h-full object-cover"
           />

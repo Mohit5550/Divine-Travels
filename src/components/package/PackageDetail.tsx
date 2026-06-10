@@ -293,8 +293,8 @@ export function PackageDetail() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Hero + Info + Safety (above booking on mobile) */}
-          <div className="lg:col-span-2 space-y-6 order-1">
+          {/* Left Column: Hero + Safety + Mobile Booking + Tabs + Sections */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Hero Image Gallery */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -455,17 +455,8 @@ export function PackageDetail() {
               </div>
             </motion.div>
 
-          </div>
-
-          {/* Booking Panel - appears above sections on mobile */}
-          <div className="lg:col-span-1 order-2 lg:order-3">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm sticky top-4 overflow-hidden"
-            >
-              {/* Price Header */}
+            {/* Booking Panel - mobile only */}
+            <div className="lg:hidden order-2 bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-brand-dark to-brand-navy p-5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -486,8 +477,6 @@ export function PackageDetail() {
                   </div>
                 </div>
               </div>
-
-              {/* Quick Details */}
               <div className="p-5 space-y-3 border-b border-border/50">
                 <div className="flex items-center gap-3 text-sm">
                   <Route className="w-4 h-4 text-blue-500" />
@@ -521,19 +510,12 @@ export function PackageDetail() {
                   </>
                 )}
               </div>
-
-              {/* Book Button */}
               <div className="p-5">
-                <Button
-                  onClick={handleBookNow}
-                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl"
-                >
+                <Button onClick={handleBookNow} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
                   Book This Activity
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
-
-              {/* Why Divine Travel */}
               <div className="p-5 bg-brand-cream/50 space-y-3">
                 <h4 className="font-semibold text-sm text-brand-dark">Why Divine Travel?</h4>
                 {[
@@ -550,30 +532,18 @@ export function PackageDetail() {
                   </div>
                 ))}
               </div>
-
-              {/* Contact Support */}
               <div className="p-5 border-t border-border/50">
                 <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
-                <Button
-                  variant="outline"
-                  className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
+                <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
                   onClick={() => {
-                    if (!isAuthenticated) {
-                      toast.error('Please login to contact us')
-                    } else {
-                      toast.info('Our team will contact you shortly!')
-                    }
-                  }}
-                >
+                    if (!isAuthenticated) { toast.error('Please login to contact us') }
+                    else { toast.info('Our team will contact you shortly!') }
+                  }}>
                   <Phone className="w-4 h-4 mr-2" />
                   Connect with Team
                 </Button>
               </div>
-            </motion.div>
-          </div>
-
-          {/* Detailed Sections - appear after booking on mobile */}
-          <div className="lg:col-span-2 space-y-6 order-3">
+            </div>
 
             {/* Section Navigation - Sticky */}
             <div className="sticky top-0 z-20 bg-brand-cream/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 border-b border-border/50">
@@ -1103,6 +1073,103 @@ export function PackageDetail() {
                     </AnimatePresence>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Desktop Booking Panel - right column */}
+          <div className="hidden lg:block lg:col-span-1">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-xl shadow-sm sticky top-4 overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-brand-dark to-brand-navy p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-white font-bold text-lg">{pkg.name}</h3>
+                    <p className="text-white/60 text-sm">{pkg.subtitle}</p>
+                  </div>
+                  <div className="text-right">
+                    {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
+                      <>
+                        <div className="text-white/50 text-sm line-through">₹{pkg.originalPrice}</div>
+                        <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</div>
+                      </>
+                    ) : (
+                      <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                    )}
+                    <div className="text-white/60 text-xs">per person</div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-3 border-b border-border/50">
+                <div className="flex items-center gap-3 text-sm">
+                  <Route className="w-4 h-4 text-blue-500" />
+                  <span className="text-muted-foreground">{pkg.distance}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Timer className="w-4 h-4 text-amber-500" />
+                  <span className="text-muted-foreground">{pkg.duration}</span>
+                </div>
+                {pkg.routeLength ? (
+                  <>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Map className="w-4 h-4 text-purple-500" />
+                      <span className="text-muted-foreground">{pkg.routeLength}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <MapPin className="w-4 h-4 text-brand-teal" />
+                      <span className="text-muted-foreground">{pkg.baseCamp || '—'}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Waves className="w-4 h-4 text-red-500" />
+                      <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Clock className="w-4 h-4 text-green-500" />
+                      <span className="text-muted-foreground">{pkg.timings}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="p-5">
+                <Button onClick={handleBookNow} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
+                  Book This Activity
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+              <div className="p-5 bg-brand-cream/50 space-y-3">
+                <h4 className="font-semibold text-sm text-brand-dark">Why Divine Travel?</h4>
+                {[
+                  { text: '500+ happy adventurers', icon: '🎉' },
+                  { text: 'Pay 10% to reserve — balance at location', icon: '💳' },
+                  { text: 'Lowest prices with last-minute availability', icon: '🏷️' },
+                  { text: 'Instant booking confirmation', icon: '⚡' },
+                  { text: '24/7 expert support', icon: '📞' },
+                  { text: 'No hidden charges. Ever.', icon: '✅' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                    <span className="text-base">{item.icon}</span>
+                    {item.text}
+                  </div>
+                ))}
+              </div>
+              <div className="p-5 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
+                <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
+                  onClick={() => {
+                    if (!isAuthenticated) { toast.error('Please login to contact us') }
+                    else { toast.info('Our team will contact you shortly!') }
+                  }}>
+                  <Phone className="w-4 h-4 mr-2" />
+                  Connect with Team
+                </Button>
               </div>
             </motion.div>
           </div>
