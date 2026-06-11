@@ -75,17 +75,17 @@ export function SocialCTASection() {
           </p>
         </motion.div>
 
-        <div className="relative flex items-end justify-center gap-2 sm:gap-3 mb-10 sm:mb-12 min-h-[260px] sm:min-h-[320px]">
+        <div className="relative flex items-end justify-center gap-1.5 sm:gap-3 mb-10 sm:mb-12 min-h-[260px] sm:min-h-[320px]">
           {featuredImages.length === 0 ? (
             Array.from({ length: 5 }).map((_, idx) => (
               <div
                 key={idx}
-                className="w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-orange/20 to-brand-gold/20 animate-pulse border-2 sm:border-4 border-white"
+                className={`w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-orange/20 to-brand-gold/20 animate-pulse border-2 sm:border-4 border-white ${idx >= 3 ? 'hidden sm:block' : ''}`}
                 style={{ transform: `rotate(${cardRotations[idx]}deg)`, zIndex: cardZIndices[idx] }}
               />
             ))
           ) : (
-            featuredImages.map((img, idx) => (
+            featuredImages.slice(0, 5).map((img, idx) => (
               <motion.button
                 key={img.id}
                 initial={{ opacity: 0, y: 60, rotate: 0 }}
@@ -93,7 +93,7 @@ export function SocialCTASection() {
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1, duration: 0.6, ease: 'easeOut' }}
                 onClick={() => navigate('gallery')}
-                className="relative w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-2 sm:border-4 border-white hover:shadow-2xl transition-shadow"
+                className={`relative w-32 sm:w-44 md:w-52 h-44 sm:h-56 md:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-2 sm:border-4 border-white hover:shadow-2xl transition-shadow ${idx >= 3 ? 'hidden sm:block' : ''}`}
                 style={{ zIndex: cardZIndices[idx] }}
                 aria-label={`View ${img.title}`}
               >
