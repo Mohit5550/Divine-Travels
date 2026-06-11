@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, useAnimation, type PanInfo } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { MapPin, Star, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
@@ -22,8 +22,10 @@ interface Pkg {
 
 export function DestinationCarousel() {
   const { navigate } = useAppStore()
-  const trackRef = useRef<HTMLDivElement>(null)
+  const controls = useAnimation()
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isDragged, setIsDragged] = useState(false)
+  const dragTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['discover-destinations'],
@@ -40,17 +42,52 @@ export function DestinationCarousel() {
 
   const cardWidth = 280
   const gap = 24
-  const visibleItems = packages.length
+
+  const pauseAutoScroll = useCallback(() => {
+    setIsDragged(true)
+    if (dragTimerRef.current) clearTimeout(dragTimerRef.current)
+    dragTimerRef.current = setTimeout(() => setIsDragged(false), 4000)
+  }, [])
 
   useEffect(() => {
-    if (packages.length === 0) return
+    if (packages.length === 0 || isDragged) return
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % packages.length)
+      setCurrentIndex(prev => (prev + 1) % packages.length)
     }, 2000)
     return () => clearInterval(interval)
+  }, [packages.length, isDragged])
+
+  const visibleItems = packages.length
+  const maxX = visibleItems > 0 ? -(visibleItems - 1) * (cardWidth + gap) : 0
+
+  const snapToIndex = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(index, packages.length - 1))
+    setCurrentIndex(clamped)
   }, [packages.length])
 
-  const offset = -currentIndex * (cardWidth + gap)
+  useEffect(() => {
+    const offset = -currentIndex * (cardWidth + gap)
+    controls.start({ x: offset, transition: { duration: 0.7, ease: 'easeInOut' } })
+  }, [currentIndex, cardWidth, gap, controls, packages.length])
+
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    pauseAutoScroll()
+    const threshold = cardWidth * 0.25
+    const dragOffset = -info.offset.x
+    const velocity = info.velocity.x
+
+    let newIndex = currentIndex
+    if (velocity < -500) {
+      newIndex = Math.min(currentIndex + 1, packages.length - 1)
+    } else if (velocity > 500) {
+      newIndex = Math.max(currentIndex - 1, 0)
+    } else if (Math.abs(dragOffset) > threshold) {
+      const steps = Math.round(dragOffset / (cardWidth + gap))
+      newIndex = Math.max(0, Math.min(packages.length - 1, currentIndex + steps))
+    }
+
+    snapToIndex(newIndex)
+  }
 
   return (
     <section id="destinations" className="py-14 sm:py-20 bg-brand-cream overflow-hidden">
@@ -80,16 +117,18 @@ export function DestinationCarousel() {
           <div className="relative mx-auto" style={{ maxWidth: visibleItems * (cardWidth + gap) - gap }}>
             <div className="overflow-hidden" style={{ maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
               <motion.div
-                ref={trackRef}
-                className="flex"
+                className="flex cursor-grab active:cursor-grabbing select-none"
                 style={{ gap: `${gap}px` }}
-                animate={{ x: offset }}
-                transition={{ duration: 0.7, ease: 'easeInOut' }}
+                animate={controls}
+                drag="x"
+                dragConstraints={{ left: maxX, right: 0 }}
+                dragElastic={0.1}
+                onDragEnd={handleDragEnd}
               >
                 {packages.concat(packages).map((pkg, index) => (
                   <div
                     key={`${pkg.id}-${index}`}
-                    className="shrink-0"
+                    className="shrink-0 pointer-events-auto"
                     style={{ width: `${cardWidth}px` }}
                   >
                     <div
@@ -101,6 +140,7 @@ export function DestinationCarousel() {
                           src={pkg.image}
                           alt={pkg.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          draggable={false}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded-full">
