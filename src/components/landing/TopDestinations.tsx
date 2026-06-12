@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { ArrowRight } from 'lucide-react'
 
-const destinations = [
+const defaultDestinations = [
   {
     name: 'Rishikesh',
     state: 'Uttarakhand',
@@ -55,10 +56,42 @@ const destinations = [
   },
 ]
 
+function toSlug(name: string) {
+  return name.toLowerCase().replace(/\s+/g, '-')
+}
+
 export function TopDestinations() {
   const { navigate } = useAppStore()
+  const [destinations, setDestinations] = useState(defaultDestinations)
 
-  const handleClick = (dest: typeof destinations[0]) => {
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/destinations?featured=true')
+        if (!res.ok) throw new Error()
+        const data = await res.json()
+        if (!Array.isArray(data) || data.length === 0 || cancelled) return
+        const apiImages: Record<string, string> = {}
+        for (const d of data) {
+          const slug = toSlug(d.name)
+          apiImages[slug] = d.image
+        }
+        setDestinations(prev =>
+          prev.map(d => ({
+            ...d,
+            image: apiImages[d.slug] || d.image,
+          }))
+        )
+      } catch {
+        // keep hardcoded defaults
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  const handleClick = (dest: typeof defaultDestinations[0]) => {
     const viewMap: Record<string, string> = {
       rishikesh: 'rishikesh-tour',
       haridwar: 'haridwar-tour',
