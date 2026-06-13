@@ -250,8 +250,8 @@ export function SpiritualPackages() {
                         <span className="text-muted-foreground text-sm"> / Person</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={() => handleViewDetails(pkg)} className="rounded-full px-4 h-10 text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5">
-                          <Eye className="w-4 h-4 mr-1.5" />Details
+                        <Button variant="outline" onClick={() => handleViewDetails(pkg)} className="rounded-full px-2.5 sm:px-4 h-8 sm:h-10 text-xs sm:text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5">
+                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1.5" /><span className="hidden sm:inline">Details</span>
                         </Button>
                         <Button onClick={() => handleBookTrip(pkg)} className="text-white rounded-full px-4 h-10 text-sm font-semibold shadow-lg bg-amber-600 hover:bg-amber-700 shadow-amber-600/30">
                           <span className="flex items-center gap-1">Book<ChevronRight className="w-4 h-4" /></span>
