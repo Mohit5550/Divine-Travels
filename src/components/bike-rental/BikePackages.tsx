@@ -279,7 +279,47 @@ export function BikePackages() {
                       </div>
                     </div>
 
+                    {/* Details Section */}
                     <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
+                      <div className="hidden sm:block">
+                      {/* Key Specs - Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                            <MapPin className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Location</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.location || 'Rishikesh'}</div>
+                          </div>
+                        </div>
+                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                            <Clock className="w-4 h-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Duration</div>
+                            <div className="text-sm font-semibold text-brand-dark">{pkg.duration || 'Full Day'}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Bike className="w-4 h-4 text-brand-orange shrink-0" />
+                        <span className="text-muted-foreground">{pkg.rapidsDescription || pkg.tagline}</span>
+                      </div>
+
+                      {/* Target Demo */}
+                      <div className="flex items-start gap-2.5 text-sm">
+                        <TargetIcon className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-brand-dark">Best for: </span>
+                          <span className="text-muted-foreground">{pkg.targetDemo}</span>
+                        </div>
+                      </div>
+                      </div>
+
                       {/* Rating */}
                       {pkg.rating > 0 && (
                         <div className="flex items-center gap-2">
