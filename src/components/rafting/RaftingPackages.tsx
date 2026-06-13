@@ -385,10 +385,10 @@ export function RaftingPackages() {
                           <Button
                             variant="outline"
                             onClick={() => handleViewDetails(pkg)}
-                            className="rounded-full px-4 h-10 text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5"
+                            className="rounded-full px-2.5 sm:px-4 h-8 sm:h-10 text-xs sm:text-sm border-brand-orange/30 text-brand-orange hover:bg-brand-orange/5"
                           >
-                            <Eye className="w-4 h-4 mr-1.5" />
-                            Details
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1.5" />
+                            <span className="hidden sm:inline">Details</span>
                           </Button>
                           <Button
                             onClick={() => handleBookTrip(pkg)}
