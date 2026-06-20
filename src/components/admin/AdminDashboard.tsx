@@ -410,9 +410,9 @@ export function AdminDashboard() {
       >
         <div className="p-4 flex items-center justify-between border-b border-white/10">
           {!sidebarCollapsed && (
-            <img
-              src="/logo.png?v=2"
-              alt="Divine Travel"
+                <img
+                  src="/logo-white.png"
+                  alt="Divine Travel"
               className="h-9 w-auto object-contain"
               draggable={false}
             />
@@ -467,7 +467,7 @@ export function AdminDashboard() {
             >
               <div className="p-4 border-b border-white/10">
                 <img
-                  src="/logo.png?v=2"
+              src="/logo-white.png"
                   alt="Divine Travel"
 className="h-9 w-auto object-contain"
                   draggable={false}

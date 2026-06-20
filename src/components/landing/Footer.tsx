@@ -24,7 +24,7 @@ export function Footer() {
           <div>
             <div className="mb-4">
               <img
-                src="/logo.png?v=2"
+                src="/logo-white.png"
                 alt="Divine Travel"
                 className="h-12 w-auto object-contain"
                 draggable={false}
