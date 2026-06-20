@@ -1,27 +1,198 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { SingleSelectTour } from './SingleSelectTour'
 
-const tours = [
-  { id: 1, title: 'Badrinath Yatra (3 Days)', img: 'https://www.chardham-pilgrimage-tour.com/assets/images/chardham-banner7.webp', itinerary: ['Day 1: Pick up from Haridwar/Rishikesh and drive to Pipalkoti/Joshimath.', 'Day 2: Drive to Badrinath, visit the Temple, Tapt Kund, Mana Village, and overnight stay.', 'Day 3: Return to Rishikesh/Haridwar.'] },
-  { id: 2, title: 'Kedarnath Yatra (4 Days)', img: 'https://www.tourtraveltourism.com/images/packages/kedarnath/kedarnath-trip.jpg', itinerary: ['Day 1: Haridwar/Rishikesh to Guptkashi/Sitapur (7-8 hours travel). Check-in and rest.', 'Day 2: Drive to Gaurikund, start 16-20 km trek (or pony/heli) to Kedarnath Temple.', 'Day 3: Attend morning Aarti, trek back down to Gaurikund, and return to Sitapur/Guptkashi.', 'Day 4: Depart from Sitapur/Guptkashi to Haridwar/Rishikesh.'] },
-  { id: 3, title: 'Gangotri Yatra (4 Days)', img: 'https://www.chardham-pilgrimage-tour.com/assets/images/gangotri-banner2.webp', itinerary: ['Day 1: Haridwar/Rishikesh to Uttarkashi (190 km/7-8 hrs) via Chamba.', 'Day 2: Drive to Gangotri Temple (3,048m). Darshan, Aarti, and optional Harsil Valley/Gartang Gali visit.', 'Day 3: Visit Vishwanath Temple in Uttarkashi or relax in the surrounding hills.', 'Day 4: Return drive from Uttarkashi to Haridwar/Rishikesh.'] },
-  { id: 4, title: 'Yamunotri Yatra (3 Days)', img: 'https://www.sushanttravels.com/uploads/nO26cmz_Yamunotri_1.jpg', itinerary: ['Day 1: Haridwar/Rishikesh to Barkot (160-180 km) via Chamba/Tehri Lake view.', 'Day 2: Barkot to Janki Chatti drive, then 6 km trek to Yamunotri Temple and hot springs.', 'Day 3: Check out from Barkot and drive back to Haridwar/Rishikesh.'] },
-  { id: 5, title: 'Do Dham Yatra (7 Days)', img: 'https://yatrakey.com/wp-content/uploads/2025/02/do-dham-yatra-1.jpg', itinerary: ['Day 1: Haridwar/Rishikesh to Guptkashi/Sitapur.', 'Day 2: Trek or Helicopter to Kedarnath. Overnight stay at Kedarnath.', 'Day 3: Trek down and return to Guptkashi.', 'Day 4: Drive from Guptkashi to Badrinath via Joshimath.', 'Day 5: Badrinath Darshan and return to Rudraprayag.', 'Day 6: Return journey to Haridwar/Rishikesh.'] },
-  { id: 6, title: 'Char Dham Yatra (10 Days)', img: 'https://www.shrineyatra.in/wp-content/uploads/2024/08/chardham-tour-package.webp', itinerary: ['Day 1: Rishikesh/Dehradun to Barkot', 'Day 2: Barkot - Yamunotri - Barkot (Trek Day)', 'Day 3: Barkot to Uttarkashi', 'Day 4: Uttarkashi - Gangotri - Uttarkashi', 'Day 5: Uttarkashi to Guptkashi', 'Day 6: Guptkashi to Kedarnath (Trek/Heli)', 'Day 7: Kedarnath to Guptkashi', 'Day 8: Guptkashi to Badrinath', 'Day 9: Badrinath to Rudraprayag/Pipalkoti', 'Day 10: Rudraprayag to Rishikesh'] },
+const defaultTourData = [
+  {
+    title: 'Do Dham (Kedarnath + Badrinath)',
+    description: 'Experience two of the most sacred Char Dham shrines nestled high in the Garhwal Himalayas.',
+    highlights: [
+      { icon: '🚁', label: '3 Night / 4 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '⛰️', label: 'Helicopter + Road' },
+      { icon: '⭐', label: 'Premium Hotels & Camps' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' },
+      { icon: '👥', label: 'Group Size: 12-15' }
+    ],
+    img: 'https://cdn.s3waas.gov.in/s33416a75f4cea9109507cacd8e2f2aefc/uploads/bfi_thumb/2018032771-olzs8a06n0m3qfz8i53k7y3e45k6w4a1s0d55n3a09.jpg',
+    itinerary: [
+      'Day 1: Dehradun to Guptkashi (Drive 7-8 hrs). Overnight stay.',
+      'Day 2: Guptkashi to Kedarnath (Helicopter). Darshan & return. Overnight stay.',
+      'Day 3: Guptkashi to Badrinath (Drive 8-9 hrs). Evening Aarti. Overnight stay.',
+      'Day 4: Badrinath to Dehradun (Drive 8-9 hrs). Trip ends.'
+    ],
+    price: '₹50,000',
+    actualPrice: 49999,
+    discountedPrice: 44999,
+  },
+  {
+    title: 'Do Dham with Valley of Flowers',
+    description: 'Combine the sacred journey with the mesmerizing, UNESCO-recognized Valley of Flowers.',
+    highlights: [
+      { icon: '🌸', label: '5 Night / 6 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '⛰️', label: 'Char Dham Temples' },
+      { icon: '🏞️', label: 'Valley of Flowers Trek' },
+      { icon: '⭐', label: 'Premium Hotels & Camps' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' },
+      { icon: '👥', label: 'Group Size: 12-15' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Joshimath (Drive 10-11 hrs). Overnight stay.',
+      'Day 2: Joshimath to Badrinath. Darshan & return. Overnight stay.',
+      'Day 3: Drive to Govind Ghat. Trek to Ghangaria. Overnight stay.',
+      'Day 4: Valley of Flowers Trek. Return to Ghangaria. Overnight stay.',
+      'Day 5: Ghangaria to Joshimath. Overnight stay.',
+      'Day 6: Joshimath to Dehradun. Trip ends.'
+    ],
+    price: '₹35,000',
+    actualPrice: 34999,
+    discountedPrice: 29999,
+  },
+  {
+    title: 'Yamunotri & Gangotri (Char Dham)',
+    description: 'A deeply spiritual expedition to the origins of the Yamuna and the ancient Gangotri glacier system.',
+    highlights: [
+      { icon: '🛕', label: '3 Night / 4 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🏔️', label: 'Yamunotri & Gangotri' },
+      { icon: '⭐', label: 'Hotels & Guest Houses' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' },
+      { icon: '👥', label: 'Group Size: 12-15' }
+    ],
+    img: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Barkot (Drive 6-7 hrs). Overnight stay.',
+      'Day 2: Barkot to Yamunotri (Drive 5 hrs + Trek 6 km). Return. Overnight stay.',
+      'Day 3: Barkot to Uttarkashi (Drive 5-6 hrs). Visit Ganga Temple. Overnight stay.',
+      'Day 4: Uttarkashi to Dehradun (Drive 6-7 hrs). Trip ends.'
+    ],
+    price: '₹32,000',
+    actualPrice: 31999,
+    discountedPrice: 26999,
+  },
+  {
+    title: 'Chardham Complete (By Helicopter)',
+    description: 'The ultimate pilgrimage covering all four shrines with the speed and comfort of a private helicopter.',
+    highlights: [
+      { icon: '🚁', label: '9 Night / 10 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '⭐', label: 'Helicopter + 5-Star' },
+      { icon: '🍽️', label: 'All Meals Included' },
+      { icon: '👥', label: 'Private Group Only' },
+      { icon: '🛕', label: 'Full Darshan Assistance' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Yamunotri. Darshan. Overnight stay.',
+      'Day 2: Yamunotri to Gangotri. Darshan. Overnight stay.',
+      'Day 3: Gangotri to Guptkashi. Overnight stay.',
+      'Day 4: Guptkashi to Kedarnath. Darshan. Overnight stay.',
+      'Day 5: Kedarnath to Badrinath. Darshan. Overnight stay.',
+      'Day 6-8: Rest and local sightseeing.',
+      'Day 9: Return to Dehradun.',
+      'Day 10: Trip ends.'
+    ],
+    price: '₹2,50,000',
+    actualPrice: 249999,
+    discountedPrice: 229999,
+  },
+  {
+    title: 'Complete Chardham (By Road)',
+    description: 'A comprehensive road journey covering all four sacred shrines over a comfortable, guided 10-day itinerary.',
+    highlights: [
+      { icon: '🛕', label: '9 Night / 10 Days' },
+      { icon: '📍', label: 'Haridwar to Haridwar' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🏔️', label: 'All Four Dhams' },
+      { icon: '⭐', label: 'Hotels & Guest Houses' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' },
+      { icon: '👥', label: 'Group Size: 12-15' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Haridwar to Barkot. Overnight stay.',
+      'Day 2: Barkot to Yamunotri. Return. Overnight stay.',
+      'Day 3: Barkot to Uttarkashi. Overnight stay.',
+      'Day 4: Uttarkashi to Gangotri. Return. Overnight stay.',
+      'Day 5: Uttarkashi to Guptkashi. Overnight stay.',
+      'Day 6: Guptkashi to Kedarnath. Return. Overnight stay.',
+      'Day 7: Guptkashi to Badrinath. Overnight stay.',
+      'Day 8: Badrinath local sightseeing. Overnight stay.',
+      'Day 9: Badrinath to Rudraprayag. Overnight stay.',
+      'Day 10: Rudraprayag to Haridwar. Trip ends.'
+    ],
+    price: '₹42,000',
+    actualPrice: 41999,
+    discountedPrice: 36999,
+  }
+]
+
+const defaultInclusions = [
+  '4-Star Hotels / Premium Camps',
+  'Daily Breakfast & Dinner',
+  'Helicopter/Ground Transport',
+  'Yamunotri Pony/Doli',
+  'Kedarnath Trek Assistance',
+  'All Temple Darshan Assistance',
+  'Experienced Trek Guide',
+  'All Local Sightseeing',
+  'Welcome Drink on Arrival',
+  'First Aid & Oxygen Cylinder',
+  'Taxes & Permit Fees'
+]
+
+const defaultExclusions = [
+  'Flight Tickets to Dehradun',
+  'Personal Expenses (Tips, Laundry)',
+  'Any Optional Activities',
+  'Additional Meals Not Mentioned',
+  'Emergency Evacuation',
+  'Insurance Coverage',
+  'Camera Fees at Temples',
+  'Any Other Item Not Mentioned'
+]
+
+const faqs = [
+  { q: 'How fit do I need to be?', a: 'Moderate fitness is needed. We provide palki/pony for Yamunotri and Kedarnath.' },
+  { q: 'What about food and water?', a: 'Breakfast and dinner are provided daily. Packaged water is provided throughout the journey.' },
+  { q: 'Do we need permits?', a: 'No special permits are required for Indian nationals. We handle all regional entry permits.' }
 ]
 
 export function CharDhamTour() {
+  const [tourData, setTourData] = useState(defaultTourData)
+  const [inclusions, setInclusions] = useState(defaultInclusions)
+  const [exclusions, setExclusions] = useState(defaultExclusions)
+
+  useEffect(() => {
+    fetch('/api/tour-destinations?slug=chardham')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.config) {
+          setTourData(data.tourData || defaultTourData)
+          setInclusions(data.inclusions?.length ? data.inclusions : defaultInclusions)
+          setExclusions(data.exclusions?.length ? data.exclusions : defaultExclusions)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <SingleSelectTour
-      heroImage="https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80"
-      heroTitle="Char Dham Yatra Packages"
-      heroSubtitle="Sacred pilgrimage to the four holy abodes of Uttarakhand"
-      heroTag="Char Dham Yatra"
-      sectionTitle="Char Dham Yatra: Select Your Pilgrimage Package"
-      destinationName="Char Dham"
-      packageTypeLabel="Char Dham Yatra Package"
-      tours={tours}
+      heroImage="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80"
+      heroTitle="Chardham Yatra Package"
+      heroSubtitle="Char Dham Yatra - A Journey of Faith Across Four Sacred Himalayan Shrines"
+      heroTag="Char Dham"
+      sectionTitle="Char Dham Pilgrimage"
+      tourData={tourData}
+      inclusions={inclusions}
+      exclusions={exclusions}
+      faqs={faqs}
+      bookingTitle="Char Dham Yatra"
     />
   )
 }

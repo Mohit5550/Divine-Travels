@@ -1,8 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { DayBasedTour } from './DayBasedTour'
 
-const programs = {
+const defaultPrograms = {
   1: { id: 1, title: 'Dehradun-Mussoorie Express', img: 'https://i0.wp.com/stampedmoments.com/wp-content/uploads/2025/07/i-love-mussoorie.jpg?fit=1024%2C768&ssl=1', itinerary: ['08:00 AM | Sahastradhara: Sulfur springs and hilltop ropeway', '10:30 AM | Robber\'s Cave: Adventure walk through natural river canyon', '12:30 PM | Prakasheshwar Temple: Famous Shiv Temple visit', '01:30 PM | Mussoorie Lake: Scenic lunch and paddle boating', '03:00 PM | Bhatta Falls: Ropeway descent and natural pools', '05:00 PM | Mall Road: Shopping and sunset at Camel\'s Back Road'] },
   2: { id: 2, title: 'The Queen of Hills Classic', img: 'https://blog.ecohospitality.in/wp-content/uploads/2024/07/Img-9.jpg', itinerary: ['09:30 AM | Kempty Falls: Morning dip and ropeway ride', '11:30 AM | Company Garden: Botanical walk and lake boating', '01:30 PM | Library Chowk: Local Himalayan cafes and Tibetan food', '03:00 PM | Gun Hill: Ropeway ride to peak for snowy range views', '05:00 PM | Mall Road: Evening stroll and Kulri Bazaar shopping'] },
   3: { id: 3, title: 'Heritage & High Peaks (Landour)', img: 'https://c.ndtvimg.com/gws/ms/top-places-to-visit-in-mussoorie/assets/2.jpeg?1727874795', itinerary: ['10:00 AM | Landour Bakehouse: Coffee and pastries at British-era bakery', '11:30 AM | Lal Tibba: Binocular viewing of Himalayan peaks', '01:00 PM | Char Dukan: Iconic pancake or Maggi lunch', '03:30 PM | George Everest\'s House: Short trek for 360-degree vistas', '06:00 PM | Cloud\'s End: Sunset walk through dense oak forest'] },
@@ -12,25 +13,45 @@ const programs = {
   7: { id: 7, title: 'Temples, Lakes & Alpine Forests', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/66/de/a3/beautiful-scenery.jpg?w=800&h=500&s=1', itinerary: ['05:00 AM | Kunjapuri Devi: Sunrise over snow-capped peaks', '09:30 AM | Tehri Lake Adventure: Jet Ski, Speed Boat, and brunch', '12:30 PM | Chamba Market: Local Pahadi market exploration', '02:30 PM | Surkanda Devi (Kanatal): Ropeway to Shakti Peeth (2,750m)'] },
 }
 
-const programList = Object.values(programs).map(({ id, title, img }) => ({ id, title, img }))
+const defaultProgramList = Object.values(defaultPrograms).map(({ id, title, img }) => ({ id, title, img }))
+
+const defaultDayConfigs = [
+  { label: 'Day 1', title: 'Section 1: Day 1 Selection (Select 1)', maxSelect: 1 },
+  { label: 'Day 2', title: 'Section 2: Day 2 Selection (Select any 2)', maxSelect: 2 },
+  { label: 'Day 3', title: 'Section 3: Day 3 Selection (Select any 3)', maxSelect: 3 },
+]
 
 export function MussoorieTour() {
+  const [apiData, setApiData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/tour-destinations?slug=mussoorie')
+      .then(r => r.json())
+      .then(data => { if (data && data.config) setApiData(data) })
+      .catch(() => {})
+  }, [])
+
+  const config = apiData?.config || {}
+  const programs = apiData?.programs?.length
+    ? Object.fromEntries(apiData.programs.map((p: any) => [p.id, p]))
+    : defaultPrograms
+  const programList = apiData?.programs?.length
+    ? apiData.programs.map((p: any) => ({ id: p.id, title: p.title, img: p.img }))
+    : defaultProgramList
+  const dayConfigs = apiData?.dayConfigs?.length ? apiData.dayConfigs : defaultDayConfigs
+
   return (
     <DayBasedTour
-      heroImage="https://blog.ecohospitality.in/wp-content/uploads/2024/07/Img-9.jpg"
-      heroTitle="Mussoorie & Dehradun Tour Packages"
-      heroSubtitle="Explore the Queen of Hills with flexible day-wise programs"
-      heroTag="Mussoorie Tours"
-      sectionTitle="Choose Your Mussoorie Experience"
-      sectionSubtitle="Mix and match programs across 3 days to create your perfect hill station getaway"
+      heroImage={config.heroImage || 'https://blog.ecohospitality.in/wp-content/uploads/2024/07/Img-9.jpg'}
+      heroTitle={config.heroTitle || 'Mussoorie & Dehradun Tour Packages'}
+      heroSubtitle={config.heroSubtitle || 'Explore the Queen of Hills with flexible day-wise programs'}
+      heroTag={config.heroTag || 'Mussoorie Tours'}
+      sectionTitle={config.sectionTitle || 'Choose Your Mussoorie Experience'}
+      sectionSubtitle={config.sectionSubtitle || 'Mix and match programs across 3 days to create your perfect hill station getaway'}
       programs={programs}
       programList={programList}
       destinationName="Mussoorie"
-      dayConfigs={[
-        { label: 'Day 1', title: 'Section 1: Day 1 Selection (Select 1)', maxSelect: 1 },
-        { label: 'Day 2', title: 'Section 2: Day 2 Selection (Select any 2)', maxSelect: 2 },
-        { label: 'Day 3', title: 'Section 3: Day 3 Selection (Select any 3)', maxSelect: 3 },
-      ]}
+      dayConfigs={dayConfigs}
     />
   )
 }

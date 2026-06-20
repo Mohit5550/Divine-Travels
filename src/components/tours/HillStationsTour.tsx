@@ -1,33 +1,170 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { SingleSelectTour } from './SingleSelectTour'
 
-const tours = [
-  { id: 1, title: 'Auli Tour (3 Days)', img: 'https://triptradition.com/wp-content/uploads/2024/08/Uttarakhand-Auli-tour-package.jpg', itinerary: ['Day 1: Rishikesh to Joshimath/Auli via Devprayag & Rudraprayag confluences', 'Day 2: Auli Ropeway, Artificial Lake, panoramic views of Nanda Devi & Skiing (Winter)', 'Day 3: Early morning return journey to Rishikesh'] },
-  { id: 2, title: 'Auli & Chopta Tour (5 Days)', img: 'https://yatrakey.com/wp-content/uploads/2024/05/Auli.jpg', itinerary: ['Day 1: Rishikesh to Chopta drive (200 km) via holy confluences', 'Day 2: Tungnath Temple and Chandrashila Peak Trekking (360° Himalayan views)', 'Day 3: Chopta to Joshimath/Auli travel', 'Day 4: Auli Exploration: Lake, Skiing & Gorson Bugyal Trek', 'Day 5: Return to Rishikesh via Dhari Devi Temple'] },
-  { id: 3, title: 'Chakrata: Hidden Gem (3 Days)', img: 'https://www.thehosteller.com/_next/image/?url=https%3A%2F%2Fstatic.thehosteller.com%2Fhostel%2Fimages%2Fblog%20cover-%20pc-%20Connecting%20Traveller.jpg%2Fblog%20cover-%20pc-%20Connecting%20Traveller-1696316511377.jpg&w=2048&q=75', itinerary: ['Day 1: Rishikesh to Chakrata via Vikasnagar, Sunset view at Chilmiri Neck', 'Day 2: Tiger Falls (312-foot cascade) & Deoban Forest exploration', 'Day 3: Budher Limestone Caves, Ram Tal Garden visit & Return journey'] },
-  { id: 4, title: 'Chopta, Tungnath & Chandrashila (3 Days)', img: 'https://himalayandaredevils.com/storage/uploads/6809e3b078591.webp', itinerary: ['Day 1: Rishikesh to Chopta camp stay via Alaknanda/Mandakini river views', 'Day 2: Trek to Tungnath Temple (3,680 m) and Chandrashila Peak (4000 m)', 'Day 3: Return to Rishikesh via Sari Village & Deoria Tal lake trek'] },
-  { id: 5, title: 'Harsil & Gartang Gali (4 Days)', img: 'https://res.cloudinary.com/dd3lqv9q9/images/f_auto,q_auto/v1768296494/Gartang_gali-f_gvjlod/Gartang_gali-f_gvjlod.webp?_i=AA', itinerary: ['Day 1: Drive along Bhagirathi river to Harsil Valley, Kashi Vishwanath visit', 'Day 2: Gartang Gali historic wooden skywalk trek and Gangotri Temple visit', 'Day 3: Explore Bagori Village, Mukhba and Sattal lakes cluster', 'Day 4: Return to Rishikesh via Gangnani Hot Springs'] },
-  { id: 6, title: 'Kanatal & Tehri Lake (3 Days)', img: 'https://www.thegypsysoulresort.com/wp-content/uploads/2022/11/dam.jpg', itinerary: ['Day 1: Drive to Kanatal, stroll through Kodai Jungle & apple orchards', 'Day 2: Surkanda Devi Temple (Ropeway) and Tehri Lake Water Sports', 'Day 3: Dhanaulti Eco Park visit and return journey to Rishikesh'] },
-  { id: 7, title: 'Khirsu & Pauri (3 Days)', img: 'https://mysterioushimachal.wordpress.com/wp-content/uploads/2025/01/top-places-to-visit-in-khirsu-uttarakhand.jpg', itinerary: ['Day 1: Drive to Khirsu via Devprayag, Pine forest sunset walk', 'Day 2: Explore Khirsu orchards, Kyunkaleshwar Mahadev & Ulka Garhi viewpoint', 'Day 3: Final sunrise views and return to Rishikesh via Srinagar'] },
-  { id: 8, title: 'Lansdowne Hill Station (2 Days)', img: 'https://www.uttarakhandi.com/wp-content/uploads/Lansdowne.jpg', itinerary: ['Day 1: Arrive Lansdowne, Bhulla Tal Lake boating and Tip-in-Top Sunset Point', 'Day 2: St. Mary\'s Church, Army Museum and Bhim Pakora visit'] },
-  { id: 9, title: 'Loyal Cave & Pawki Devi (1 Day)', img: 'https://inditales.com/wp-content/uploads/2013/10/kailash-temple-ellora-caves.jpg', itinerary: ['08:30 AM: Departure from Rishikesh along Badrinath Highway', '10:00 AM: Explore Loyal Kailash Cave and meet local \'Baba\'', '02:30 PM: Hike to Pawki Devi Shakti Peeth (5,000 feet) for views', '06:30 PM: Return arrival in Rishikesh'] },
-  { id: 10, title: 'Mahabgarh Mahadev (2 Days)', img: 'https://i.ytimg.com/vi/fH5SieIpAFU/maxresdefault.jpg', itinerary: ['Day 1: Twin Valley stay via Kotdwar road, Sunset at Mahabgarh peak', 'Day 2: Himalayan Sunrise from ridge, forest nature walk and return'] },
-  { id: 11, title: 'Munsiyari Highlights (6 Days)', img: 'https://munsiyari-tours.com/images/post-images/1751985553.jpg', itinerary: ['Day 1: Rishikesh to Chaukori tea gardens', 'Day 2: Birthi Falls visit and reach Munsiyari', 'Day 3: Nanda Devi Temple trek and Tribal Heritage Museum', 'Day 4: Trek to Khaliya Top (Views of Panchachuli range)', 'Day 5: Thamri Kund and Darkot Village local shopping', 'Day 6: Return journey to Rishikesh via Almora/Binsar'] },
-  { id: 12, title: 'Niti Valley & Chote Amarnath (4 Days)', img: 'https://cdn1.tripoto.com/media/filter/tst/img/2150829/Image/1658416060_niti2.jpg', itinerary: ['Day 1: Rishikesh to Joshimath via Panch Prayags', 'Day 2: Tapovan Hot Springs and Rock-cut roads to Niti Village', 'Day 3: Timmersain Mahadev (Ice Shivling) cave trek', 'Day 4: Long return drive to Rishikesh (Starting at 5:00 AM)'] },
+const defaultTourData = [
+  {
+    title: 'Char Dham of Uttarakhand',
+    description: 'A complete road journey to the most sacred shrines in the mighty Garhwal Himalayas.',
+    highlights: [
+      { icon: '⛰️', label: '11 Nights / 12 Days' },
+      { icon: '📍', label: 'Haridwar to Haridwar' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🏔️', label: 'All Four Dhams' },
+      { icon: '⭐', label: 'Hotels & Guest Houses' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Haridwar to Barkot. Overnight stay.',
+      'Day 2: Yamunotri Darshan. Return to Barkot.',
+      'Day 3: Barkot to Uttarkashi. Overnight stay.',
+      'Day 4: Gangotri Darshan. Return to Uttarkashi.',
+      'Day 5: Uttarkashi to Guptkashi. Overnight stay.',
+      'Day 6: Kedarnath Darshan. Return to Guptkashi.',
+      'Day 7: Guptkashi to Badrinath. Overnight stay.',
+      'Day 8: Badrinath local sightseeing.',
+      'Day 9: Badrinath to Rudraprayag. Overnight stay.',
+      'Day 10: Rudraprayag to Haridwar.',
+      'Day 11: Haridwar local sightseeing.',
+      'Day 12: Trip ends.'
+    ],
+    price: '₹42,000',
+    actualPrice: 41999,
+    discountedPrice: 36999,
+  },
+  {
+    title: 'Badrinath, Kedarnath & Auli',
+    description: 'Combine the spiritual with the scenic, ending at the stunning Auli ski resort and Gurso Bugyal.',
+    highlights: [
+      { icon: '🏔️', label: '5 Night / 6 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🛕', label: 'Char Dham Temples' },
+      { icon: '⭐', label: 'Hotels & Guest Houses' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Guptkashi. Overnight stay.',
+      'Day 2: Kedarnath Darshan. Return to Guptkashi.',
+      'Day 3: Guptkashi to Badrinath. Overnight stay.',
+      'Day 4: Badrinath Darshan and local sightseeing.',
+      'Day 5: Badrinath to Auli. Overnight stay.',
+      'Day 6: Auli to Dehradun. Trip ends.'
+    ],
+    price: '₹35,000',
+    actualPrice: 34999,
+    discountedPrice: 29999,
+  },
+  {
+    title: 'Badrinath, Kedarnath & Chopta Trek',
+    description: 'Experience the thrill of the Chandrashila trek alongside the most revered temples.',
+    highlights: [
+      { icon: '🥾', label: '5 Night / 6 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🏔️', label: 'Chopta & Chandrashila' },
+      { icon: '⭐', label: 'Hotels & Camps' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Guptkashi. Overnight stay.',
+      'Day 2: Kedarnath Darshan. Return to Guptkashi.',
+      'Day 3: Guptkashi to Chopta. Trek to Tungnath. Overnight stay.',
+      'Day 4: Chandrashila Summit trek. Return to Chopta.',
+      'Day 5: Chopta to Badrinath. Overnight stay.',
+      'Day 6: Badrinath to Dehradun. Trip ends.'
+    ],
+    price: '₹32,000',
+    actualPrice: 31999,
+    discountedPrice: 26999,
+  },
+  {
+    title: 'Do Dham with Auli & Chopta Trek',
+    description: 'A balanced mix of pilgrimage and adventure, including the famous Chopta trek and Auli meadows.',
+    highlights: [
+      { icon: '🥾', label: '6 Night / 7 Days' },
+      { icon: '📍', label: 'Dehradun to Dehradun' },
+      { icon: '🚗', label: 'Innova/Similar' },
+      { icon: '🏔️', label: 'Chopta & Auli' },
+      { icon: '⭐', label: 'Hotels & Camps' },
+      { icon: '🍽️', label: 'Daily Breakfast & Dinner' }
+    ],
+    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    itinerary: [
+      'Day 1: Dehradun to Guptkashi. Overnight stay.',
+      'Day 2: Kedarnath Darshan. Return to Guptkashi.',
+      'Day 3: Guptkashi to Chopta. Trek to Tungnath.',
+      'Day 4: Chandrashila Summit. Return to Chopta.',
+      'Day 5: Chopta to Badrinath. Overnight stay.',
+      'Day 6: Badrinath to Auli. Overnight stay.',
+      'Day 7: Auli to Dehradun. Trip ends.'
+    ],
+    price: '₹38,000',
+    actualPrice: 37999,
+    discountedPrice: 32999,
+  }
+]
+
+const defaultInclusions = [
+  'Hotels & Guest Houses',
+  'Daily Breakfast & Dinner',
+  'Ground Transport (Innova)',
+  'Experienced Driver',
+  'All Sightseeing',
+  'Parking & Toll Taxes',
+  'First Aid Kit'
+]
+
+const defaultExclusions = [
+  'Flight Tickets',
+  'Personal Expenses',
+  'Any Optional Activities',
+  'Additional Meals',
+  'Insurance',
+  'Camera Fees',
+  'Anything Not Mentioned'
+]
+
+const faqs = [
+  { q: 'Is this trip suitable for families?', a: 'Yes, the itineraries are designed for all age groups.' },
+  { q: 'What about accommodation?', a: 'We provide comfortable hotels and guest houses at every stop.' },
+  { q: 'Do we need a special vehicle?', a: 'No, a standard Innova is sufficient for these routes.' }
 ]
 
 export function HillStationsTour() {
+  const [tourData, setTourData] = useState(defaultTourData)
+  const [inclusions, setInclusions] = useState(defaultInclusions)
+  const [exclusions, setExclusions] = useState(defaultExclusions)
+
+  useEffect(() => {
+    fetch('/api/tour-destinations?slug=hillstations')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.config) {
+          setTourData(data.tourData || defaultTourData)
+          setInclusions(data.inclusions?.length ? data.inclusions : defaultInclusions)
+          setExclusions(data.exclusions?.length ? data.exclusions : defaultExclusions)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <SingleSelectTour
-      heroImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"
+      heroImage="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80"
       heroTitle="Uttarakhand Hill Stations"
-      heroSubtitle="Explore the majestic Himalayan hill stations with curated tour packages"
+      heroSubtitle="Sacred Temples & Snowy Mountain Views Across the Himalayas"
       heroTag="Hill Stations"
-      sectionTitle="Uttarakhand Journey: Select Your Tour Package"
-      destinationName="Uttarakhand Hill Stations"
-      packageTypeLabel="Hill Stations Tour Package"
-      tours={tours}
+      sectionTitle="Uttarakhand Adventures"
+      tourData={tourData}
+      inclusions={inclusions}
+      exclusions={exclusions}
+      faqs={faqs}
+      bookingTitle="Uttarakhand Hill Stations Tour"
     />
   )
 }
