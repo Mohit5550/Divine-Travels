@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { Star, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -88,7 +88,15 @@ export function TestimonialsSection() {
   const [isPaused, setIsPaused] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     fetch('/api/reviews/recent')
@@ -107,7 +115,8 @@ export function TestimonialsSection() {
       })
   }, [])
 
-  const totalSlides = reviews.length > 0 ? Math.ceil(reviews.length / 3) : 1
+  const itemsPerSlide = isMobile ? 1 : 3
+  const totalSlides = reviews.length > 0 ? Math.ceil(reviews.length / itemsPerSlide) : 1
 
   const updateScrollButtons = () => {
     if (scrollRef.current) {
@@ -154,8 +163,8 @@ export function TestimonialsSection() {
 
   const chunked: Review[][] = []
   if (reviews.length > 0) {
-    for (let i = 0; i < reviews.length; i += 3) {
-      chunked.push(reviews.slice(i, i + 3))
+    for (let i = 0; i < reviews.length; i += itemsPerSlide) {
+      chunked.push(reviews.slice(i, i + itemsPerSlide))
     }
   }
 

@@ -9,7 +9,7 @@ export function HeroBanner() {
   const { navigate } = useAppStore()
 
   return (
-    <section className="relative h-[75vh] sm:h-[80vh] overflow-hidden">
+    <section className="relative h-[55vh] sm:h-[80vh] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img

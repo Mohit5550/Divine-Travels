@@ -44,80 +44,85 @@ export function Footer() {
             </a>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-semibold text-sm mb-4 text-brand-orange">Quick Links</h4>
-            <div className="flex flex-col gap-2">
-              {[
-                { label: 'Home', action: () => navigate('landing') },
-                { label: 'Destinations', action: handleDestClick },
-                { label: 'About Us', action: () => navigate('about-us') },
-                { label: 'Contact Us', action: () => navigate('contact') },
-                { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
-                { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
-                { label: 'Refund Policy', action: () => navigate('refund-policy') },
-                { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
-              ].map((link) => (
-                <button
-                  key={link.label}
-                  onClick={link.action}
-                  className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                >
-                  {link.label}
-                  {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
-                    <ArrowUpRight className="w-3 h-3" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Quick Links + Our Services side by side on mobile */}
+          <div className="sm:col-span-2 lg:col-span-2">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Quick Links */}
+              <div>
+                <h4 className="font-semibold text-sm mb-4 text-brand-orange">Quick Links</h4>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: 'Home', action: () => navigate('landing') },
+                    { label: 'Destinations', action: handleDestClick },
+                    { label: 'About Us', action: () => navigate('about-us') },
+                    { label: 'Contact Us', action: () => navigate('contact') },
+                    { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
+                    { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
+                    { label: 'Refund Policy', action: () => navigate('refund-policy') },
+                    { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
+                  ].map((link) => (
+                    <button
+                      key={link.label}
+                      onClick={link.action}
+                      className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                    >
+                      {link.label}
+                      {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
+                        <ArrowUpRight className="w-3 h-3" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Our Services */}
-          <div>
-            <h4 className="font-semibold text-sm mb-4 text-brand-orange">Our Services</h4>
-            <div className="flex flex-col gap-2">
-              {[
-                { label: 'River Rafting', view: 'rafting-packages' },
-                { label: 'Trekking', view: 'trekking' },
-                { label: 'Adventure Activities', view: 'adventure' },
-                { label: 'Bike Rental', view: 'bike-rental' },
-                { label: 'Taxi Booking', view: 'taxi-booking' },
-                { label: 'Domestic Tours', view: 'domestic-tours' },
-                { label: 'Spiritual Tours', view: 'spiritual-tours' },
-              ].map((svc) => (
-                <button
-                  key={svc.label}
-                  onClick={() => navigate(svc.view)}
-                  className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left"
-                >
-                  {svc.label}
-                </button>
-              ))}
+              {/* Our Services */}
+              <div>
+                <h4 className="font-semibold text-sm mb-4 text-brand-orange">Our Services</h4>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: 'River Rafting', view: 'rafting-packages' },
+                    { label: 'Trekking', view: 'trekking' },
+                    { label: 'Adventure Activities', view: 'adventure' },
+                    { label: 'Bike Rental', view: 'bike-rental' },
+                    { label: 'Taxi Booking', view: 'taxi-booking' },
+                    { label: 'Domestic Tours', view: 'domestic-tours' },
+                    { label: 'Spiritual Tours', view: 'spiritual-tours' },
+                  ].map((svc) => (
+                    <button
+                      key={svc.label}
+                      onClick={() => navigate(svc.view)}
+                      className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left"
+                    >
+                      {svc.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="font-semibold text-sm mb-4 text-brand-orange">Contact Us</h4>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-white/60 text-sm">
-                <Phone className="w-4 h-4 text-brand-orange" />
-                <a href={`tel:${s.phone}`} className="hover:text-brand-orange transition-colors">{s.phone}</a>
+            {/* Contact Us - horizontal on mobile */}
+            <div className="mt-8">
+              <h4 className="font-semibold text-sm mb-4 text-brand-orange">Contact Us</h4>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6">
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <Phone className="w-4 h-4 text-brand-orange shrink-0" />
+                  <a href={`tel:${s.phone}`} className="hover:text-brand-orange transition-colors">{s.phone}</a>
+                </div>
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <Mail className="w-4 h-4 text-brand-orange shrink-0" />
+                  <a href={`mailto:${s.email}`} className="hover:text-brand-orange transition-colors">{s.email}</a>
+                </div>
+                <div className="flex items-start gap-2 text-white/60 text-sm">
+                  <MapPin className="w-4 h-4 text-brand-orange mt-0.5 shrink-0" />
+                  <span>{s.address}</span>
+                </div>
+                <button
+                  onClick={() => navigate('contact')}
+                  className="text-brand-orange text-sm hover:underline text-left"
+                >
+                  Send us a message →
+                </button>
               </div>
-              <div className="flex items-center gap-2 text-white/60 text-sm">
-                <Mail className="w-4 h-4 text-brand-orange" />
-                <a href={`mailto:${s.email}`} className="hover:text-brand-orange transition-colors">{s.email}</a>
-              </div>
-              <div className="flex items-start gap-2 text-white/60 text-sm">
-                <MapPin className="w-4 h-4 text-brand-orange mt-0.5" />
-                <span>{s.address}</span>
-              </div>
-              <button
-                onClick={() => navigate('contact')}
-                className="text-brand-orange text-sm hover:underline mt-2 text-left"
-              >
-                Send us a message →
-              </button>
             </div>
 
             {/* Social / WhatsApp */}
