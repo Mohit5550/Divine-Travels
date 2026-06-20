@@ -10,7 +10,7 @@ const defaultDestinations = [
     name: 'Rishikesh',
     state: 'Uttarakhand',
     tagline: 'Devbhoomi of Nature & Adventure',
-    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80',
+    image: '',
     type: 'destination' as const,
     slug: 'rishikesh',
   },
@@ -18,7 +18,7 @@ const defaultDestinations = [
     name: 'Haridwar',
     state: 'Uttarakhand',
     tagline: 'Devbhoomi of Nature & Ganga Ghats',
-    image: 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?w=600&q=80',
+    image: '',
     type: 'destination' as const,
     slug: 'haridwar',
   },
@@ -26,7 +26,7 @@ const defaultDestinations = [
     name: 'Mussoorie',
     state: 'Uttarakhand',
     tagline: 'Temple, Waterfalls & Hill Station',
-    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80',
+    image: '',
     type: 'destination' as const,
     slug: 'mussoorie',
   },
@@ -34,7 +34,7 @@ const defaultDestinations = [
     name: 'Nainital',
     state: 'Uttarakhand',
     tagline: 'Beautiful Lake\'s & Hill Station',
-    image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&q=80',
+    image: '',
     type: 'destination' as const,
     slug: 'nainital',
   },
@@ -42,7 +42,7 @@ const defaultDestinations = [
     name: 'Hill Stations',
     state: 'Uttarakhand',
     tagline: 'Explore the majestic peaks',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
+    image: '',
     type: 'category' as const,
     slug: 'hill-stations',
   },
@@ -50,15 +50,11 @@ const defaultDestinations = [
     name: 'Char Dham',
     state: 'Uttarakhand',
     tagline: 'चारधाम यात्रा — Sacred pilgrimage',
-    image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&q=80',
+    image: '',
     type: 'destination' as const,
     slug: 'char-dham',
   },
 ]
-
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/\s+/g, '-')
-}
 
 export function TopDestinations() {
   const { navigate } = useAppStore()
@@ -68,14 +64,15 @@ export function TopDestinations() {
     let cancelled = false
     const load = async () => {
       try {
-        const res = await fetch('/api/destinations?featured=true')
+        const res = await fetch('/api/tour-destinations')
         if (!res.ok) throw new Error()
         const data = await res.json()
         if (!Array.isArray(data) || data.length === 0 || cancelled) return
         const apiImages: Record<string, string> = {}
         for (const d of data) {
-          const slug = toSlug(d.name)
-          apiImages[slug] = d.image
+          if (d.config?.heroImage) {
+            apiImages[d.slug] = d.config.heroImage
+          }
         }
         setDestinations(prev =>
           prev.map(d => ({
@@ -84,7 +81,7 @@ export function TopDestinations() {
           }))
         )
       } catch {
-        // keep hardcoded defaults
+        // keep defaults
       }
     }
     load()
@@ -163,14 +160,20 @@ export function TopDestinations() {
               className="group cursor-pointer"
             >
               <div className="relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 h-full flex flex-col hover:-translate-y-2 hover:rotate-1">
-                <div className="relative h-44 sm:h-52 overflow-hidden">
-                  <motion.img
-                    src={dest.image}
-                    alt={dest.name}
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.15 }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                  />
+                <div className="relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br from-brand-orange/20 to-brand-gold/20">
+                  {dest.image ? (
+                    <motion.img
+                      src={dest.image}
+                      alt={dest.name}
+                      className="w-full h-full object-cover"
+                      whileHover={{ scale: 1.15 }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-brand-orange/60 font-serif text-4xl font-bold">{dest.name[0]}</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   <div className="absolute top-3 left-3 right-3">
                     <h3
