@@ -1,8 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { DayBasedTour } from './DayBasedTour'
 
-const programs = {
+const defaultPrograms = {
   1: { id: 1, title: 'Kunjapuri Sunrise', img: 'https://sun-b2b.s3.us-east-2.amazonaws.com/tour/Sunrise-view-from-kunjapuri-temple.jpg', itinerary: ['Kunjapuri Viewpoint', 'Janki Jhula', 'Paramarth Niketan', 'Geetabhawan', 'Ram Jhula Market', 'Neer Waterfall', 'Triveni Ghat Aarti'] },
   2: { id: 2, title: 'Neelkhanth & Waterfalls', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/d1/79/1a/caption.jpg?w=1200&h=-1&s=1', itinerary: ['Neelkhanth Mahadev Temple', 'Kali Kund Waterfall', 'Patna Waterfall', 'Vasisth Cave', 'Shivpuri Beach'] },
   3: { id: 3, title: 'Local Tour', img: 'https://www.chardhamtours.in/gallery/cityImage/1462337031_veer.jpg', itinerary: ['Bharat Mata Mandir', 'Triveni Ghat', 'Veer Bhadr Temple', 'Hanuman Temple', 'Laxman Jhula', 'Ram Jhula Aarti'] },
@@ -13,25 +14,45 @@ const programs = {
   8: { id: 8, title: 'Tehri Lake & Surkanda', img: 'https://t.eucdn.in/tourism/lg/tehri-lake-993324.webp', itinerary: ['Tehri Lake Water Sports', 'Chamba Market', 'Surkanda Devi Temple'] },
 }
 
-const programList = Object.values(programs).map(({ id, title, img }) => ({ id, title, img }))
+const defaultProgramList = Object.values(defaultPrograms).map(({ id, title, img }) => ({ id, title, img }))
+
+const defaultDayConfigs = [
+  { label: 'Day 1', title: 'Section 1: Day 1 Selection (Select 1)', maxSelect: 1 },
+  { label: 'Day 2', title: 'Section 2: Day 2 Selection (Select any 2)', maxSelect: 2 },
+  { label: 'Day 3', title: 'Section 3: Day 3 Selection (Select any 3)', maxSelect: 3 },
+]
 
 export function RishikeshTour() {
+  const [apiData, setApiData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/tour-destinations?slug=rishikesh')
+      .then(r => r.json())
+      .then(data => { if (data && data.config) setApiData(data) })
+      .catch(() => {})
+  }, [])
+
+  const config = apiData?.config || {}
+  const programs = apiData?.programs?.length
+    ? Object.fromEntries(apiData.programs.map((p: any) => [p.id, p]))
+    : defaultPrograms
+  const programList = apiData?.programs?.length
+    ? apiData.programs.map((p: any) => ({ id: p.id, title: p.title, img: p.img }))
+    : defaultProgramList
+  const dayConfigs = apiData?.dayConfigs?.length ? apiData.dayConfigs : defaultDayConfigs
+
   return (
     <DayBasedTour
-      heroImage="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80"
-      heroTitle="Rishikesh Tour Packages"
-      heroSubtitle="Explore the Yoga Capital of the World with flexible day-wise programs"
-      heroTag="Rishikesh Tours"
-      sectionTitle="Choose Your Rishikesh Experience"
-      sectionSubtitle="Mix and match programs across 3 days to create your perfect itinerary"
+      heroImage={config.heroImage || 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80'}
+      heroTitle={config.heroTitle || 'Rishikesh Tour Packages'}
+      heroSubtitle={config.heroSubtitle || 'Explore the Yoga Capital of the World with flexible day-wise programs'}
+      heroTag={config.heroTag || 'Rishikesh Tours'}
+      sectionTitle={config.sectionTitle || 'Choose Your Rishikesh Experience'}
+      sectionSubtitle={config.sectionSubtitle || 'Mix and match programs across 3 days to create your perfect itinerary'}
       programs={programs}
       programList={programList}
       destinationName="Rishikesh"
-      dayConfigs={[
-        { label: 'Day 1', title: 'Section 1: Day 1 Selection (Select 1)', maxSelect: 1 },
-        { label: 'Day 2', title: 'Section 2: Day 2 Selection (Select any 2)', maxSelect: 2 },
-        { label: 'Day 3', title: 'Section 3: Day 3 Selection (Select any 3)', maxSelect: 3 },
-      ]}
+      dayConfigs={dayConfigs}
     />
   )
 }
