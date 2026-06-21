@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { Loader2, Building2 } from 'lucide-react'
+import { toDirectImageUrl } from '@/lib/utils'
 
 interface Company {
   id: string
@@ -82,7 +83,7 @@ export function CompanySection() {
               <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
                 {company.photo ? (
                   <img
-                    src={company.photo}
+                    src={toDirectImageUrl(company.photo)}
                     alt={company.name}
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

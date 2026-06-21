@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
+import { toDirectImageUrl } from '@/lib/utils'
 
 interface HeroNoticeItem {
   id: string
@@ -71,7 +72,7 @@ export function HeroNotice() {
         >
           {notice.image && (
             <div className="relative h-20 sm:h-36 overflow-hidden">
-              <img src={notice.image} alt={notice.heading} className="w-full h-full object-cover" />
+              <img src={toDirectImageUrl(notice.image)} alt={notice.heading} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
             </div>
           )}
