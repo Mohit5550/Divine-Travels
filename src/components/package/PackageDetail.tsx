@@ -115,9 +115,10 @@ interface PackageData {
   howToReach: string
   importantInfo: string
   fixedDepartures: string
+  pickupLocationUrl: string
 }
 
-type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'itinerary' | 'howToReach' | 'thingsToCarry' | 'importantInfo' | 'fixedDepartures'
+type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'howToReach' | 'thingsToCarry' | 'importantInfo'
 
 export function PackageDetail() {
   const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
@@ -199,13 +200,11 @@ export function PackageDetail() {
   const sections: { id: DetailSection; label: string }[] = [
     { id: 'about', label: 'About' },
     { id: 'highlights', label: 'Highlights' },
-    { id: 'itinerary', label: 'Itinerary' },
     { id: 'inclusions', label: 'Inclusions' },
     { id: 'exclusions', label: 'Exclusions' },
     { id: 'thingsToCarry', label: 'Things To Carry' },
     { id: 'howToReach', label: 'How To Reach' },
     { id: 'importantInfo', label: 'Important Info' },
-    { id: 'fixedDepartures', label: 'Departures' },
     { id: 'eligibility', label: 'Eligibility' },
     { id: 'location', label: 'Location' },
     { id: 'cancellation', label: 'Cancellation Policy' },
@@ -656,53 +655,6 @@ export function PackageDetail() {
               </div>
             </motion.div>
 
-            {/* Itinerary */}
-            <motion.div
-              id="itinerary"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl p-6 shadow-sm"
-            >
-              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
-                <div className="w-1 h-6 bg-brand-orange rounded-full" />
-                Itinerary
-              </h2>
-              <p className="text-muted-foreground text-sm mb-4">Day-by-day plan</p>
-
-              <div className="space-y-3">
-                {parsedData.itinerary.length > 0 ? parsedData.itinerary.map((day: ItineraryDay, i: number) => (
-                  <div key={i} className="border border-border/50 rounded-xl overflow-hidden">
-                    <div className="bg-brand-cream/50 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0">
-                          <span className="text-sm font-bold text-brand-orange">D{day.day}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm text-brand-dark">{day.title}</p>
-                          {(day.startTime || day.endTime) && (
-                            <p className="text-xs text-muted-foreground">{day.startTime}{day.startTime && day.endTime ? ' - ' : ''}{day.endTime}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        {day.altitude && <span>↑ {day.altitude}</span>}
-                        {day.altitudeGain && <span>↗ {day.altitudeGain}</span>}
-                        {day.distance && <span>Dist: {day.distance}</span>}
-                        {day.hours && <span>Hours: {day.hours}</span>}
-                      </div>
-                    </div>
-                    {day.description && (
-                      <div className="px-4 py-3 text-sm text-muted-foreground leading-relaxed border-t border-border/50">
-                        {day.description}
-                      </div>
-                    )}
-                  </div>
-                )) : (
-                  <p className="text-muted-foreground text-sm">Detailed itinerary coming soon.</p>
-                )}
-              </div>
-            </motion.div>
-
             {/* Inclusions & Exclusions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <motion.div
@@ -824,47 +776,6 @@ export function PackageDetail() {
               )}
             </motion.div>
 
-            {/* Fixed Departures */}
-            <motion.div
-              id="fixedDepartures"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl p-6 shadow-sm"
-            >
-              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
-                <div className="w-1 h-6 bg-brand-orange rounded-full" />
-                Fixed Departures
-              </h2>
-              <p className="text-muted-foreground text-sm mb-4">Guaranteed departure dates</p>
-
-              {parsedData.fixedDepartures.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {parsedData.fixedDepartures.map((dep: FixedDeparture, i: number) => {
-                    const statusColor = dep.status === 'available' ? 'bg-green-500' : dep.status === 'few-seats' ? 'bg-amber-500' : 'bg-red-500'
-                    const statusLabel = dep.status === 'available' ? 'Available' : dep.status === 'few-seats' ? 'Few Seats' : 'Sold Out'
-                    return (
-                      <div key={i} className="border border-border/50 rounded-xl p-4 flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <Calendar className="w-5 h-5 text-brand-orange shrink-0" />
-                          <div>
-                            <p className="text-sm font-semibold text-brand-dark">
-                              {new Date(dep.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
-                            {dep.notes && <p className="text-xs text-muted-foreground mt-0.5">{dep.notes}</p>}
-                          </div>
-                        </div>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full text-white ${statusColor} shrink-0 ml-2`}>
-                          {statusLabel}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Fixed departure dates coming soon.</p>
-              )}
-            </motion.div>
-
             {/* Eligibility */}
             <motion.div
               id="eligibility"
@@ -897,14 +808,25 @@ export function PackageDetail() {
                 <MapPin className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
                 <p className="text-muted-foreground leading-relaxed">{pkg.location}</p>
               </div>
-              {/* Map placeholder */}
-              <div className="mt-4 bg-brand-cream rounded-xl h-48 flex items-center justify-center border border-border/50">
-                <div className="text-center">
-                  <MapPin className="w-8 h-8 text-brand-orange mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">{pkg.name} — Rishikesh, Uttarakhand</p>
-                  <p className="text-xs text-muted-foreground mt-1">Map integration coming soon</p>
+              {pkg.pickupLocationUrl ? (
+                <a
+                  href={pkg.pickupLocationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex items-center gap-2 bg-brand-teal text-white rounded-xl px-5 py-3 hover:bg-brand-teal/90 transition-colors w-fit"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Open Pickup Location in Google Maps</span>
+                </a>
+              ) : (
+                <div className="mt-4 bg-brand-cream rounded-xl h-48 flex items-center justify-center border border-border/50">
+                  <div className="text-center">
+                    <MapPin className="w-8 h-8 text-brand-orange mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">{pkg.name} — Rishikesh, Uttarakhand</p>
+                    <p className="text-xs text-muted-foreground mt-1">Map integration coming soon</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
 
             {/* Cancellation Policy */}

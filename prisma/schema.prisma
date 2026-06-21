@@ -114,6 +114,7 @@ model Package {
   exclusions         String          @default("[]")
   eligibility        String          @default("")
   location           String          @default("")
+  pickupLocationUrl  String          @default("")
   cancellationPolicy String          @default("")
   faqs               String          @default("[]")
   badge              String?

@@ -35,6 +35,7 @@ interface PackageData {
   exclusions: string
   eligibility: string
   location: string
+  pickupLocationUrl: string
   cancellationPolicy: string
   faqs: string
   badge: string | null
@@ -100,6 +101,7 @@ const emptyForm = {
   exclusions: '',
   eligibility: '',
   location: '',
+  pickupLocationUrl: '',
   cancellationPolicy: '',
   faqs: '',
   badge: '',
@@ -196,6 +198,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
       exclusions: pkg.exclusions,
       eligibility: pkg.eligibility,
       location: pkg.location,
+      pickupLocationUrl: pkg.pickupLocationUrl || '',
       cancellationPolicy: pkg.cancellationPolicy,
       faqs: pkg.faqs,
       badge: pkg.badge || '',
@@ -597,6 +600,10 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                     <div>
                       <Label htmlFor="location">Location</Label>
                       <Textarea id="location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} rows={3} placeholder="Address, directions, pickup points..." />
+                    </div>
+                    <div>
+                      <Label htmlFor="pickupLocationUrl">Pickup Location URL (Google Maps)</Label>
+                      <Input id="pickupLocationUrl" value={form.pickupLocationUrl} onChange={(e) => setForm({ ...form, pickupLocationUrl: e.target.value })} placeholder="https://maps.app.goo.gl/... or https://www.google.com/maps/..." />
                     </div>
                     <div>
                       <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
