@@ -107,7 +107,7 @@ export function StaySection() {
                   </div>
                   <span className="text-white/80 text-xs font-semibold tracking-wider uppercase">Camping</span>
                 </div>
-                <h3 className="text-white font-bold text-3xl sm:text-4xl mb-2 drop-shadow-lg">Riverside Camping</h3>
+                <h3 className="text-white font-bold text-3xl sm:text-4xl mb-2 drop-shadow-lg">Camping</h3>
                 <p className="text-white/80 text-sm sm:text-base mb-6 max-w-xs drop-shadow-md">
                   Bonfire, river views, starry nights — an unforgettable outdoor experience
                 </p>
