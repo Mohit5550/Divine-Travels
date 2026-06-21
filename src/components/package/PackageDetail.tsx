@@ -197,6 +197,19 @@ export function PackageDetail() {
     }
   }
 
+  if (isLoading || !pkg || !parsedData) {
+    return (
+      <div className="min-h-screen bg-brand-cream">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <BackButton className="mb-4" />
+          <div className="h-96 bg-muted rounded-2xl animate-pulse" />
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   const itineraryCategories = ['trekking', 'international-tours', 'domestic-tours', 'spiritual-tours']
   const showItinerary = itineraryCategories.includes(pkg.category)
 
@@ -215,19 +228,6 @@ export function PackageDetail() {
     { id: 'reviews', label: 'Reviews' },
     { id: 'faqs', label: 'FAQs' },
   ]
-
-  if (isLoading || !pkg || !parsedData) {
-    return (
-      <div className="min-h-screen bg-brand-cream">
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <BackButton className="mb-4" />
-          <div className="h-96 bg-muted rounded-2xl animate-pulse" />
-        </div>
-        <Footer />
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-brand-cream">

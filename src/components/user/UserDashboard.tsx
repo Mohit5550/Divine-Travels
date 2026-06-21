@@ -25,18 +25,20 @@ export function UserDashboard() {
   const [activeTab, setActiveTab] = useState<UserTab>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const { data: bookings = [] } = useQuery({
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['user-bookings', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
 
-  const { data: pkgBookings = [] } = useQuery({
+  const { data: pkgBookings = [], isLoading: pkgLoading } = useQuery({
     queryKey: ['user-package-bookings-stats', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
@@ -45,6 +47,7 @@ export function UserDashboard() {
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
@@ -53,6 +56,7 @@ export function UserDashboard() {
     queryKey: ['package-wishlist-stats', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
@@ -61,6 +65,7 @@ export function UserDashboard() {
     queryKey: ['notifications-count', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/notifications', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { unreadCount: 0 }
       const d = await res.json()
       return d
     },
@@ -69,13 +74,15 @@ export function UserDashboard() {
 
   const unreadNotifs = notifData?.unreadCount || 0
 
-  const confirmedBookings = bookings.filter((b: { status: string }) => b.status === 'confirmed').length
-  const pendingBookings = bookings.filter((b: { status: string }) => b.status === 'pending').length
-  const completedPkg = pkgBookings.filter((b: { status: string }) => b.status === 'completed').length
-  const totalSpent = [...bookings, ...pkgBookings]
+  const isLoading = bookingsLoading || pkgLoading
+
+  const confirmedBookings = isLoading ? 0 : bookings.filter((b: { status: string }) => b.status === 'confirmed').length
+  const pendingBookings = isLoading ? 0 : bookings.filter((b: { status: string }) => b.status === 'pending').length
+  const completedPkg = isLoading ? 0 : pkgBookings.filter((b: { status: string }) => b.status === 'completed').length
+  const totalSpent = isLoading ? 0 : [...bookings, ...pkgBookings]
     .filter((b: { paymentStatus?: string }) => b.paymentStatus === 'paid' || !b.paymentStatus)
     .reduce((sum: number, b: { totalPrice: number }) => sum + (b.totalPrice || 0), 0)
-  const totalBookings = bookings.length + pkgBookings.length
+  const totalBookings = isLoading ? 0 : bookings.length + pkgBookings.length
 
   const tabs = [
     { id: 'overview' as UserTab, label: 'Overview', icon: LayoutDashboard },

@@ -8,21 +8,32 @@ import { Calendar, CheckCircle, Clock, XCircle, ArrowRight, MapPin, Package } fr
 export function UserTimeline() {
   const { user, navigate } = useAppStore()
 
-  const { data: destBookings = [] } = useQuery({
+  const { data: destBookings = [], isLoading: destLoading } = useQuery({
     queryKey: ['user-bookings-timeline', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
 
-  const { data: pkgBookings = [] } = useQuery({
+  const { data: pkgBookings = [], isLoading: pkgLoading } = useQuery({
     queryKey: ['user-package-bookings-timeline', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
+
+  if (destLoading || pkgLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+        <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
+        <h3 className="font-semibold text-brand-dark mb-2">Loading timeline...</h3>
+      </div>
+    )
+  }
 
   const allBookings = [
     ...destBookings.map((b: any) => ({

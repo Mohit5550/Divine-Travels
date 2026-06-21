@@ -18,6 +18,7 @@ export function UserPackageBookings() {
       const res = await fetch('/api/package-bookings', {
         headers: { 'x-user-id': user?.id || '' },
       })
+      if (!res.ok) return []
       return res.json()
     },
   })

@@ -87,6 +87,7 @@ export function TaxiPackages() {
     queryKey: ['taxi-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=taxi-booking')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

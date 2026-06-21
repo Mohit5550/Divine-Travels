@@ -14,6 +14,7 @@ export function UserBookings() {
     queryKey: ['user-bookings', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })

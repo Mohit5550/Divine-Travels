@@ -63,6 +63,7 @@ export function InternationalPackages() {
     queryKey: ['international-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=international-tours')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

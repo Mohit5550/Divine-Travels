@@ -60,6 +60,7 @@ export function SpiritualPackages() {
     queryKey: ['spiritual-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=spiritual-tours')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

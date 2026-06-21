@@ -41,6 +41,7 @@ export function DestinationDetail() {
     queryKey: ['destination', selectedDestinationId],
     queryFn: async () => {
       const res = await fetch(`/api/destinations/${selectedDestinationId}`)
+      if (!res.ok) throw new Error('Not found')
       return res.json()
     },
     enabled: !!selectedDestinationId,
@@ -53,6 +54,7 @@ export function DestinationDetail() {
       const res = await fetch('/api/wishlist', {
         headers: { 'x-user-id': user?.id || '' },
       })
+      if (!res.ok) return []
       const data = await res.json()
       setIsWishlisted(data.some((w: { destinationId: string }) => w.destinationId === selectedDestinationId))
       return data

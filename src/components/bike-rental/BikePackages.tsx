@@ -85,6 +85,7 @@ export function BikePackages() {
     queryKey: ['bike-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=bike-rental')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

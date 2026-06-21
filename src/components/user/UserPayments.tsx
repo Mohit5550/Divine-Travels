@@ -14,6 +14,7 @@ export function UserPayments() {
     queryKey: ['user-payments', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/payments', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })

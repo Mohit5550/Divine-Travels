@@ -17,6 +17,7 @@ export function UserWishlist() {
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
@@ -25,6 +26,7 @@ export function UserWishlist() {
     queryKey: ['package-wishlist', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       return res.json()
     },
   })
@@ -107,7 +109,7 @@ export function UserWishlist() {
                   <div className="relative h-40">
                     <img src={item.destination?.image || '/placeholder.svg'} alt={item.destination?.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <button onClick={() => removeDestWishlist(item.destination.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
+                    <button onClick={() => removeDestWishlist(item.destination?.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
                       <Trash2 className="w-3.5 h-3.5 text-white" />
                     </button>
                     <div className="absolute bottom-3 left-3">
@@ -121,7 +123,7 @@ export function UserWishlist() {
                       <div className="flex items-center gap-1"><Star className="w-4 h-4 fill-brand-gold text-brand-gold" /><span className="text-sm font-medium">{item.destination?.rating}</span></div>
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-brand-orange">₹{item.destination?.price?.toLocaleString()}</span>
-                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('destination-detail', item.destination.id)}>Book <ArrowRight className="w-3 h-3 ml-1" /></Button>
+                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('destination-detail', item.destination?.id)}>Book <ArrowRight className="w-3 h-3 ml-1" /></Button>
                       </div>
                     </div>
                   </div>
@@ -133,7 +135,7 @@ export function UserWishlist() {
                   <div className="relative h-40">
                     <img src={item.package?.image || '/placeholder.svg'} alt={item.package?.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <button onClick={() => removePkgWishlist(item.package.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
+                    <button onClick={() => removePkgWishlist(item.package?.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
                       <Trash2 className="w-3.5 h-3.5 text-white" />
                     </button>
                     <div className="absolute bottom-3 left-3">
@@ -150,7 +152,7 @@ export function UserWishlist() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-brand-orange">₹{item.package?.price?.toLocaleString()}</span>
-                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('package-detail', null, item.package.id)}>
+                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('package-detail', null, item.package?.id)}>
                           Book <ArrowRight className="w-3 h-3 ml-1" />
                         </Button>
                       </div>

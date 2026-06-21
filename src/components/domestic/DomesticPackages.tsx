@@ -63,6 +63,7 @@ export function DomesticPackages() {
     queryKey: ['domestic-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=domestic-tours')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

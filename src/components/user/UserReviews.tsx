@@ -20,6 +20,7 @@ export function UserReviews() {
     queryKey: ['user-reviews', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/user/reviews', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { destinationReviews: [], packageReviews: [] }
       return res.json()
     },
   })
@@ -28,6 +29,7 @@ export function UserReviews() {
     queryKey: ['user-package-bookings-completed', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return []
       const all = await res.json()
       return all.filter((b: any) => b.status === 'completed')
     },

@@ -103,6 +103,7 @@ export function TrekkingPackages() {
     queryKey: ['trekking-packages'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=trekking')
+      if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]
     },

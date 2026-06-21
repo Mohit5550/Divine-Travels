@@ -38,7 +38,7 @@ export function GalleryPage() {
     queryKey: ['gallery-images'],
     queryFn: async () => {
       const res = await fetch('/api/gallery')
-      if (!res.ok) throw new Error('Failed to fetch gallery')
+      if (!res.ok) return []
       const data = await res.json()
       return data as GalleryImage[]
     },

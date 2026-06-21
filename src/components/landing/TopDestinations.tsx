@@ -101,7 +101,7 @@ export function TopDestinations() {
     if (view) {
       navigate(view)
     } else {
-      navigate('destination-detail', null)
+      navigate('destination-detail', dest.id)
     }
   }
 
