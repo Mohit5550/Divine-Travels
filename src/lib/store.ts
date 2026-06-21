@@ -1,6 +1,47 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+const VIEW_TO_URL: Record<string, string> = {
+  'landing': '/',
+  'rafting-packages': '/rafting',
+  'trekking': '/trekking',
+  'adventure': '/adventure',
+  'bike-rental': '/bike-rental',
+  'taxi-booking': '/taxi-booking',
+  'domestic-tours': '/domestic-tours',
+  'spiritual-tours': '/spiritual-tours',
+  'international-tours': '/international-tours',
+  'gallery': '/gallery',
+  'rishikesh-tour': '/rishikesh-tour',
+  'haridwar-tour': '/haridwar-tour',
+  'mussoorie-tour': '/mussoorie-tour',
+  'nainital-tour': '/nainital-tour',
+  'hill-stations-tour': '/hill-stations-tour',
+  'char-dham-tour': '/char-dham-tour',
+  'hotel-packages': '/hotel-packages',
+  'camping-packages': '/camping-packages',
+  'about-us': '/about-us',
+  'contact': '/contact',
+  'privacy-policy': '/privacy-policy',
+  'terms-of-service': '/terms-of-service',
+  'refund-policy': '/refund-policy',
+  'cancellation-policy': '/cancellation-policy',
+  'admin-dashboard': '/admin-dashboard',
+  'user-dashboard': '/user-dashboard',
+}
+
+const URL_TO_VIEW: Record<string, string> = Object.fromEntries(
+  Object.entries(VIEW_TO_URL).map(([view, url]) => [url, view])
+)
+
+export function getViewFromUrl(pathname: string): string {
+  return URL_TO_VIEW[pathname] || 'landing'
+}
+
+export function getUrlFromView(view: string): string {
+  return VIEW_TO_URL[view] || '/'
+}
+
 interface AppUser {
   id: string
   email: string
@@ -70,6 +111,12 @@ export const useAppStore = create<AppStore>()(
           selectedPackageId: pkgId ?? null,
           sourceView: newSource,
         })
+
+        const url = VIEW_TO_URL[view] || '/'
+        if (window.location.pathname !== url) {
+          window.history.pushState({ view }, '', url)
+        }
+
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
 
