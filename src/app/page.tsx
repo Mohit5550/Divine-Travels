@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppStore, getViewFromUrl } from '@/lib/store'
+import { useAppStore } from '@/lib/store'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
@@ -55,21 +55,7 @@ export default function Home() {
     if (redirect) {
       localStorage.removeItem('dt_redirect')
       navigate(redirect)
-      return
     }
-
-    const urlView = getViewFromUrl(window.location.pathname)
-    if (urlView !== 'landing' || window.location.pathname !== '/') {
-      navigate(urlView)
-    }
-
-    const handlePopState = () => {
-      const view = getViewFromUrl(window.location.pathname)
-      useAppStore.setState({ currentView: view })
-    }
-
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
   }, [navigate])
 
   const renderView = () => {
