@@ -118,7 +118,7 @@ interface PackageData {
   pickupLocationUrl: string
 }
 
-type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'howToReach' | 'thingsToCarry' | 'importantInfo'
+type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'itinerary' | 'howToReach' | 'thingsToCarry' | 'importantInfo'
 
 export function PackageDetail() {
   const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
@@ -197,9 +197,13 @@ export function PackageDetail() {
     }
   }
 
+  const itineraryCategories = ['trekking', 'international-tours', 'domestic-tours', 'spiritual-tours']
+  const showItinerary = itineraryCategories.includes(pkg.category)
+
   const sections: { id: DetailSection; label: string }[] = [
     { id: 'about', label: 'About' },
     { id: 'highlights', label: 'Highlights' },
+    ...(showItinerary ? [{ id: 'itinerary' as DetailSection, label: 'Itinerary' }] : []),
     { id: 'inclusions', label: 'Inclusions' },
     { id: 'exclusions', label: 'Exclusions' },
     { id: 'thingsToCarry', label: 'Things To Carry' },
@@ -654,6 +658,55 @@ export function PackageDetail() {
                 ))}
               </div>
             </motion.div>
+
+            {/* Itinerary */}
+            {showItinerary && (
+              <motion.div
+                id="itinerary"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl p-6 shadow-sm"
+              >
+                <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                  <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                  Itinerary
+                </h2>
+                <p className="text-muted-foreground text-sm mb-4">Day-by-day plan</p>
+
+                <div className="space-y-3">
+                  {parsedData.itinerary.length > 0 ? parsedData.itinerary.map((day: ItineraryDay, i: number) => (
+                    <div key={i} className="border border-border/50 rounded-xl overflow-hidden">
+                      <div className="bg-brand-cream/50 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-brand-orange">D{day.day}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-brand-dark">{day.title}</p>
+                            {(day.startTime || day.endTime) && (
+                              <p className="text-xs text-muted-foreground">{day.startTime}{day.startTime && day.endTime ? ' - ' : ''}{day.endTime}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          {day.altitude && <span>↑ {day.altitude}</span>}
+                          {day.altitudeGain && <span>↗ {day.altitudeGain}</span>}
+                          {day.distance && <span>Dist: {day.distance}</span>}
+                          {day.hours && <span>Hours: {day.hours}</span>}
+                        </div>
+                      </div>
+                      {day.description && (
+                        <div className="px-4 py-3 text-sm text-muted-foreground leading-relaxed border-t border-border/50 whitespace-pre-line">
+                          {day.description}
+                        </div>
+                      )}
+                    </div>
+                  )) : (
+                    <p className="text-muted-foreground text-sm">Detailed itinerary coming soon.</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* Inclusions & Exclusions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
