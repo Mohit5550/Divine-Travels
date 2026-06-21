@@ -789,7 +789,7 @@ export function PackageDetail() {
               </h2>
               <div className="flex items-start gap-3">
                 <UsersRound className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
-                <p className="text-muted-foreground leading-relaxed">{pkg.eligibility}</p>
+                <div className="text-muted-foreground leading-relaxed whitespace-pre-line">{pkg.eligibility}</div>
               </div>
             </motion.div>
 
@@ -840,7 +840,7 @@ export function PackageDetail() {
                 <div className="w-1 h-6 bg-brand-orange rounded-full" />
                 Cancellation Policy
               </h2>
-              {pkg.cancellationPolicy.split('. ').filter(s => s.trim()).map((point, i) => (
+              {pkg.cancellationPolicy.split(/\n|\. /).filter(s => s.trim()).map((point, i) => (
                 <div key={i} className="flex items-start gap-2.5 mb-2">
                   <div className="w-2 h-2 rounded-full bg-brand-orange shrink-0 mt-1.5" />
                   <p className="text-sm text-muted-foreground">{point.trim().endsWith('.') ? point : point + '.'}</p>
