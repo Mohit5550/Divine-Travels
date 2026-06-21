@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/((?:rafting|trekking|adventure|bike-rental|taxi-booking|domestic-tours|spiritual-tours|international-tours|gallery|rishikesh-tour|haridwar-tour|mussoorie-tour|nainital-tour|hill-stations-tour|char-dham-tour|hotel-packages|camping-packages|about-us|contact|privacy-policy|terms-of-service|refund-policy|cancellation-policy|admin-dashboard|user-dashboard)(?:/.*|$))",
-      "destination": "/"
-    }
-  ]
-}
