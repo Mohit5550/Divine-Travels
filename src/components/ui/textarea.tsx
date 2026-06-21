@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils"
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   const ref = React.useRef<HTMLTextAreaElement>(null)
 
-  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    const target = e.currentTarget
+  React.useLayoutEffect(() => {
+    const target = ref.current
+    if (!target) return
     target.style.height = 'auto'
     target.style.height = target.scrollHeight + 'px'
-    props.onInput?.(e)
-  }
+  }, [props.value])
 
   return (
     <textarea
@@ -21,7 +21,6 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
         "resize-y overflow-auto",
         className
       )}
-      onInput={handleInput}
       {...props}
     />
   )

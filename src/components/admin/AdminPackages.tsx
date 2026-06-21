@@ -378,6 +378,19 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     setItems(items.filter((_, i) => i !== idx))
   }
 
+  const handleItemKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, items: string[], setItems: (items: string[]) => void, idx: number) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (idx === items.length - 1) {
+        setItems([...items, ''])
+        setTimeout(() => {
+          const inputs = document.querySelectorAll<HTMLInputElement>('.item-builder-input')
+          inputs[inputs.length - 1]?.focus()
+        }, 0)
+      }
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -666,7 +679,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <div className="space-y-2">
                         {highlightsItems.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(highlightsItems, setHighlightsItems, idx, e.target.value)} placeholder={`Highlight ${idx + 1}`} />
+                            <Input value={item} onChange={(e) => updateSimpleItem(highlightsItems, setHighlightsItems, idx, e.target.value)} placeholder={`Highlight ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, highlightsItems, setHighlightsItems, idx)} />
                             <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(highlightsItems, setHighlightsItems, idx)}>
                               <TrashIcon className="w-4 h-4 text-red-500" />
                             </Button>
@@ -686,7 +699,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <div className="space-y-2">
                         {inclusionsItems.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(inclusionsItems, setInclusionsItems, idx, e.target.value)} placeholder={`Inclusion ${idx + 1}`} />
+                            <Input value={item} onChange={(e) => updateSimpleItem(inclusionsItems, setInclusionsItems, idx, e.target.value)} placeholder={`Inclusion ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, inclusionsItems, setInclusionsItems, idx)} />
                             <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(inclusionsItems, setInclusionsItems, idx)}>
                               <TrashIcon className="w-4 h-4 text-red-500" />
                             </Button>
@@ -706,7 +719,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <div className="space-y-2">
                         {exclusionsItems.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(exclusionsItems, setExclusionsItems, idx, e.target.value)} placeholder={`Exclusion ${idx + 1}`} />
+                            <Input value={item} onChange={(e) => updateSimpleItem(exclusionsItems, setExclusionsItems, idx, e.target.value)} placeholder={`Exclusion ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, exclusionsItems, setExclusionsItems, idx)} />
                             <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(exclusionsItems, setExclusionsItems, idx)}>
                               <TrashIcon className="w-4 h-4 text-red-500" />
                             </Button>
@@ -786,7 +799,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <div className="space-y-2">
                         {thingsToCarryItems.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx, e.target.value)} placeholder={`Item ${idx + 1}`} />
+                            <Input value={item} onChange={(e) => updateSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx, e.target.value)} placeholder={`Item ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, thingsToCarryItems, setThingsToCarryItems, idx)} />
                             <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx)}>
                               <TrashIcon className="w-4 h-4 text-red-500" />
                             </Button>
@@ -807,7 +820,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <div className="space-y-2">
                         {howToReachItems.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} />
+                            <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, howToReachItems, setHowToReachItems, idx)} />
                             <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(howToReachItems, setHowToReachItems, idx)}>
                               <TrashIcon className="w-4 h-4 text-red-500" />
                             </Button>

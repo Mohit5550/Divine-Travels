@@ -2,11 +2,9 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-  const ref = React.useRef<HTMLInputElement>(null)
+function Input({ className, type, onKeyDown: externalOnKeyDown, ...props }: React.ComponentProps<"input">) {
   return (
     <input
-      ref={ref}
       type={type}
       data-slot="input"
       className={cn(
@@ -32,7 +30,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
             target.selectionStart = target.selectionEnd = start + 1
           }, 0)
         }
-        props.onKeyDown?.(e)
+        externalOnKeyDown?.(e)
       }}
       {...props}
     />
