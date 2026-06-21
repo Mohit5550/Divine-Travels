@@ -297,7 +297,7 @@ export function InternationalPackages() {
                           ))}
                         </div>
                         <span className="text-sm font-semibold text-brand-dark">{pkg.rating}</span>
-                        <span className="text-xs text-muted-foreground">({pkg.reviewCount} reviews)</span>
+                        <span className="text-xs text-muted-foreground">({pkg.reviewCount} <span className="hidden sm:inline">reviews</span>)</span>
                       </div>
                     )}
                     <div className="border-t border-border/50" />
