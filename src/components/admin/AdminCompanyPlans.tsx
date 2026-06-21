@@ -373,14 +373,41 @@ function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, edit
 }
 
 function Input({ label, value, onChange, textarea, type, placeholder }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean; type?: string; placeholder?: string }) {
-  const cls = "w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+  const cls = "w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none resize-y"
+  const hasNewlines = value.includes('\n')
+  const showAsTextarea = textarea || hasNewlines
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      {textarea ? (
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cls} />
+      {showAsTextarea ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={Math.min(8, Math.max(3, (value.match(/\n/g) || []).length + 1))}
+          className={cls}
+          placeholder={placeholder}
+        />
       ) : (
-        <input type={type || 'text'} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={cls} />
+        <input
+          type={type || 'text'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.shiftKey) {
+              e.preventDefault()
+              const target = e.target as HTMLInputElement
+              const start = target.selectionStart
+              const end = target.selectionEnd
+              const newValue = value.substring(0, start) + '\n' + value.substring(end)
+              onChange(newValue)
+              setTimeout(() => {
+                target.selectionStart = target.selectionEnd = start + 1
+              }, 0)
+            }
+          }}
+          placeholder={placeholder}
+          className={cls}
+        />
       )}
     </div>
   )
