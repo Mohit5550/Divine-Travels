@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toDirectImageUrl } from '@/lib/utils'
 
 interface PackageData {
   id: string
@@ -156,6 +157,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [inclusionsItems, setInclusionsItems] = useState<string[]>([])
   const [exclusionsItems, setExclusionsItems] = useState<string[]>([])
   const [faqsItems, setFaqsItems] = useState<{ question: string; answer: string }[]>([])
+  const [galleryImages, setGalleryImages] = useState<string[]>([])
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['admin-packages'],
@@ -231,6 +233,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     try { setInclusionsItems(JSON.parse(pkg.inclusions || '[]')) } catch { setInclusionsItems([]) }
     try { setExclusionsItems(JSON.parse(pkg.exclusions || '[]')) } catch { setExclusionsItems([]) }
     try { setFaqsItems(JSON.parse(pkg.faqs || '[]')) } catch { setFaqsItems([]) }
+    try { setGalleryImages(JSON.parse(pkg.images || '[]')) } catch { setGalleryImages([]) }
 
     setActiveTab('basic')
     setShowForm(true)
@@ -247,6 +250,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     setInclusionsItems([])
     setExclusionsItems([])
     setFaqsItems([])
+    setGalleryImages([])
     setActiveTab('basic')
     setShowForm(true)
   }
@@ -272,6 +276,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
         inclusions: JSON.stringify(inclusionsItems),
         exclusions: JSON.stringify(exclusionsItems),
         faqs: JSON.stringify(faqsItems),
+        images: JSON.stringify(galleryImages.filter(Boolean)),
       }
 
       const res = await fetch(url, {
@@ -487,17 +492,54 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="image">Main Image URL *</Label>
-                      <Input id="image" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." required />
+                      <Label htmlFor="image">Featured Image URL *</Label>
+                      <Input id="image" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://... or Google Drive link" required />
                       {form.image && (
-                        <div className="mt-2 rounded-lg overflow-hidden w-32 h-20 border">
-                          <img src={form.image} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        <div className="mt-2 rounded-lg overflow-hidden w-full max-w-xs h-32 border">
+                          <img src={toDirectImageUrl(form.image)} alt="featured preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                         </div>
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="images">Gallery Images (JSON array)</Label>
-                      <Textarea id="images" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} rows={2} placeholder='["https://img1.jpg", "https://img2.jpg"]' />
+                      <Label>Gallery Images (up to 5)</Label>
+                      <div className="space-y-2 mt-1">
+                        {galleryImages.map((url, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <Input
+                                value={url}
+                                onChange={(e) => {
+                                  const updated = [...galleryImages]
+                                  updated[idx] = e.target.value
+                                  setGalleryImages(updated)
+                                }}
+                                placeholder={`Gallery image ${idx + 1} URL`}
+                              />
+                              {url && (
+                                <div className="mt-1 rounded-md overflow-hidden w-full max-w-[120px] h-16 border">
+                                  <img src={toDirectImageUrl(url)} alt={`gallery ${idx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== idx))}
+                              className="mt-1 p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {galleryImages.length < 5 && (
+                          <button
+                            type="button"
+                            onClick={() => setGalleryImages([...galleryImages, ''])}
+                            className="flex items-center gap-1.5 text-sm text-brand-orange hover:underline font-medium"
+                          >
+                            <Plus className="w-4 h-4" /> Add Image
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
