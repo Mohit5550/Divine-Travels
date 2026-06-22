@@ -216,7 +216,8 @@ export function PackageBookingForm() {
         userId: user?.id || '',
       }
 
-      sessionStorage.setItem('dt_pending_app', JSON.stringify(formData))
+      localStorage.setItem('dt_pending_app', JSON.stringify(formData))
+      localStorage.setItem('dt_user_id', user?.id || '')
 
       const payRes = await fetch('/api/kwikupi/create-payment', {
         method: 'POST',
@@ -236,17 +237,17 @@ export function PackageBookingForm() {
       if (!payRes.ok) {
         const d = await payRes.json()
         toast.error(d.error || 'Failed to create payment')
-        sessionStorage.removeItem('dt_pending_app')
+        localStorage.removeItem('dt_pending_app')
         return
       }
 
       const payData = await payRes.json()
-      sessionStorage.setItem('dt_payment_id', payData.payment_id)
-      sessionStorage.setItem('dt_service', 'package')
+      localStorage.setItem('dt_payment_id', payData.payment_id)
+      localStorage.setItem('dt_service', 'package')
       window.location.href = payData.payment_page
     } catch {
       toast.error('Failed to process payment')
-      sessionStorage.removeItem('dt_pending_app')
+      localStorage.removeItem('dt_pending_app')
     } finally {
       setSubmitting(false)
     }

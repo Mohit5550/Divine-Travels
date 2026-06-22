@@ -17,11 +17,11 @@ function PaymentContent() {
           searchParams.get('pay_id') ||
           searchParams.get('id') ||
           searchParams.get('txn_id') ||
-          sessionStorage.getItem('dt_payment_id')
+          localStorage.getItem('dt_payment_id')
 
-        const bookingId = searchParams.get('booking_id') || sessionStorage.getItem('dt_booking_id')
-        const service = searchParams.get('service') || sessionStorage.getItem('dt_service') || 'package'
-        const pendingApp = sessionStorage.getItem('dt_pending_app')
+        const bookingId = searchParams.get('booking_id') || localStorage.getItem('dt_booking_id')
+        const service = searchParams.get('service') || localStorage.getItem('dt_service') || 'package'
+        const pendingApp = localStorage.getItem('dt_pending_app')
 
         if (!paymentId) {
           setStatus('error')
@@ -41,7 +41,7 @@ function PaymentContent() {
 
         if (paymentSuccess) {
           if (pendingApp) {
-            // Adventure flow: pending app in sessionStorage — create booking now
+            // Adventure flow: pending app in localStorage — create booking now
             const formData = JSON.parse(pendingApp)
             const createRes = await fetch('/api/package-bookings', {
               method: 'POST',
@@ -59,23 +59,30 @@ function PaymentContent() {
             })
 
             if (createRes.ok) {
-              sessionStorage.removeItem('dt_pending_app')
-              sessionStorage.removeItem('dt_payment_id')
-              sessionStorage.removeItem('dt_booking_id')
-              sessionStorage.removeItem('dt_service')
+              localStorage.removeItem('dt_pending_app')
+              localStorage.removeItem('dt_payment_id')
+              localStorage.removeItem('dt_booking_id')
+              localStorage.removeItem('dt_service')
               setStatus('success')
               setMessage(`Payment successful! Your booking has been submitted. Reference: ${verifyData.order_id}`)
             } else {
+              const err = await createRes.json().catch(() => ({}))
               setStatus('error')
-              setMessage('Payment was processed but booking creation failed. Please contact support.')
+              setMessage(`Payment was processed (${verifyData.order_id}) but booking creation failed. ${err.error || 'Please contact support.'}`)
             }
           } else if (bookingId && service === 'package') {
             // Non-adventure flow: booking already exists, update payment status
+            const userId = localStorage.getItem('dt_user_id')
+            if (!userId) {
+              setStatus('error')
+              setMessage('Session expired. Payment was received but could not be linked. Please contact support with reference: ' + verifyData.order_id)
+              return
+            }
             const updateRes = await fetch(`/api/package-bookings/${bookingId}`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
-                'x-user-id': sessionStorage.getItem('dt_user_id') || '',
+                'x-user-id': userId,
               },
               body: JSON.stringify({
                 paymentId: verifyData.payment_id,
@@ -87,14 +94,15 @@ function PaymentContent() {
             })
 
             if (updateRes.ok) {
-              sessionStorage.removeItem('dt_payment_id')
-              sessionStorage.removeItem('dt_booking_id')
-              sessionStorage.removeItem('dt_service')
+              localStorage.removeItem('dt_payment_id')
+              localStorage.removeItem('dt_booking_id')
+              localStorage.removeItem('dt_service')
               setStatus('success')
               setMessage(`Payment successful! Booking confirmed. Reference: ${verifyData.order_id}`)
             } else {
-              setStatus('success')
-              setMessage('Payment received but status update pending. Admin will verify shortly.')
+              const err = await updateRes.json().catch(() => ({}))
+              setStatus('error')
+              setMessage(`Payment received (${verifyData.order_id}) but status update failed. ${err.error || 'Contact support.'}`)
             }
           } else {
             setStatus('success')

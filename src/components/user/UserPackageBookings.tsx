@@ -3,14 +3,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
-import { Package, MapPin, Calendar, Users, X, Eye, ArrowRight, CreditCard } from 'lucide-react'
+import { Package, MapPin, Calendar, Users, X, Eye, ArrowRight, CreditCard, Receipt } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 export function UserPackageBookings() {
   const { user, navigate } = useAppStore()
   const queryClient = useQueryClient()
+  const [receiptBooking, setReceiptBooking] = useState<any | null>(null)
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['user-package-bookings', user?.id],
@@ -51,10 +53,10 @@ export function UserPackageBookings() {
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
       const payData = await res.json()
-      sessionStorage.setItem('dt_payment_id', payData.payment_id)
-      sessionStorage.setItem('dt_booking_id', booking.id)
-      sessionStorage.setItem('dt_user_id', user?.id || '')
-      sessionStorage.setItem('dt_service', 'package')
+      localStorage.setItem('dt_payment_id', payData.payment_id)
+      localStorage.setItem('dt_booking_id', booking.id)
+      localStorage.setItem('dt_user_id', user?.id || '')
+      localStorage.setItem('dt_service', 'package')
       window.location.href = payData.payment_page
     } catch {
       toast.error('Failed to initiate payment')
@@ -129,6 +131,11 @@ export function UserPackageBookings() {
                       <Button variant="outline" size="sm" onClick={() => navigate('package-detail', null, booking.packageId)}>
                         <Eye className="w-3 h-3 mr-1" /> View
                       </Button>
+                      {booking.paymentStatus === 'completed' && (
+                        <Button size="sm" className="bg-brand-teal hover:bg-brand-teal/90 text-white" onClick={() => setReceiptBooking(booking)}>
+                          <Receipt className="w-3 h-3 mr-1" /> Receipt
+                        </Button>
+                      )}
                       {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (
                         <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white" onClick={() => handlePayNow(booking)}>
                           <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{booking.totalPrice?.toLocaleString()}
@@ -150,6 +157,98 @@ export function UserPackageBookings() {
               </div>
             </motion.div>
           ))}
+
+          {/* Receipt Modal */}
+          {receiptBooking && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
+              onClick={() => setReceiptBooking(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Receipt Header */}
+                <div className="bg-gradient-to-r from-brand-dark to-brand-navy p-6 text-center">
+                  <Receipt className="w-10 h-10 text-brand-orange mx-auto mb-2" />
+                  <h3 className="text-white font-bold text-lg">Payment Receipt</h3>
+                  <p className="text-white/50 text-xs mt-1">Booking #{receiptBooking.id.slice(-8).toUpperCase()}</p>
+                </div>
+
+                {/* Booking Details */}
+                <div className="p-6 space-y-4">
+                  <div className="text-center pb-4 border-b border-border/50">
+                    <p className="font-serif text-xl text-brand-dark">{receiptBooking.package?.name}</p>
+                    <p className="text-muted-foreground text-sm">{receiptBooking.package?.category}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Customer Name</p>
+                      <p className="font-medium text-brand-dark">{receiptBooking.fullName}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Mobile</p>
+                      <p className="font-medium text-brand-dark">{receiptBooking.mobile}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Date</p>
+                      <p className="font-medium text-brand-dark">{new Date(receiptBooking.preferredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Time</p>
+                      <p className="font-medium text-brand-dark">{receiptBooking.preferredTime || 'No preference'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Number of People</p>
+                      <p className="font-medium text-brand-dark">{receiptBooking.numberOfPeople}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Total Paid</p>
+                      <p className="font-bold text-brand-orange">₹{receiptBooking.paymentAmount?.toLocaleString() || receiptBooking.totalPrice?.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {receiptBooking.additionalNotes && (
+                    <div className="pt-3 border-t border-border/50">
+                      <p className="text-muted-foreground text-xs mb-1">Additional Notes</p>
+                      <p className="text-sm text-brand-dark">{receiptBooking.additionalNotes}</p>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Payment ID</p>
+                      <p className="text-brand-dark font-mono">{receiptBooking.paymentId || '—'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-foreground">Status</p>
+                      <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">{receiptBooking.paymentStatus === 'completed' ? 'Paid' : receiptBooking.paymentStatus}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/50 text-center">
+                    <p className="text-[10px] text-muted-foreground">Booking ID: {receiptBooking.id}</p>
+                    <p className="text-[10px] text-muted-foreground">Booked on {new Date(receiptBooking.createdAt).toLocaleString('en-IN')}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-border/50">
+                  <Button
+                    className="w-full bg-brand-dark hover:bg-brand-dark/90 text-white rounded-xl"
+                    onClick={() => setReceiptBooking(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </div>
       )}
     </div>
