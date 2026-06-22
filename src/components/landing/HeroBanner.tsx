@@ -13,7 +13,7 @@ export function HeroBanner() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="https://picsum.photos/seed/divine-river-nature/1600/900"
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop"
           alt="Divine Travel - Scenic River Landscape"
           className="w-full h-full object-cover"
         />

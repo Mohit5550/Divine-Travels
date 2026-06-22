@@ -12,7 +12,7 @@ export function CTABanner() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="https://picsum.photos/seed/kayaking-water-adventure/1600/900"
+          src="https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=1600&h=900&fit=crop"
           alt="Kayaking adventure on water"
           className="w-full h-full object-cover"
         />
