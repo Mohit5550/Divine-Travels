@@ -140,6 +140,59 @@ export function PackageDetail() {
     enabled: !!selectedPackageId,
   })
 
+  const subOptionMap: Record<string, string> = {
+    brahmpuri: 'Brahmpuri 9km',
+    shivpuri: 'Shivpuri 16km',
+    'marine drive': 'Marine Drive 26km',
+    'valley of flowers': 'Valley of Flowers',
+    'nag tibba': 'Nag Tibba',
+    kedarkantha: 'Kedarkantha',
+    'har ki dun': 'Har Ki Dun',
+    sedan: 'Sedan',
+    suv: 'SUV',
+    'tempo traveller': 'Tempo Traveller',
+    bus: 'Bus',
+    hunter: 'Hunter 350',
+    activa: 'Activa',
+    splendor: 'Splendor',
+    'royal enfield': 'Royal Enfield',
+    'access 125': 'Access 125',
+    rishikesh: 'Rishikesh Tour',
+    haridwar: 'Haridwar Tour',
+    mussoorie: 'Mussoorie Tour',
+    nainital: 'Nainital Tour',
+    'hill stations': 'Hill Stations',
+    'char dham': 'Char Dham',
+  }
+
+  function getSubOption(name: string): string | undefined {
+    const lower = name.toLowerCase()
+    for (const [key, sub] of Object.entries(subOptionMap)) {
+      if (lower.includes(key)) return sub
+    }
+    return undefined
+  }
+
+  const { data: effectivePrice } = useQuery({
+    queryKey: ['detail-effective-price', selectedPackageId, pkg?.category],
+    queryFn: async () => {
+      if (!pkg) return null
+      const service = pkg.category || ''
+      const res = await fetch(`/api/public/availability?service=${service}`)
+      const data = await res.json()
+      const records = data.records || []
+      const subOption = getSubOption(pkg.name)
+      const match = records.find((r: any) => {
+        if (r.allDay) return true
+        return (r.subOptions || []).includes(subOption)
+      })
+      return match?.price ?? pkg.price
+    },
+    enabled: !!pkg,
+  })
+
+  const displayPrice = effectivePrice ?? pkg?.price ?? 0
+
   const parsedData = pkg ? {
     images: JSON.parse(pkg.images || '[]') as string[],
     highlights: JSON.parse(pkg.highlights || '[]') as string[],
@@ -467,14 +520,14 @@ export function PackageDetail() {
                     <p className="text-white/60 text-sm">{pkg.subtitle}</p>
                   </div>
                   <div className="text-right">
-                    {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
+                    {pkg.originalPrice && pkg.originalPrice > displayPrice ? (
                       <>
                         <div className="text-white/50 text-sm line-through">₹{pkg.originalPrice}</div>
-                        <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
-                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</div>
+                        <div className="text-white font-bold text-2xl">₹{displayPrice}</div>
+                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - displayPrice}</div>
                       </>
                     ) : (
-                      <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                      <div className="text-white font-bold text-2xl">₹{displayPrice}</div>
                     )}
                     <div className="text-white/60 text-xs">per person</div>
                   </div>
@@ -1067,14 +1120,14 @@ export function PackageDetail() {
                     <p className="text-white/60 text-sm">{pkg.subtitle}</p>
                   </div>
                   <div className="text-right">
-                    {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
+                    {pkg.originalPrice && pkg.originalPrice > displayPrice ? (
                       <>
                         <div className="text-white/50 text-sm line-through">₹{pkg.originalPrice}</div>
-                        <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
-                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</div>
+                        <div className="text-white font-bold text-2xl">₹{displayPrice}</div>
+                        <div className="text-emerald-400 text-xs font-semibold">Save ₹{pkg.originalPrice - displayPrice}</div>
                       </>
                     ) : (
-                      <div className="text-white font-bold text-2xl">₹{pkg.price}</div>
+                      <div className="text-white font-bold text-2xl">₹{displayPrice}</div>
                     )}
                     <div className="text-white/60 text-xs">per person</div>
                   </div>

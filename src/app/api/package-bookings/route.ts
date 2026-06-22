@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       packageId, fullName, mobile, numberOfPeople,
       preferredDate, preferredTime, additionalNotes, couponCode,
       paymentId, paymentOrderId, paymentStatus, paymentAmount,
+      pricePerPerson,
     } = body
 
     if (!packageId || !fullName || !mobile || !preferredDate) {
@@ -83,7 +84,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Package not found or inactive' }, { status: 404 })
     }
 
-    let baseTotal = pkg.price * (numberOfPeople || 1)
+    let unitPrice = pricePerPerson ? Number(pricePerPerson) : pkg.price
+    let baseTotal = unitPrice * (numberOfPeople || 1)
     let discountAmount = 0
     let couponId: string | null = null
 

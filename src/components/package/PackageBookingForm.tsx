@@ -212,6 +212,7 @@ export function PackageBookingForm() {
         preferredTime: form.preferredTime,
         additionalNotes: form.additionalNotes,
         couponCode: appliedCoupon?.code || '',
+        pricePerPerson: pricePerPerson,
         userId: user?.id || '',
       }
 
@@ -289,6 +290,7 @@ export function PackageBookingForm() {
           preferredTime: form.preferredTime,
           additionalNotes: form.additionalNotes,
           couponCode: appliedCoupon?.code || '',
+          pricePerPerson: displayPrice,
         }),
       })
 
