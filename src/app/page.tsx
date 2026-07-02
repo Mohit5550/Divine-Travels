@@ -41,6 +41,7 @@ import { PackageDetail } from '@/components/package/PackageDetail'
 import { PackageBookingForm } from '@/components/package/PackageBookingForm'
 import { AboutUs } from '@/components/pages/AboutUs'
 import { Contact } from '@/components/pages/Contact'
+import { BlogSection } from '@/components/landing/BlogSection'
 import { CompanyDetail } from '@/components/company/CompanyDetail'
 import { PrivacyPolicy } from '@/components/pages/PrivacyPolicy'
 import { BlogArchive } from '@/components/blog/BlogArchive'
@@ -139,6 +140,7 @@ export default function Home() {
             <CompanySection />
             <TopDestinations />
             <StaySection />
+            <BlogSection />
             <TestimonialsSection />
             <PartnersSection />
             <SocialCTASection />
