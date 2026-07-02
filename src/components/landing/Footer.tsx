@@ -56,6 +56,7 @@ export function Footer() {
                     { label: 'Home', action: () => navigate('landing') },
                     { label: 'Destinations', action: handleDestClick },
                     { label: 'About Us', action: () => navigate('about-us') },
+                    { label: 'Blog', action: () => navigate('blog-archive') },
                     { label: 'Contact Us', action: () => navigate('contact') },
                     { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
                     { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },

@@ -370,6 +370,35 @@ model TourBooking {
   updatedAt        DateTime @updatedAt
 }
 
+model BlogCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  blogs       Blog[]
+}
+
+model Blog {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  content         String        // HTML content
+  excerpt         String        // short description for archive cards
+  featuredImage   String?
+  tags            String        @default("[]") // JSON array of tag strings
+  categoryId      String?
+  category        BlogCategory? @relation(fields: [categoryId], references: [id])
+  author          String        @default("Divine Travels")
+  published       Boolean       @default(false)
+  publishedAt     DateTime?
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
 model GalleryImage {
   id        String   @id @default(cuid())
   url       String

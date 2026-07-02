@@ -357,12 +357,18 @@ export function Navbar() {
                 </button>
                 {isAuthenticated ? (
                   <>
-                    <button
-                      onClick={() => { navigate('user-dashboard'); setMobileMenuOpen(false) }}
-                      className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
-                    >
-                      My Dashboard
-                    </button>
+                <button
+                  onClick={() => { navigate('blog-archive'); setMobileMenuOpen(false) }}
+                  className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
+                >
+                  Blog
+                </button>
+                <button
+                  onClick={() => { navigate('user-dashboard'); setMobileMenuOpen(false) }}
+                  className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
+                >
+                  My Dashboard
+                </button>
                     {isAdmin && (
                       <button
                         onClick={() => { navigate('admin-dashboard'); setMobileMenuOpen(false) }}

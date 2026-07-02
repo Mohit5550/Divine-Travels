@@ -57,13 +57,14 @@ import { AdminTaxiBookings } from './AdminTaxiBookings'
 import { AdminCompanyPlans } from './AdminCompanyPlans'
 import { AdminHeroNotices } from './AdminHeroNotices'
 import { AdminBookingsPanel } from './AdminBookingsPanel'
+import { AdminBlogs } from './AdminBlogs'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices'
+  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices' | 'blogs'
   | 'bkg-rafting' | 'bkg-trekking' | 'bkg-adventure' | 'bkg-bike-rental' | 'bkg-taxi'
   | 'bkg-domestic-tours' | 'bkg-spiritual-tours' | 'bkg-international-tours'
   | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour'
@@ -83,6 +84,7 @@ const mainTabs = [
   { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
   { id: 'company-plans' as AdminTab, label: 'Company Plans', icon: Building2 },
   { id: 'hero-notices' as AdminTab, label: 'Hero Notices', icon: Bell },
+  { id: 'blogs' as AdminTab, label: 'Blog', icon: FileText },
 ]
 
 const bookingSubTabs = [
@@ -365,6 +367,8 @@ export function AdminDashboard() {
         return <AdminCompanyPlans />
       case 'hero-notices':
         return <AdminHeroNotices />
+      case 'blogs':
+        return <AdminBlogs />
 
       // Booking sub-tabs
       case 'bkg-rafting':

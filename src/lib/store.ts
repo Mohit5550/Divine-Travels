@@ -29,10 +29,10 @@ const LISTING_VIEWS = [
   'domestic-tours', 'spiritual-tours', 'international-tours', 'hotel-packages',
   'camping-packages', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour',
   'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'taxi-booking-form',
-  'gallery', 'company-detail',
+  'gallery', 'company-detail', 'blog-archive',
 ]
 
-const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail']
+const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single']
 
 function getBackView(currentView: string): string {
   if (DETAIL_VIEWS.includes(currentView)) return ''
