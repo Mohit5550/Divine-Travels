@@ -130,7 +130,7 @@ export function StayPackageView({
   }
 
   const handleViewDetails = (pkg: PackageData) => {
-    navigate('package-detail', null, pkg.id)
+    navigate('hotel-detail', null, pkg.id)
   }
 
   return (

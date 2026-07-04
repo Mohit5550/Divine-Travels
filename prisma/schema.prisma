@@ -139,6 +139,11 @@ model Package {
   howToReach         String          @default("[]")
   importantInfo      String          @default("")
   fixedDepartures    String          @default("[]")
+  // Hotel-specific fields
+  propertyType       String          @default("")
+  amenities          String          @default("[]")
+  roomTypes          String          @default("[]")
+  mealPlans          String          @default("[]")
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   reviews            PackageReview[]

@@ -32,7 +32,7 @@ const LISTING_VIEWS = [
   'gallery', 'company-detail', 'blog-archive',
 ]
 
-const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single']
+const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single', 'hotel-detail']
 
 function getBackView(currentView: string): string {
   if (DETAIL_VIEWS.includes(currentView)) return ''

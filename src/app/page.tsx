@@ -46,6 +46,7 @@ import { CompanyDetail } from '@/components/company/CompanyDetail'
 import { PrivacyPolicy } from '@/components/pages/PrivacyPolicy'
 import { BlogArchive } from '@/components/blog/BlogArchive'
 import { BlogSingle } from '@/components/blog/BlogSingle'
+import { HotelDetail } from '@/components/hotel/HotelDetail'
 import { TermsOfService } from '@/components/pages/TermsOfService'
 import { RefundPolicy } from '@/components/pages/RefundPolicy'
 import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
@@ -129,6 +130,8 @@ export default function Home() {
         return <BlogArchive />
       case 'blog-single':
         return <BlogSingle />
+      case 'hotel-detail':
+        return <HotelDetail />
       case 'landing':
       default:
         return (
@@ -152,7 +155,7 @@ export default function Home() {
   }
 
   // Views that should NOT show the Navbar (handled internally)
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail', 'package-detail', 'package-booking', 'blog-archive', 'blog-single']
+  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail', 'package-detail', 'package-booking', 'blog-archive', 'blog-single', 'hotel-detail']
 
   return (
     <main className="min-h-screen flex flex-col">
