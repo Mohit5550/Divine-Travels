@@ -484,7 +484,9 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   { id: 'trek', label: 'Trek Details' },
                   { id: 'hotel', label: 'Hotel Details' },
                   { id: 'dates', label: 'Dates & Info' },
-                ] as const).map((tab) => (
+                ] as const)
+                  .filter((tab) => tab.id !== 'hotel' || form.category === 'stay-hotel' || form.category === 'stay-camping')
+                  .map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
