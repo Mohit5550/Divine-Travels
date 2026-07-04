@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       routeLength, maxAltitude, baseCamp, pickupPoint,
       suitableFor, experience, fitness, bestSeason, gstRate,
       itinerary, thingsToCarry, howToReach, importantInfo, fixedDepartures,
+      propertyType, amenities, roomTypes, mealPlans,
     } = body
 
     if (!name || !slug || !description || !price) {
@@ -108,6 +109,10 @@ export async function POST(request: Request) {
         howToReach: howToReach || '[]',
         importantInfo: importantInfo || '',
         fixedDepartures: fixedDepartures || '[]',
+        propertyType: propertyType || null,
+        amenities: amenities || '[]',
+        roomTypes: roomTypes || '[]',
+        mealPlans: mealPlans || '[]',
       },
     })
 

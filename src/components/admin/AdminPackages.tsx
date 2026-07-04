@@ -60,6 +60,10 @@ interface PackageData {
   howToReach: string
   importantInfo: string
   fixedDepartures: string
+  propertyType: string
+  amenities: string
+  roomTypes: string
+  mealPlans: string
 }
 
 interface ItineraryDay {
@@ -78,6 +82,26 @@ interface FixedDeparture {
   date: string
   status: 'available' | 'few-seats' | 'sold-out'
   notes: string
+}
+
+interface RoomType {
+  name: string
+  price: number
+  plan: string
+  guests: number
+  bed: string
+  size: string
+}
+
+interface MealPlan {
+  name: string
+  description: string
+  price: number
+}
+
+interface Amenity {
+  icon: string
+  name: string
 }
 
 const emptyForm = {
@@ -124,6 +148,7 @@ const emptyForm = {
   howToReach: '',
   importantInfo: '',
   fixedDepartures: '',
+  propertyType: '',
 }
 
 const categoryLabels: Record<string, string> = {
@@ -146,7 +171,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'basic' | 'specs' | 'content' | 'trek' | 'dates'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'specs' | 'content' | 'trek' | 'dates' | 'hotel'>('basic')
 
   // Visual builder state
   const [itineraryDays, setItineraryDays] = useState<ItineraryDay[]>([])
@@ -158,6 +183,9 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [exclusionsItems, setExclusionsItems] = useState<string[]>([])
   const [faqsItems, setFaqsItems] = useState<{ question: string; answer: string }[]>([])
   const [galleryImages, setGalleryImages] = useState<string[]>([])
+  const [amenityItems, setAmenityItems] = useState<Amenity[]>([])
+  const [roomTypeItems, setRoomTypeItems] = useState<RoomType[]>([])
+  const [mealPlanItems, setMealPlanItems] = useState<MealPlan[]>([])
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['admin-packages'],
@@ -222,6 +250,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
       howToReach: pkg.howToReach || '',
       importantInfo: pkg.importantInfo || '',
       fixedDepartures: pkg.fixedDepartures || '',
+      propertyType: pkg.propertyType || '',
     })
 
     // Parse JSON for visual editors
@@ -234,6 +263,9 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     try { setExclusionsItems(JSON.parse(pkg.exclusions || '[]')) } catch { setExclusionsItems([]) }
     try { setFaqsItems(JSON.parse(pkg.faqs || '[]')) } catch { setFaqsItems([]) }
     try { setGalleryImages(JSON.parse(pkg.images || '[]')) } catch { setGalleryImages([]) }
+    try { setAmenityItems(JSON.parse(pkg.amenities || '[]')) } catch { setAmenityItems([]) }
+    try { setRoomTypeItems(JSON.parse(pkg.roomTypes || '[]')) } catch { setRoomTypeItems([]) }
+    try { setMealPlanItems(JSON.parse(pkg.mealPlans || '[]')) } catch { setMealPlanItems([]) }
 
     setActiveTab('basic')
     setShowForm(true)
@@ -251,6 +283,9 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     setExclusionsItems([])
     setFaqsItems([])
     setGalleryImages([])
+    setAmenityItems([])
+    setRoomTypeItems([])
+    setMealPlanItems([])
     setActiveTab('basic')
     setShowForm(true)
   }
@@ -277,6 +312,10 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
         exclusions: JSON.stringify(exclusionsItems),
         faqs: JSON.stringify(faqsItems),
         images: JSON.stringify(galleryImages.filter(Boolean)),
+        propertyType: form.propertyType || null,
+        amenities: JSON.stringify(amenityItems),
+        roomTypes: JSON.stringify(roomTypeItems),
+        mealPlans: JSON.stringify(mealPlanItems),
       }
 
       const res = await fetch(url, {
@@ -443,6 +482,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   { id: 'specs', label: 'Specs' },
                   { id: 'content', label: 'Content' },
                   { id: 'trek', label: 'Trek Details' },
+                  { id: 'hotel', label: 'Hotel Details' },
                   { id: 'dates', label: 'Dates & Info' },
                 ] as const).map((tab) => (
                   <button
@@ -833,6 +873,139 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                     <div className="border-t border-border pt-4">
                       <Label htmlFor="importantInfo">Important Information (Waivers, Safety, Disclaimers)</Label>
                       <Textarea id="importantInfo" value={form.importantInfo} onChange={(e) => setForm({ ...form, importantInfo: e.target.value })} rows={6} placeholder="Personal confirmation statement, parent/guardian approval, medical liability waiver, etc." />
+                    </div>
+                  </>
+                )}
+
+                {activeTab === 'hotel' && (
+                  <>
+                    <div>
+                      <Label htmlFor="propertyType">Property Type</Label>
+                      <select
+                        id="propertyType"
+                        value={form.propertyType}
+                        onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                      >
+                        <option value="">Select property type</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="resort">Resort</option>
+                        <option value="camping">Camping</option>
+                        <option value="homestay">Homestay</option>
+                        <option value="villa">Villa</option>
+                        <option value="guesthouse">Guest House</option>
+                      </select>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Amenities</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setAmenityItems([...amenityItems, { icon: 'wifi', name: '' }])}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Icon options: wifi, parking, gym, pool, spa, restaurant, bar, roomservice, traveldesk, conference, bonfire</p>
+                      <div className="space-y-2">
+                        {amenityItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <select
+                              value={item.icon}
+                              onChange={(e) => setAmenityItems(amenityItems.map((a, i) => i === idx ? { ...a, icon: e.target.value } : a))}
+                              className="w-28 h-10 px-2 rounded-md border border-input bg-background text-sm"
+                            >
+                              <option value="wifi">WiFi</option>
+                              <option value="parking">Parking</option>
+                              <option value="gym">Gym</option>
+                              <option value="pool">Pool</option>
+                              <option value="spa">Spa</option>
+                              <option value="restaurant">Restaurant</option>
+                              <option value="bar">Bar</option>
+                              <option value="roomservice">Room Service</option>
+                              <option value="traveldesk">Travel Desk</option>
+                              <option value="conference">Conference</option>
+                              <option value="bonfire">Bonfire</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <Input
+                              value={item.name}
+                              onChange={(e) => setAmenityItems(amenityItems.map((a, i) => i === idx ? { ...a, name: e.target.value } : a))}
+                              placeholder="Amenity name"
+                              className="flex-1"
+                            />
+                            <Button type="button" size="icon" variant="ghost" onClick={() => setAmenityItems(amenityItems.filter((_, i) => i !== idx))}>
+                              <TrashIcon className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                        {amenityItems.length === 0 && <p className="text-xs text-muted-foreground">No amenities. Click Add to create.</p>}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Room Types</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setRoomTypeItems([...roomTypeItems, { name: '', price: 0, plan: 'room only', guests: 2, bed: '', size: '' }])}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add Room
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        {roomTypeItems.map((item, idx) => (
+                          <div key={idx} className="border border-border rounded-xl p-3 space-y-2 bg-brand-cream/30">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-brand-orange">Room {idx + 1}</span>
+                              <Button type="button" size="sm" variant="ghost" onClick={() => setRoomTypeItems(roomTypeItems.filter((_, i) => i !== idx))}>
+                                <TrashIcon className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input value={item.name} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))} placeholder="Room name (e.g. Deluxe Room)" />
+                              <Input type="number" value={item.price || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, price: Number(e.target.value) } : r))} placeholder="Price per night (₹)" />
+                              <select
+                                value={item.plan}
+                                onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, plan: e.target.value } : r))}
+                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                              >
+                                <option value="room only">Room Only</option>
+                                <option value="breakfast included">Breakfast Included</option>
+                                <option value="half board">Half Board (B+D)</option>
+                                <option value="full board">Full Board (B+L+D)</option>
+                                <option value="all inclusive">All Inclusive</option>
+                              </select>
+                              <Input type="number" value={item.guests || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, guests: Number(e.target.value) } : r))} placeholder="Max guests" />
+                              <Input value={item.bed} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, bed: e.target.value } : r))} placeholder="Bed type (e.g. 1 King Bed)" />
+                              <Input value={item.size} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, size: e.target.value } : r))} placeholder="Room size (e.g. 280 sq ft)" />
+                            </div>
+                          </div>
+                        ))}
+                        {roomTypeItems.length === 0 && <p className="text-xs text-muted-foreground">No room types. Click Add Room to create.</p>}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Meal Plans</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setMealPlanItems([...mealPlanItems, { name: '', description: '', price: 0 }])}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add Meal Plan
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        {mealPlanItems.map((item, idx) => (
+                          <div key={idx} className="border border-border rounded-xl p-3 space-y-2 bg-brand-cream/30">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-brand-orange">Plan {idx + 1}</span>
+                              <Button type="button" size="sm" variant="ghost" onClick={() => setMealPlanItems(mealPlanItems.filter((_, i) => i !== idx))}>
+                                <TrashIcon className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input value={item.name} onChange={(e) => setMealPlanItems(mealPlanItems.map((m, i) => i === idx ? { ...m, name: e.target.value } : m))} placeholder="Plan name (e.g. Breakfast Only)" />
+                              <Input type="number" value={item.price || ''} onChange={(e) => setMealPlanItems(mealPlanItems.map((m, i) => i === idx ? { ...m, price: Number(e.target.value) } : m))} placeholder="Price per person (₹)" />
+                            </div>
+                            <Textarea value={item.description} onChange={(e) => setMealPlanItems(mealPlanItems.map((m, i) => i === idx ? { ...m, description: e.target.value } : m))} rows={2} placeholder="Description (e.g. Veg thali, buffet, live counters)" />
+                          </div>
+                        ))}
+                        {mealPlanItems.length === 0 && <p className="text-xs text-muted-foreground">No meal plans. Click Add Meal Plan to create.</p>}
+                      </div>
                     </div>
                   </>
                 )}
