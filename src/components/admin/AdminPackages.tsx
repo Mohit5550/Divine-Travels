@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, X, Star, Plus as PlusIcon, Trash2 as TrashIcon } from 'lucide-react'
@@ -203,6 +203,11 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   }, [packages, categoryFilter])
 
   const categoryName = categoryFilter ? (categoryLabels[categoryFilter] || categoryFilter) : 'All'
+
+  useEffect(() => {
+    if (form.category !== 'trekking' && activeTab === 'trek') setActiveTab('basic')
+    if (form.category !== 'stay-hotel' && form.category !== 'stay-camping' && activeTab === 'hotel') setActiveTab('basic')
+  }, [form.category, activeTab])
 
   const openEdit = (pkg: PackageData) => {
     setEditingId(pkg.id)
@@ -485,7 +490,11 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   { id: 'hotel', label: 'Hotel Details' },
                   { id: 'dates', label: 'Dates & Info' },
                 ] as const)
-                  .filter((tab) => tab.id !== 'hotel' || form.category === 'stay-hotel' || form.category === 'stay-camping')
+                  .filter((tab) => {
+                    if (tab.id === 'trek') return form.category === 'trekking'
+                    if (tab.id === 'hotel') return form.category === 'stay-hotel' || form.category === 'stay-camping'
+                    return true
+                  })
                   .map((tab) => (
                   <button
                     key={tab.id}
