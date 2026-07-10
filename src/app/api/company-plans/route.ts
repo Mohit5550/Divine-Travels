@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { companyId, name, description, price, image, category, duration, highlights } = body
+    const { companyId, name, description, price, image, category, duration, highlights, packageSlug } = body
 
     if (!companyId || !name) {
       return NextResponse.json({ error: 'Company ID and name are required' }, { status: 400 })
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         category,
         duration,
         highlights: highlights ? JSON.stringify(highlights) : null,
+        packageSlug: packageSlug || null,
       },
     })
 

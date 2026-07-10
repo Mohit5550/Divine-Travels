@@ -46,6 +46,16 @@ interface CompanyPlan {
   order: number
 }
 
+interface AdventurePackage {
+  id: string
+  name: string
+  slug: string
+  category: string
+  price: number
+  location: string
+  badge: string | null
+}
+
 const emptyCompany = { name: '', slug: '', logo: '', photo: '', description: '', website: '' }
 const emptyPlan = { name: '', packageSlug: '', description: '', price: 0, category: '', duration: '', highlights: '' }
 
@@ -60,6 +70,7 @@ export function AdminCompanyPlans() {
   const [planForm, setPlanForm] = useState(emptyPlan)
   const [planCompanyId, setPlanCompanyId] = useState('')
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null)
+  const [adventurePackages, setAdventurePackages] = useState<AdventurePackage[]>([])
 
   const fetchCompanies = async () => {
     try {
@@ -75,7 +86,13 @@ export function AdminCompanyPlans() {
     }
   }
 
-  useEffect(() => { fetchCompanies() }, [])
+  useEffect(() => {
+    fetchCompanies()
+    fetch('/api/packages?category=adventure')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setAdventurePackages(data.map((p: { id: string; name: string; slug: string; category: string; price: number; location: string; badge: string | null }) => ({ id: p.id, name: p.name, slug: p.slug, category: p.category, price: p.price, location: p.location, badge: p.badge }))))
+      .catch(() => {})
+  }, [])
 
   const fetchPlans = async (companyId: string) => {
     try {
@@ -221,6 +238,7 @@ export function AdminCompanyPlans() {
             companies={companies}
             companyId={planCompanyId}
             setCompanyId={setPlanCompanyId}
+            adventurePackages={adventurePackages}
             editing={!!editingPlan}
             onSave={savePlan}
             onClose={() => { setShowPlanForm(false); setEditingPlan(null); setPlanForm(emptyPlan) }}
@@ -328,12 +346,13 @@ function CompanyFormModal({ form, setForm, editing, onSave, onClose }: {
   )
 }
 
-function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, editing, onSave, onClose }: {
+function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, adventurePackages, editing, onSave, onClose }: {
   form: typeof emptyPlan
   setForm: (f: typeof emptyPlan) => void
   companies: Company[]
   companyId: string
   setCompanyId: (id: string) => void
+  adventurePackages: AdventurePackage[]
   editing: boolean
   onSave: () => void
   onClose: () => void
@@ -359,7 +378,31 @@ function PlanFormModal({ form, setForm, companies, companyId, setCompanyId, edit
           <Input label="Category" value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
           <Input label="Duration" value={form.duration} onChange={(v) => setForm({ ...form, duration: v })} />
           <Input label="Price (₹)" value={String(form.price)} onChange={(v) => setForm({ ...form, price: Number(v) || 0 })} type="number" />
-          <Input label="Package Slug" value={form.packageSlug} onChange={(v) => setForm({ ...form, packageSlug: v })} placeholder="e.g. brahmpuri-9km-rafting" />
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Link Adventure Package</label>
+            <select
+              value={form.packageSlug}
+              onChange={(e) => {
+                const slug = e.target.value
+                const pkg = slug ? adventurePackages.find((p) => p.slug === slug) : null
+                setForm({
+                  ...form,
+                  packageSlug: slug,
+                  name: pkg && !form.name ? pkg.name : form.name,
+                  price: pkg && !form.price ? pkg.price : form.price,
+                  category: pkg && !form.category ? (pkg.badge || pkg.category) : form.category,
+                })
+              }}
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm"
+            >
+              <option value="">None (manual entry)</option>
+              {adventurePackages.map((pkg) => (
+                <option key={pkg.slug} value={pkg.slug}>
+                  {pkg.name} — ₹{pkg.price} ({pkg.location || pkg.category})
+                </option>
+              ))}
+            </select>
+          </div>
           <Input label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
           <Input label="Highlights (JSON array)" value={form.highlights} onChange={(v) => setForm({ ...form, highlights: v })} />
         </div>

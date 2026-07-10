@@ -18,6 +18,7 @@ export async function PUT(
         category: body.category,
         duration: body.duration,
         highlights: body.highlights ? JSON.stringify(body.highlights) : undefined,
+        packageSlug: body.packageSlug !== undefined ? (body.packageSlug || null) : undefined,
         companyId: body.companyId,
         active: body.active,
         order: body.order,
