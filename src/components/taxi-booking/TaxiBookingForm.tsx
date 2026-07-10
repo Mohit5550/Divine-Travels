@@ -22,22 +22,11 @@ import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 
-const defaultVehicleTypes = [
-  'Hatchback',
-  'Sedan',
-  'Ertiga',
-  'SUV',
-  'INNOVA',
-  'INNOVA CRYSTA',
-  'FORCE Traveller',
-  'Bus',
-]
-
 export function TaxiBookingForm() {
   const { navigate } = useAppStore()
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('one-way')
   const [vehicleType, setVehicleType] = useState('')
-  const [vehicleTypes, setVehicleTypes] = useState<string[]>(defaultVehicleTypes)
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/packages?category=taxi-booking')
@@ -45,10 +34,7 @@ export function TaxiBookingForm() {
       .then((data) => {
         if (Array.isArray(data)) {
           const names = data.map((p: { name: string }) => p.name).filter(Boolean)
-          if (names.length > 0) {
-            const merged = [...new Set([...names, ...defaultVehicleTypes])]
-            setVehicleTypes(merged)
-          }
+          setVehicleTypes([...new Set(names)])
         }
       })
       .catch(() => {})
