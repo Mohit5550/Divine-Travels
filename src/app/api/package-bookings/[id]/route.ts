@@ -88,15 +88,14 @@ export async function PUT(
 
     // Notify customer about status change
     if (status && user?.role === 'admin' && booking.user.id !== userId) {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002'
       const statusMessages: Record<string, string> = {
-        confirmed: `Your booking for "${booking.package.name}" has been confirmed! Pay now: ${baseUrl}/payment/return?booking_id=${id}&service=package`,
+        confirmed: `Your booking for "${booking.package.name}" has been confirmed! Click to view and pay.`,
         cancelled: `Your booking for "${booking.package.name}" has been cancelled.`,
         completed: `Your booking for "${booking.package.name}" has been marked as completed.`,
       }
       const msg = statusMessages[status]
       if (msg) {
-        notifyUser(booking.user.id, 'Booking Update', msg, 'booking', `/payment/return?booking_id=${id}&service=package`)
+        notifyUser(booking.user.id, 'Booking Update', msg, 'booking', 'dashboard')
       }
     }
 

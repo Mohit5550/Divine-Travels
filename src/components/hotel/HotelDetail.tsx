@@ -90,6 +90,25 @@ function getAmenityIcon(icon: string) {
   return amenityIcons[key] || amenityIcons.default
 }
 
+const SUBOPTION_MAP: Record<string, string> = {
+  deluxe: 'Deluxe',
+  suite: 'Suite',
+  standard: 'Standard',
+  premium: 'Premium',
+  cottage: 'Cottage',
+  tent: 'Tent',
+  dormitory: 'Dormitory',
+  'swiss tent': 'Swiss Tent',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
+}
+
 export function HotelDetail() {
   const { selectedPackageId, navigate } = useAppStore()
   const [selectedImage, setSelectedImage] = useState(0)
@@ -105,6 +124,27 @@ export function HotelDetail() {
     enabled: !!selectedPackageId,
   })
 
+  const { data: availabilityRecords = [] } = useQuery({
+    queryKey: ['availability', pkg?.category || 'stay-hotel'],
+    queryFn: async () => {
+      const service = pkg?.category || 'stay-hotel'
+      const res = await fetch(`/api/public/availability?service=${service}`)
+      const data = await res.json()
+      return data.records || []
+    },
+    enabled: !!pkg,
+  })
+
+  const getEffectivePrice = (roomName: string, originalPrice: number) => {
+    const subOption = getSubOptionFromName(roomName)
+    if (!subOption) return originalPrice
+    const match = availabilityRecords.find((r: any) => {
+      if (r.allDay) return true
+      return (r.subOptions || []).includes(subOption)
+    })
+    return match?.price ?? originalPrice
+  }
+
   const parsed = pkg ? {
     images: JSON.parse(pkg.images || '[]') as string[],
     highlights: JSON.parse(pkg.highlights || '[]') as string[],
@@ -117,7 +157,7 @@ export function HotelDetail() {
   } : null
 
   const lowestRoomPrice = parsed?.roomTypes?.length
-    ? Math.min(...parsed.roomTypes.map(r => r.price))
+    ? Math.min(...parsed.roomTypes.map(r => getEffectivePrice(r.name, r.price)))
     : pkg?.price || 0
 
   const handleWhatsApp = () => {
@@ -230,7 +270,7 @@ export function HotelDetail() {
                         {parsed.roomTypes.map((room, i) => (
                           <tr key={i} className="border-b border-gray-100 hover:bg-brand-cream/30 transition-colors">
                             <td className="py-3 px-4 font-medium text-brand-dark">{room.name}</td>
-                            <td className="py-3 px-4 text-brand-orange font-bold">₹{room.price.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-brand-orange font-bold">₹{getEffectivePrice(room.name, room.price).toLocaleString()}</td>
                             <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{room.plan}</td>
                             <td className="py-3 px-4 text-center hidden md:table-cell">
                               <span className="inline-flex items-center gap-1 text-gray-500"><Users className="w-3.5 h-3.5" /> {room.guests}</span>

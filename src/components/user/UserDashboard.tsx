@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, CalendarCheck, Heart, User, LogOut, Compass, ChevronLeft, Package, Star, Gift, CreditCard, Clock,
+  LayoutDashboard, CalendarCheck, Heart, User, LogOut, Compass, ChevronLeft, Package, Star, Gift, CreditCard, Clock, Receipt,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserBookings } from './UserBookings'
@@ -17,6 +17,7 @@ import { UserCoupons } from './UserCoupons'
 import { UserPayments } from './UserPayments'
 import { UserTimeline } from './UserTimeline'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 type UserTab = 'overview' | 'bookings' | 'package-bookings' | 'wishlist' | 'reviews' | 'payments' | 'coupons' | 'timeline' | 'profile'
 
@@ -24,6 +25,40 @@ export function UserDashboard() {
   const { user, logout, navigate } = useAppStore()
   const [activeTab, setActiveTab] = useState<UserTab>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [receiptBooking, setReceiptBooking] = useState<any | null>(null)
+
+  useEffect(() => {
+    const tab = sessionStorage.getItem('dt_dashboard_tab')
+    if (tab && ['overview', 'bookings', 'package-bookings', 'wishlist', 'reviews', 'payments', 'coupons', 'timeline', 'profile'].includes(tab)) {
+      setActiveTab(tab as UserTab)
+      sessionStorage.removeItem('dt_dashboard_tab')
+    }
+  }, [])
+
+  const handlePayNow = async (booking: any) => {
+    try {
+      const res = await fetch('/api/kwikupi/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        body: JSON.stringify({
+          customer_name: booking.fullName || user?.name,
+          customer_email: user?.email,
+          booking_id: booking.id,
+          service: 'package',
+          amount: booking.totalPrice || 500,
+        }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
+      const payData = await res.json()
+      localStorage.setItem('dt_payment_id', payData.payment_id)
+      localStorage.setItem('dt_booking_id', booking.id)
+      localStorage.setItem('dt_user_id', user?.id || '')
+      localStorage.setItem('dt_service', 'package')
+      window.location.href = payData.payment_page
+    } catch {
+      toast.error('Failed to initiate payment')
+    }
+  }
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['user-bookings', user?.id],
@@ -258,32 +293,124 @@ export function UserDashboard() {
 
                   {/* Recent Bookings */}
                   <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-brand-dark mb-4">Recent Bookings</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-brand-dark">Recent Bookings</h3>
+                      {bookings.length + pkgBookings.length > 5 && (
+                        <Button variant="ghost" size="sm" className="text-brand-orange" onClick={() => { sessionStorage.setItem('dt_dashboard_tab', 'package-bookings'); setActiveTab('package-bookings') }}>
+                          View All
+                        </Button>
+                      )}
+                    </div>
                     {bookings.length === 0 && pkgBookings.length === 0 ? (
                       <p className="text-muted-foreground text-sm">No bookings yet. Start exploring!</p>
                     ) : (
                       <div className="space-y-3">
                         {[...bookings.slice(0, 3), ...pkgBookings.slice(0, 3)].slice(0, 5).map((booking: any) => {
                           const isDest = booking.destination
+                          const isPkgConfirmedUnpaid = !isDest && booking.status === 'confirmed' && booking.paymentStatus !== 'completed'
+                          const isPkgPaid = !isDest && booking.paymentStatus === 'completed'
                           return (
-                            <div key={booking.id} className="flex items-center gap-4 p-3 rounded-lg bg-brand-cream/50 cursor-pointer hover:bg-brand-cream transition-colors" onClick={() => isDest ? navigate('destination-detail', booking.destinationId) : navigate('package-detail', null, booking.packageId)}>
-                              <img src={isDest ? booking.destination?.image : booking.package?.image || '/placeholder.svg'} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                            <div key={booking.id} className="flex items-center gap-3 p-3 rounded-lg bg-brand-cream/50 hover:bg-brand-cream transition-colors">
+                              <img src={isDest ? booking.destination?.image : booking.package?.image || '/placeholder.svg'} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm text-brand-dark truncate">
                                   {isDest ? booking.destination?.name : booking.package?.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {isDest ? new Date(booking.checkIn).toLocaleDateString() : new Date(booking.preferredDate).toLocaleDateString()}
-                                  {isDest ? ` • ${booking.status}` : ` • ${booking.status}`}
+                                  {' • '}{booking.status}
                                 </p>
                               </div>
-                              <p className="font-semibold text-sm">₹{booking.totalPrice?.toLocaleString()}</p>
+                              <div className="flex items-center gap-2 shrink-0">
+                                {isPkgConfirmedUnpaid && (
+                                  <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white h-8 text-xs" onClick={(e) => { e.stopPropagation(); handlePayNow(booking) }}>
+                                    <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{booking.totalPrice?.toLocaleString()}
+                                  </Button>
+                                )}
+                                {isPkgPaid && (
+                                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={(e) => { e.stopPropagation(); setReceiptBooking(booking) }}>
+                                    <Receipt className="w-3 h-3 mr-1" /> Receipt
+                                  </Button>
+                                )}
+                                {!isPkgConfirmedUnpaid && !isPkgPaid && (
+                                  <p className="font-semibold text-sm">₹{booking.totalPrice?.toLocaleString()}</p>
+                                )}
+                              </div>
                             </div>
                           )
                         })}
                       </div>
                     )}
                   </div>
+
+                  {/* Receipt Modal */}
+                  {receiptBooking && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
+                      onClick={() => setReceiptBooking(null)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="bg-gradient-to-r from-brand-dark to-brand-navy p-6 text-center">
+                          <Receipt className="w-10 h-10 text-brand-orange mx-auto mb-2" />
+                          <h3 className="text-white font-bold text-lg">Payment Receipt</h3>
+                          <p className="text-white/50 text-xs mt-1">Booking #{receiptBooking.id.slice(-8).toUpperCase()}</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                          <div className="text-center pb-4 border-b border-border/50">
+                            <p className="font-serif text-xl text-brand-dark">{receiptBooking.package?.name}</p>
+                            <p className="text-muted-foreground text-sm">{receiptBooking.package?.category}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-muted-foreground text-xs">Customer Name</p>
+                              <p className="font-medium text-brand-dark">{receiptBooking.fullName}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Mobile</p>
+                              <p className="font-medium text-brand-dark">{receiptBooking.mobile}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Date</p>
+                              <p className="font-medium text-brand-dark">{new Date(receiptBooking.preferredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">People</p>
+                              <p className="font-medium text-brand-dark">{receiptBooking.numberOfPeople}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Total Paid</p>
+                              <p className="font-bold text-brand-orange">₹{receiptBooking.paymentAmount?.toLocaleString() || receiptBooking.totalPrice?.toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs">
+                            <div>
+                              <p className="text-muted-foreground">Payment ID</p>
+                              <p className="text-brand-dark font-mono">{receiptBooking.paymentId || '—'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-muted-foreground">Status</p>
+                              <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">Paid</span>
+                            </div>
+                          </div>
+                          <div className="pt-3 border-t border-border/50 text-center">
+                            <p className="text-[10px] text-muted-foreground">Booking ID: {receiptBooking.id}</p>
+                            <p className="text-[10px] text-muted-foreground">Booked on {new Date(receiptBooking.createdAt).toLocaleString('en-IN')}</p>
+                          </div>
+                        </div>
+                        <div className="p-4 border-t border-border/50">
+                          <Button className="w-full bg-brand-dark hover:bg-brand-dark/90 text-white rounded-xl" onClick={() => setReceiptBooking(null)}>Close</Button>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
 
                   {/* Quick Actions */}
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">

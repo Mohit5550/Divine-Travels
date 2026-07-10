@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+const SERVICE_ALIASES: Record<string, string[]> = {
+  'bike-rental': ['bike-rental', 'bike'],
+  'taxi-booking': ['taxi-booking', 'taxi'],
+  'stay-hotel': ['stay-hotel', 'stay'],
+  'stay-camping': ['stay-camping', 'stay'],
+  'domestic-tours': ['domestic-tours', 'tour-packages'],
+  'spiritual-tours': ['spiritual-tours', 'tour-packages'],
+  'international-tours': ['international-tours', 'tour-packages'],
+  adventure: ['adventure'],
+  rafting: ['rafting'],
+  trekking: ['trekking'],
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -11,8 +24,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Service parameter is required' }, { status: 400 })
     }
 
+    const serviceAliases = SERVICE_ALIASES[service] || [service]
+
     const records = await db.dateAvailability.findMany({
-      where: { service },
+      where: { service: { in: serviceAliases } },
       orderBy: { date: 'asc' },
     })
 

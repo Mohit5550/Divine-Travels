@@ -3,11 +3,15 @@ import { db } from '@/lib/db'
 
 export const serviceOptions: Record<string, string[]> = {
   rafting: ['Brahmpuri 9km', 'Shivpuri 16km', 'Marine Drive 26km'],
-  trekking: ['Valley of Flowers', 'Nag Tibba', 'Kedarkantha', 'Har Ki Dun'],
-  taxi: ['Sedan', 'SUV', 'Tempo Traveller', 'Bus'],
-  bike: ['Hunter 350', 'Activa', 'Splendor', 'Royal Enfield', 'Access 125'],
-  stay: ['Hotel Holy Ganga Non-AC', 'Hotel Holy Ganga AC', 'Camping Double', 'Camping Triple', 'Camping Quad'],
-  'tour-packages': ['Rishikesh Tour', 'Haridwar Tour', 'Mussoorie Tour', 'Nainital Tour', 'Hill Stations', 'Char Dham'],
+  trekking: ['Valley of Flowers', 'Nag Tibba', 'Kedarkantha', 'Har Ki Dun', 'Brahmatal', 'Dayara Bugyal', 'Tungnath', 'Chandrashila', 'Kauri Pass', 'Rupin Pass'],
+  adventure: ['Bungy Jumping', 'Giant Swing', 'Paragliding', 'Zipline', 'Foxtail Flying', 'Sky Cycle', 'Cliff Jump', 'Speed Boat', 'Jet Ski', 'Banana Boat', 'Bumper Boat', 'Parasailing', 'Flyboard'],
+  'bike-rental': ['Hunter 350', 'Activa', 'Splendor', 'Royal Enfield', 'Access 125', 'Himalayan 450'],
+  'taxi-booking': ['Sedan', 'SUV', 'Tempo Traveller', 'Bus', 'Hatchback', 'Ertiga', 'INNOVA'],
+  'stay-hotel': ['Deluxe', 'Suite', 'Standard', 'Premium', 'Cottage', 'Dormitory'],
+  'stay-camping': ['Tent', 'Swiss Tent', 'Camping Double', 'Camping Triple', 'Camping Quad'],
+  'domestic-tours': ['Rishikesh Tour', 'Haridwar Tour', 'Mussoorie Tour', 'Nainital Tour', 'Hill Stations', 'Char Dham', 'Kashmir', 'Kerala', 'Goa', 'Rajasthan'],
+  'spiritual-tours': ['Char Dham', 'Jyotirlinga', 'Temple Tours', 'Pilgrimages', 'Yatra', 'Varanasi', 'Haridwar', 'Rishikesh'],
+  'international-tours': ['Thailand', 'Bali', 'Vietnam', 'Singapore', 'Malaysia', 'Switzerland', 'France', 'UK', 'Italy', 'Dubai', 'Nepal', 'Bhutan', 'Maldives'],
 }
 
 export async function GET(request: NextRequest) {

@@ -53,6 +53,25 @@ const categories = [
   { name: 'Yatra', color: 'bg-blue-600' },
 ]
 
+const SUBOPTION_MAP: Record<string, string> = {
+  'char dham': 'Char Dham',
+  jyotirlinga: 'Jyotirlinga',
+  'temple tour': 'Temple Tours',
+  pilgrimage: 'Pilgrimages',
+  yatra: 'Yatra',
+  varanasi: 'Varanasi',
+  haridwar: 'Haridwar',
+  rishikesh: 'Rishikesh',
+}
+
+function getSubOptionFromName(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
+    if (lower.includes(key)) return sub
+  }
+  return undefined
+}
+
 export function SpiritualPackages() {
   const { navigate, isAuthenticated } = useAppStore()
 
@@ -65,6 +84,25 @@ export function SpiritualPackages() {
       return data as PackageData[]
     },
   })
+
+  const { data: availabilityRecords = [] } = useQuery({
+    queryKey: ['availability', 'spiritual-tours'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/availability?service=spiritual-tours')
+      const data = await res.json()
+      return data.records || []
+    },
+  })
+
+  const getEffectivePrice = (pkg: PackageData) => {
+    const subOption = getSubOptionFromName(pkg.name)
+    if (!subOption) return pkg.price
+    const match = availabilityRecords.find((r: any) => {
+      if (r.allDay) return true
+      return (r.subOptions || []).includes(subOption)
+    })
+    return match?.price ?? pkg.price
+  }
 
   const handleBookTrip = (pkg: PackageData) => {
     if (!isAuthenticated) {
@@ -184,15 +222,15 @@ export function SpiritualPackages() {
                       {pkg.badge}
                     </div>
                     <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-                      {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
+                      {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                         <div className="flex flex-col items-end">
                           <span className="line-through text-white/60 text-xs">₹{pkg.originalPrice}</span>
-                          <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
-                          <span className="text-emerald-500 text-[10px] font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
+                          <div className="text-brand-orange font-bold text-lg leading-none">₹{ep}</div>
+                          <span className="text-emerald-500 text-[10px] font-semibold">Save ₹{pkg.originalPrice - ep}</span>
                         </div>
                       ) : (
-                        <div className="text-brand-orange font-bold text-lg leading-none">₹{pkg.price}</div>
-                      )}
+                        <div className="text-brand-orange font-bold text-lg leading-none">₹{ep}</div>
+                      ) })()}
                       <div className="text-muted-foreground text-[10px] mt-0.5">per person</div>
                     </div>
                     <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
@@ -232,15 +270,15 @@ export function SpiritualPackages() {
                     <div className="border-t border-border/50" />
                     <div className="flex items-center justify-between gap-3">
                       <div className="hidden sm:block">
-                        {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
+                        {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>
-                            <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                            <span className="text-emerald-600 text-xs font-semibold">Save ₹{pkg.originalPrice - pkg.price}</span>
+                            <span className="text-2xl font-bold text-brand-dark">₹{ep}</span>
+                            <span className="text-emerald-600 text-xs font-semibold">Save ₹{pkg.originalPrice - ep}</span>
                           </div>
                         ) : (
-                          <span className="text-2xl font-bold text-brand-dark">₹{pkg.price}</span>
-                        )}
+                          <span className="text-2xl font-bold text-brand-dark">₹{ep}</span>
+                        ) })()}
                         <span className="text-muted-foreground text-sm"> / Person</span>
                       </div>
                       <div className="flex items-center gap-2">

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export function UserNotifications() {
-  const { user } = useAppStore()
+  const { user, navigate } = useAppStore()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -41,6 +41,14 @@ export function UserNotifications() {
       body: JSON.stringify({ read: true }),
     })
     queryClient.invalidateQueries({ queryKey: ['notifications'] })
+  }
+
+  const handleNotificationClick = async (n: any) => {
+    await markAsRead(n.id)
+    if (n.link) {
+      sessionStorage.setItem('dt_dashboard_tab', 'package-bookings')
+      navigate('user-dashboard')
+    }
   }
 
   const markAllRead = async () => {
@@ -107,7 +115,7 @@ export function UserNotifications() {
                   <div
                     key={n.id}
                     className={`flex items-start gap-3 p-4 border-b border-border/50 hover:bg-brand-cream/50 cursor-pointer transition-colors ${!n.read ? 'bg-brand-orange/5' : ''}`}
-                    onClick={() => { markAsRead(n.id) }}
+                    onClick={() => handleNotificationClick(n)}
                   >
                     <div className="mt-0.5">{getIcon(n.type)}</div>
                     <div className="flex-1 min-w-0">
