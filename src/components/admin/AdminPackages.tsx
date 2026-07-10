@@ -1099,26 +1099,28 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       </div>
                     </div>
 
-                    <div className="border-t border-border pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>How To Reach</Label>
-                        <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(howToReachItems, setHowToReachItems)}>
-                          <PlusIcon className="w-3 h-3 mr-1" /> Add
-                        </Button>
+                    {form.category !== 'taxi-booking' && (
+                      <div className="border-t border-border pt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>How To Reach</Label>
+                          <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(howToReachItems, setHowToReachItems)}>
+                            <PlusIcon className="w-3 h-3 mr-1" /> Add
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">Add transport options. E.g. "BUS: AC Volvo from Delhi ISBT Kashmere Gate, 6-8 hr journey", "TRAIN: 12017 Dehradun Shatabdi from New Delhi, 6 hr 10 min"</p>
+                        <div className="space-y-2">
+                          {howToReachItems.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, howToReachItems, setHowToReachItems, idx)} />
+                              <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(howToReachItems, setHowToReachItems, idx)}>
+                                <TrashIcon className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          ))}
+                          {howToReachItems.length === 0 && <p className="text-xs text-muted-foreground">No transport options. Click Add to create.</p>}
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-2">Add transport options. E.g. "BUS: AC Volvo from Delhi ISBT Kashmere Gate, 6-8 hr journey", "TRAIN: 12017 Dehradun Shatabdi from New Delhi, 6 hr 10 min"</p>
-                      <div className="space-y-2">
-                        {howToReachItems.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, howToReachItems, setHowToReachItems, idx)} />
-                            <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(howToReachItems, setHowToReachItems, idx)}>
-                              <TrashIcon className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        ))}
-                        {howToReachItems.length === 0 && <p className="text-xs text-muted-foreground">No transport options. Click Add to create.</p>}
-                      </div>
-                    </div>
+                    )}
 
                     <div className="border-t border-border pt-4">
                       <Label htmlFor="importantInfo">Important Information (Waivers, Safety, Disclaimers)</Label>

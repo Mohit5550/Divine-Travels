@@ -272,6 +272,8 @@ export function PackageDetail() {
   const itineraryCategories = ['trekking', 'international-tours', 'domestic-tours', 'spiritual-tours']
   const showItinerary = itineraryCategories.includes(pkg.category)
 
+  const isTaxiBooking = pkg.category === 'taxi-booking'
+
   const sections: { id: DetailSection; label: string }[] = [
     { id: 'about', label: 'About' },
     { id: 'highlights', label: 'Highlights' },
@@ -279,7 +281,7 @@ export function PackageDetail() {
     { id: 'inclusions', label: 'Inclusions' },
     { id: 'exclusions', label: 'Exclusions' },
     { id: 'thingsToCarry', label: 'Things To Carry' },
-    { id: 'howToReach', label: 'How To Reach' },
+    ...(!isTaxiBooking ? [{ id: 'howToReach' as DetailSection, label: 'How To Reach' }] : []),
     { id: 'importantInfo', label: 'Important Info' },
     { id: 'eligibility', label: 'Eligibility' },
     { id: 'location', label: 'Location' },
@@ -841,32 +843,34 @@ export function PackageDetail() {
               )}
             </motion.div>
 
-            {/* How To Reach */}
-            <motion.div
-              id="howToReach"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl p-6 shadow-sm"
-            >
-              <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
-                <div className="w-1 h-6 bg-brand-orange rounded-full" />
-                How To Reach
-              </h2>
-              <p className="text-muted-foreground text-sm mb-4">Getting to the start point</p>
+            {/* How To Reach - hidden for taxi-booking */}
+            {!isTaxiBooking && (
+              <motion.div
+                id="howToReach"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl p-6 shadow-sm"
+              >
+                <h2 className="font-serif text-xl text-brand-dark mb-1 flex items-center gap-2">
+                  <div className="w-1 h-6 bg-brand-orange rounded-full" />
+                  How To Reach
+                </h2>
+                <p className="text-muted-foreground text-sm mb-4">Getting to the start point</p>
 
-              {parsedData.howToReach.length > 0 ? (
-                <div className="space-y-3">
-                  {parsedData.howToReach.map((item: string, i: number) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-brand-cream/50 rounded-xl">
-                      <Car className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
-                      <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Travel details coming soon.</p>
-              )}
-            </motion.div>
+                {parsedData.howToReach.length > 0 ? (
+                  <div className="space-y-3">
+                    {parsedData.howToReach.map((item: string, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-brand-cream/50 rounded-xl">
+                        <Car className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Travel details coming soon.</p>
+                )}
+              </motion.div>
+            )}
 
             {/* Important Info */}
             <motion.div
