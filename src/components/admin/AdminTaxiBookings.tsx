@@ -200,6 +200,14 @@ export function AdminTaxiBookings() {
                             <span className="text-gray-600">Trip:</span>
                             <span className="font-medium">{details.tripType === 'round-trip' ? 'Round Trip' : 'One Way'}</span>
                           </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600">Name:</span>
+                            <span className="font-medium">{booking.name || '-'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">{booking.phone || '-'}</span>
+                          </div>
                           {details.numberOfDays > 1 && (
                             <div className="flex items-center gap-2 text-sm">
                               <Calendar className="w-4 h-4 text-brand-orange" />

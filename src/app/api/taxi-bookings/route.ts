@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
       packageType,
       selectedPrograms,
       travelDate,
+      name,
+      phone,
     } = body
 
     if (!destination || !packageType || !travelDate) {
@@ -51,8 +53,8 @@ export async function POST(request: NextRequest) {
         dayLabel: null,
         packageType,
         selectedPrograms: selectedPrograms || '{}',
-        name: parsed.name || 'Guest',
-        phone: parsed.phone || '',
+        name: name || parsed.name || 'Guest',
+        phone: phone || parsed.phone || '',
         travelDate,
         travelers: 1,
         status: 'pending',
