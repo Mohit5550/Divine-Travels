@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import {
@@ -22,7 +22,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 
-const vehicleTypes = [
+const defaultVehicleTypes = [
   'Hatchback',
   'Sedan',
   'Ertiga',
@@ -37,6 +37,22 @@ export function TaxiBookingForm() {
   const { navigate } = useAppStore()
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('one-way')
   const [vehicleType, setVehicleType] = useState('')
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(defaultVehicleTypes)
+
+  useEffect(() => {
+    fetch('/api/packages?category=taxi-booking')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const names = data.map((p: { name: string }) => p.name).filter(Boolean)
+          if (names.length > 0) {
+            const merged = [...new Set([...names, ...defaultVehicleTypes])]
+            setVehicleTypes(merged)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [pickupLocation, setPickupLocation] = useState('')
