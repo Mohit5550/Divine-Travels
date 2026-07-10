@@ -63,6 +63,11 @@ interface FixedDeparture {
   notes: string
 }
 
+interface LocationUrl {
+  caption: string
+  url: string
+}
+
 interface Review {
   id: string
   rating: number
@@ -116,6 +121,7 @@ interface PackageData {
   importantInfo: string
   fixedDepartures: string
   pickupLocationUrl: string
+  locationUrls: string
 }
 
 type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'itinerary' | 'howToReach' | 'thingsToCarry' | 'importantInfo'
@@ -914,25 +920,43 @@ export function PackageDetail() {
                 <MapPin className="w-5 h-5 text-brand-teal shrink-0 mt-0.5" />
                 <p className="text-muted-foreground leading-relaxed">{pkg.location}</p>
               </div>
-              {pkg.pickupLocationUrl ? (
-                <a
-                  href={pkg.pickupLocationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 flex items-center gap-2 bg-brand-teal text-white rounded-xl px-5 py-3 hover:bg-brand-teal/90 transition-colors w-fit"
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm font-semibold">Open Pickup Location in Google Maps</span>
-                </a>
-              ) : (
-                <div className="mt-4 bg-brand-cream rounded-xl h-48 flex items-center justify-center border border-border/50">
-                  <div className="text-center">
-                    <MapPin className="w-8 h-8 text-brand-orange mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">{pkg.name} — Rishikesh, Uttarakhand</p>
-                    <p className="text-xs text-muted-foreground mt-1">Map integration coming soon</p>
+              {(() => {
+                let locations: LocationUrl[] = []
+                try {
+                  const parsed = JSON.parse(pkg.locationUrls || '[]')
+                  if (Array.isArray(parsed)) locations = parsed
+                } catch {}
+                if (locations.length === 0 && pkg.pickupLocationUrl) {
+                  locations = [{ caption: 'Pickup Location', url: pkg.pickupLocationUrl }]
+                }
+                if (locations.length > 0) {
+                  return (
+                    <div className="mt-4 space-y-3">
+                      {locations.map((loc, i) => (
+                        <a
+                          key={i}
+                          href={loc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 bg-brand-teal text-white rounded-xl px-5 py-3 hover:bg-brand-teal/90 transition-colors w-fit"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm font-semibold">{loc.caption || 'View on Google Maps'}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )
+                }
+                return (
+                  <div className="mt-4 bg-brand-cream rounded-xl h-48 flex items-center justify-center border border-border/50">
+                    <div className="text-center">
+                      <MapPin className="w-8 h-8 text-brand-orange mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">{pkg.name} — Rishikesh, Uttarakhand</p>
+                      <p className="text-xs text-muted-foreground mt-1">Map integration coming soon</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
             </motion.div>
 
             {/* Cancellation Policy */}

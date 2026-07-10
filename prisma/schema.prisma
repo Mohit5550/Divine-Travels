@@ -115,6 +115,7 @@ model Package {
   eligibility        String          @default("")
   location           String          @default("")
   pickupLocationUrl  String          @default("")
+  locationUrls       String          @default("[]")
   cancellationPolicy String          @default("")
   faqs               String          @default("[]")
   badge              String?

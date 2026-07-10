@@ -37,6 +37,7 @@ interface PackageData {
   eligibility: string
   location: string
   pickupLocationUrl: string
+  locationUrls: string
   cancellationPolicy: string
   faqs: string
   badge: string | null
@@ -99,6 +100,11 @@ interface MealPlan {
   price: number
 }
 
+interface LocationUrl {
+  caption: string
+  url: string
+}
+
 interface Amenity {
   icon: string
   name: string
@@ -127,6 +133,7 @@ const emptyForm = {
   eligibility: '',
   location: '',
   pickupLocationUrl: '',
+  locationUrls: '',
   cancellationPolicy: '',
   faqs: '',
   badge: '',
@@ -186,6 +193,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [amenityItems, setAmenityItems] = useState<Amenity[]>([])
   const [roomTypeItems, setRoomTypeItems] = useState<RoomType[]>([])
   const [mealPlanItems, setMealPlanItems] = useState<MealPlan[]>([])
+  const [locationItems, setLocationItems] = useState<LocationUrl[]>([])
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['admin-packages'],
@@ -233,6 +241,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
       eligibility: pkg.eligibility,
       location: pkg.location,
       pickupLocationUrl: pkg.pickupLocationUrl || '',
+      locationUrls: pkg.locationUrls || '[]',
       cancellationPolicy: pkg.cancellationPolicy,
       faqs: pkg.faqs,
       badge: pkg.badge || '',
@@ -270,6 +279,14 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     try { setAmenityItems(JSON.parse(pkg.amenities || '[]')) } catch { setAmenityItems([]) }
     try { setRoomTypeItems(JSON.parse(pkg.roomTypes || '[]')) } catch { setRoomTypeItems([]) }
     try { setMealPlanItems(JSON.parse(pkg.mealPlans || '[]')) } catch { setMealPlanItems([]) }
+    try {
+      const parsed = JSON.parse(pkg.locationUrls || '[]')
+      if (Array.isArray(parsed)) {
+        setLocationItems(parsed)
+      } else {
+        setLocationItems([])
+      }
+    } catch { setLocationItems([]) }
 
     setActiveTab('basic')
     setShowForm(true)
@@ -290,6 +307,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     setAmenityItems([])
     setRoomTypeItems([])
     setMealPlanItems([])
+    setLocationItems([])
     setActiveTab('basic')
     setShowForm(true)
   }
@@ -316,6 +334,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
         exclusions: JSON.stringify(exclusionsItems),
         faqs: JSON.stringify(faqsItems),
         images: JSON.stringify(galleryImages.filter(Boolean)),
+        locationUrls: JSON.stringify(locationItems),
         propertyType: form.propertyType || null,
         amenities: JSON.stringify(amenityItems),
         roomTypes: JSON.stringify(roomTypeItems),
@@ -634,20 +653,8 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                         <Input id="distance" value={form.distance} onChange={(e) => setForm({ ...form, distance: e.target.value })} placeholder="9 km" />
                       </div>
                       <div>
-                        <Label htmlFor="routeLength">Route Length (e.g. 43 KM)</Label>
-                        <Input id="routeLength" value={form.routeLength} onChange={(e) => setForm({ ...form, routeLength: e.target.value })} placeholder="43 KM" />
-                      </div>
-                      <div>
-                        <Label htmlFor="maxAltitude">Max Altitude (e.g. 11,800 FT)</Label>
-                        <Input id="maxAltitude" value={form.maxAltitude} onChange={(e) => setForm({ ...form, maxAltitude: e.target.value })} placeholder="11,800 FT" />
-                      </div>
-                      <div>
                         <Label htmlFor="duration">Duration (e.g. 6N/7D)</Label>
                         <Input id="duration" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="6N/7D" />
-                      </div>
-                      <div>
-                        <Label htmlFor="baseCamp">Base Camp (e.g. Sankari)</Label>
-                        <Input id="baseCamp" value={form.baseCamp} onChange={(e) => setForm({ ...form, baseCamp: e.target.value })} placeholder="Sankari" />
                       </div>
                       <div>
                         <Label htmlFor="pickupPoint">Pickup Point (e.g. Dehradun)</Label>
@@ -702,8 +709,54 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <Textarea id="location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} rows={3} placeholder="Address, directions, pickup points..." />
                     </div>
                     <div>
-                      <Label htmlFor="pickupLocationUrl">Pickup Location URL (Google Maps)</Label>
-                      <Input id="pickupLocationUrl" value={form.pickupLocationUrl} onChange={(e) => setForm({ ...form, pickupLocationUrl: e.target.value })} placeholder="https://maps.app.goo.gl/... or https://www.google.com/maps/..." />
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Map Locations (Google Maps)</Label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocationItems([...locationItems, { caption: '', url: '' }])}
+                        >
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add Location
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">Add Google Maps URLs with labels (e.g. Pickup Location, Drop-off Point)</p>
+                      {locationItems.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">No locations added yet. Click "Add Location" to begin.</p>
+                      )}
+                      {locationItems.map((loc, idx) => (
+                        <div key={idx} className="flex items-start gap-2 mb-3 p-3 bg-brand-cream/50 rounded-lg border border-border/50">
+                          <div className="flex-1 space-y-2">
+                            <Input
+                              value={loc.caption}
+                              onChange={(e) => {
+                                const updated = [...locationItems]
+                                updated[idx] = { ...updated[idx], caption: e.target.value }
+                                setLocationItems(updated)
+                              }}
+                              placeholder="Caption (e.g. Pickup Location, Drop-off Point)"
+                            />
+                            <Input
+                              value={loc.url}
+                              onChange={(e) => {
+                                const updated = [...locationItems]
+                                updated[idx] = { ...updated[idx], url: e.target.value }
+                                setLocationItems(updated)
+                              }}
+                              placeholder="https://maps.app.goo.gl/... or https://www.google.com/maps/..."
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive shrink-0 mt-1"
+                            onClick={() => setLocationItems(locationItems.filter((_, i) => i !== idx))}
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                     <div>
                       <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
