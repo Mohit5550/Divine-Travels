@@ -652,13 +652,31 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                         <Label htmlFor="distance">Distance (e.g. 9 km)</Label>
                         <Input id="distance" value={form.distance} onChange={(e) => setForm({ ...form, distance: e.target.value })} placeholder="9 km" />
                       </div>
+                      {form.category !== 'rafting' && (
+                        <>
+                          <div>
+                            <Label htmlFor="routeLength">Route Length (e.g. 43 KM)</Label>
+                            <Input id="routeLength" value={form.routeLength} onChange={(e) => setForm({ ...form, routeLength: e.target.value })} placeholder="43 KM" />
+                          </div>
+                          <div>
+                            <Label htmlFor="maxAltitude">Max Altitude (e.g. 11,800 FT)</Label>
+                            <Input id="maxAltitude" value={form.maxAltitude} onChange={(e) => setForm({ ...form, maxAltitude: e.target.value })} placeholder="11,800 FT" />
+                          </div>
+                        </>
+                      )}
                       <div>
                         <Label htmlFor="duration">Duration (e.g. 6N/7D)</Label>
                         <Input id="duration" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="6N/7D" />
                       </div>
+                      {form.category !== 'rafting' && (
+                        <div>
+                          <Label htmlFor="baseCamp">Base Camp (e.g. Sankari)</Label>
+                          <Input id="baseCamp" value={form.baseCamp} onChange={(e) => setForm({ ...form, baseCamp: e.target.value })} placeholder="Sankari" />
+                        </div>
+                      )}
                       <div>
-                        <Label htmlFor="pickupPoint">Rafting Starting Point</Label>
-                        <Input id="pickupPoint" value={form.pickupPoint} onChange={(e) => setForm({ ...form, pickupPoint: e.target.value })} placeholder="e.g. Shivpuri, Marine Drive" />
+                        <Label htmlFor="pickupPoint">{form.category === 'rafting' ? 'Rafting Starting Point' : 'Pickup Point (e.g. Dehradun)'}</Label>
+                        <Input id="pickupPoint" value={form.pickupPoint} onChange={(e) => setForm({ ...form, pickupPoint: e.target.value })} placeholder={form.category === 'rafting' ? 'e.g. Shivpuri, Marine Drive' : 'Dehradun'} />
                       </div>
                       <div>
                         <Label htmlFor="rapidsLevel">Difficulty / Grade</Label>
