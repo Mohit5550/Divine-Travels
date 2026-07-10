@@ -215,6 +215,13 @@ export function AdminTaxiBookings() {
                               <span className="font-medium">{details.numberOfDays}</span>
                             </div>
                           )}
+                          {details.numberOfPassengers && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Users className="w-4 h-4 text-brand-orange" />
+                              <span className="text-gray-600">Passengers:</span>
+                              <span className="font-medium">{details.numberOfPassengers}</span>
+                            </div>
+                          )}
                           {details.bookingAmount && (
                             <div className="flex items-center gap-2 text-sm">
                               <span className="text-gray-600">Amount:</span>
