@@ -267,27 +267,30 @@ export function AdminAvailability() {
                 onChange={(e) => setForm({ ...form, allDay: e.target.checked, subOptions: [] })}
                 className="w-4 h-4 rounded border-gray-300 text-brand-teal focus:ring-brand-teal"
               />
-              <span className="text-sm font-medium text-brand-dark">All sub-options available</span>
+              <span className="text-sm font-medium text-brand-dark">Apply to ALL packages in this category</span>
             </label>
 
             {!form.allDay && (
-              <div className="flex flex-wrap gap-2">
-                {(serviceOptions[form.service] || []).map((option) => {
-                  const checked = form.subOptions.includes(option)
-                  return (
-                    <button
-                      key={option}
-                      onClick={() => toggleSubOption(option)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
-                        checked
-                          ? 'bg-brand-teal/10 border-brand-teal/30 text-brand-dark font-medium'
-                          : 'bg-gray-50 border-border/50 text-muted-foreground hover:border-brand-teal/30'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  )
-                })}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Or select specific packages:</p>
+                <div className="flex flex-wrap gap-2">
+                  {(serviceOptions[form.service] || []).map((option) => {
+                    const checked = form.subOptions.includes(option)
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => toggleSubOption(option)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                          checked
+                            ? 'bg-brand-teal/10 border-brand-teal/30 text-brand-dark font-medium'
+                            : 'bg-gray-50 border-border/50 text-muted-foreground hover:border-brand-teal/30'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -383,7 +386,7 @@ export function AdminAvailability() {
                                 <div className="flex items-center gap-2 mt-1">
                                   {record.allDay ? (
                                     <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
-                                      <CheckCircle className="w-3 h-3" /> All available
+                                      <CheckCircle className="w-3 h-3" /> All Packages
                                     </span>
                                   ) : (
                                     <div className="flex flex-wrap gap-1">

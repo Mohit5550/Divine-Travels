@@ -137,9 +137,10 @@ export function HotelDetail() {
 
   const getEffectivePrice = (roomName: string, originalPrice: number) => {
     const subOption = getSubOptionFromName(roomName)
+    const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
+    if (allDayMatch) return allDayMatch.price ?? originalPrice
     if (!subOption) return originalPrice
     const match = availabilityRecords.find((r: any) => {
-      if (r.allDay) return true
       return (r.subOptions || []).includes(subOption)
     })
     return match?.price ?? originalPrice

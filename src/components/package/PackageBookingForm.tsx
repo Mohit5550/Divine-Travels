@@ -106,8 +106,10 @@ export function PackageBookingForm() {
       const data = await res.json()
       const records = data.records || []
       const subOption = getSubOptionFromName(pkg.name)
+      const allDayMatch = records.find((r: any) => r.allDay)
+      if (allDayMatch) return allDayMatch.price ?? pkg.price
+      if (!subOption) return pkg.price
       const match = records.find((r: any) => {
-        if (r.allDay) return true
         return (r.subOptions || []).includes(subOption)
       })
       return match?.price ?? pkg.price

@@ -86,6 +86,24 @@ export async function PUT(
       },
     })
 
+    // Create a Payment record when payment is completed
+    if (paymentStatus === 'completed' && paymentId) {
+      try {
+        await db.payment.create({
+          data: {
+            userId: booking.user.id,
+            pkgBookingId: booking.id,
+            amount: paymentAmount || booking.totalPrice || 0,
+            method: 'online',
+            transactionId: paymentId,
+            status: 'completed',
+          },
+        })
+      } catch (err) {
+        console.error('Failed to create payment record:', err)
+      }
+    }
+
     // Notify customer about status change
     if (status && user?.role === 'admin' && booking.user.id !== userId) {
       const statusMessages: Record<string, string> = {

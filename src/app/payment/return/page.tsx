@@ -72,12 +72,28 @@ function PaymentContent() {
             }
           } else if (bookingId && service === 'package') {
             // Non-adventure flow: booking already exists, update payment status
-            const userId = localStorage.getItem('dt_user_id')
+            let userId = localStorage.getItem('dt_user_id')
+
+            // If userId not in localStorage, try to fetch booking to find it
+            if (!userId) {
+              try {
+                const bookingRes = await fetch(`/api/package-bookings/${bookingId}`)
+                if (bookingRes.ok) {
+                  const bookingData = await bookingRes.json()
+                  userId = bookingData.user?.id || bookingData.userId
+                  if (userId) localStorage.setItem('dt_user_id', userId)
+                }
+              } catch {
+                // fall through
+              }
+            }
+
             if (!userId) {
               setStatus('error')
               setMessage('Session expired. Payment was received but could not be linked. Please contact support with reference: ' + verifyData.order_id)
               return
             }
+
             const updateRes = await fetch(`/api/package-bookings/${bookingId}`, {
               method: 'PUT',
               headers: {
@@ -101,6 +117,22 @@ function PaymentContent() {
               setMessage(`Payment successful! Booking confirmed. Reference: ${verifyData.order_id}`)
             } else {
               const err = await updateRes.json().catch(() => ({}))
+              // Try creating Payment record directly even if booking update failed
+              if (userId && verifyData.amount) {
+                try {
+                  await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+                    body: JSON.stringify({
+                      pkgBookingId: bookingId,
+                      amount: verifyData.amount,
+                      transactionId: verifyData.payment_id,
+                      status: 'completed',
+                      method: 'online',
+                    }),
+                  })
+                } catch {}
+              }
               setStatus('error')
               setMessage(`Payment received (${verifyData.order_id}) but status update failed. ${err.error || 'Contact support.'}`)
             }

@@ -22,10 +22,18 @@ import { toast } from 'sonner'
 type UserTab = 'overview' | 'bookings' | 'package-bookings' | 'wishlist' | 'reviews' | 'payments' | 'coupons' | 'timeline' | 'profile'
 
 export function UserDashboard() {
-  const { user, logout, navigate } = useAppStore()
+  const { user, logout, navigate, dashboardTab, setDashboardTab } = useAppStore()
   const [activeTab, setActiveTab] = useState<UserTab>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [receiptBooking, setReceiptBooking] = useState<any | null>(null)
+
+  useEffect(() => {
+    const validTabs: UserTab[] = ['overview', 'bookings', 'package-bookings', 'wishlist', 'reviews', 'payments', 'coupons', 'timeline', 'profile']
+    if (dashboardTab && validTabs.includes(dashboardTab as UserTab)) {
+      setActiveTab(dashboardTab as UserTab)
+      setDashboardTab('')
+    }
+  }, [dashboardTab, setDashboardTab])
 
   useEffect(() => {
     const tab = sessionStorage.getItem('dt_dashboard_tab')
@@ -115,7 +123,7 @@ export function UserDashboard() {
   const pendingBookings = isLoading ? 0 : bookings.filter((b: { status: string }) => b.status === 'pending').length
   const completedPkg = isLoading ? 0 : pkgBookings.filter((b: { status: string }) => b.status === 'completed').length
   const totalSpent = isLoading ? 0 : [...bookings, ...pkgBookings]
-    .filter((b: { paymentStatus?: string }) => b.paymentStatus === 'paid' || !b.paymentStatus)
+    .filter((b: { paymentStatus?: string }) => b.paymentStatus === 'completed')
     .reduce((sum: number, b: { totalPrice: number }) => sum + (b.totalPrice || 0), 0)
   const totalBookings = isLoading ? 0 : bookings.length + pkgBookings.length
 

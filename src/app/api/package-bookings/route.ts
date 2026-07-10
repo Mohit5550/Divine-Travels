@@ -157,6 +157,24 @@ export async function POST(request: Request) {
     const serviceLabel = (pkg.category || 'Package').replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
     notifyAdmin('New Package Booking', `${serviceLabel}: ${fullName} booked "${pkg.name}" for ${numberOfPeople} person(s) on ${preferredDate}`, 'booking', `/admin?tab=${pkg.category || 'package-bookings'}`)
 
+    // Create Payment record if booking was created with completed payment
+    if (paymentStatus === 'completed' && paymentId) {
+      try {
+        await db.payment.create({
+          data: {
+            userId,
+            pkgBookingId: booking.id,
+            amount: paymentAmount ? Number(paymentAmount) : totalPrice,
+            method: 'online',
+            transactionId: paymentId,
+            status: 'completed',
+          },
+        })
+      } catch (err) {
+        console.error('Failed to create payment record:', err)
+      }
+    }
+
     return NextResponse.json(booking, { status: 201 })
   } catch (error) {
     console.error('Error creating package booking:', error)

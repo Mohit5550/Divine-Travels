@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export function UserNotifications() {
-  const { user, navigate } = useAppStore()
+  const { user, navigate, setDashboardTab } = useAppStore()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -45,10 +45,10 @@ export function UserNotifications() {
 
   const handleNotificationClick = async (n: any) => {
     await markAsRead(n.id)
-    if (n.link) {
-      sessionStorage.setItem('dt_dashboard_tab', 'package-bookings')
-      navigate('user-dashboard')
+    if (n.link === 'dashboard') {
+      setDashboardTab('package-bookings')
     }
+    navigate('user-dashboard')
   }
 
   const markAllRead = async () => {

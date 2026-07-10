@@ -18,9 +18,11 @@ interface AppStore {
   isAuthenticated: boolean
   isAdmin: boolean
   sourceView: string | null
+  dashboardTab: string | null
   navigate: (view: string, destId?: string | null, pkgId?: string | null) => void
   goBack: () => void
   setUser: (user: AppUser | null) => void
+  setDashboardTab: (tab: string) => void
   logout: () => void
 }
 
@@ -50,6 +52,7 @@ export const useAppStore = create<AppStore>()(
       isAuthenticated: false,
       isAdmin: false,
       sourceView: null,
+      dashboardTab: null,
 
       navigate: (view: string, destId?: string | null, pkgId?: string | null) => {
         const state = get()
@@ -110,6 +113,10 @@ export const useAppStore = create<AppStore>()(
         })
       },
 
+      setDashboardTab: (tab: string) => {
+        set({ dashboardTab: tab })
+      },
+
       logout: () => {
         set({
           user: null,
@@ -119,6 +126,7 @@ export const useAppStore = create<AppStore>()(
           selectedDestinationId: null,
           selectedPackageId: null,
           sourceView: null,
+          dashboardTab: null,
         })
       },
     }),
