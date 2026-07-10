@@ -57,6 +57,7 @@ export function TaxiBookingForm() {
   const [pickupLocation, setPickupLocation] = useState('')
   const [dropLocation, setDropLocation] = useState('')
   const [numberOfDays, setNumberOfDays] = useState(1)
+  const [numberOfPassengers, setNumberOfPassengers] = useState(1)
   const [tourDescription, setTourDescription] = useState('')
   const [quoteBestPrice, setQuoteBestPrice] = useState(false)
   const [bookingAmount, setBookingAmount] = useState('')
@@ -76,6 +77,7 @@ export function TaxiBookingForm() {
     if (!pickupLocation) return toast.error('Please enter a pick up location')
     if (!dropLocation) return toast.error('Please enter a drop location')
     if (pickupLocation === dropLocation) return toast.error('Pick up and drop locations must be different')
+    if (!numberOfPassengers || numberOfPassengers < 1) return toast.error('Please enter number of passengers')
 
     setSubmitting(true)
     try {
@@ -91,6 +93,7 @@ export function TaxiBookingForm() {
           pickupLocation,
           dropLocation,
           numberOfDays: tripType === 'round-trip' ? numberOfDays : 1,
+          numberOfPassengers,
           tourDescription,
           quoteBestPrice,
           bookingAmount: quoteBestPrice ? null : Number(bookingAmount) || null,
@@ -98,7 +101,7 @@ export function TaxiBookingForm() {
         name,
         phone,
         travelDate: pickupDate,
-        travelers: 1,
+        travelers: numberOfPassengers,
       }
 
       const res = await fetch('/api/taxi-bookings', {
@@ -141,7 +144,7 @@ export function TaxiBookingForm() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                onClick={() => { setSubmitted(false); setName(''); setPhone(''); setVehicleType(''); setPickupDate(''); setPickupTime(''); setPickupLocation(''); setDropLocation(''); setTourDescription(''); setBookingAmount(''); setNumberOfDays(1); setQuoteBestPrice(false) }}
+                onClick={() => { setSubmitted(false); setName(''); setPhone(''); setVehicleType(''); setPickupDate(''); setPickupTime(''); setPickupLocation(''); setDropLocation(''); setTourDescription(''); setBookingAmount(''); setNumberOfDays(1); setNumberOfPassengers(1); setQuoteBestPrice(false) }}
                 className="bg-brand-orange hover:bg-brand-orange/90 text-white"
               >
                 Book Another Taxi
