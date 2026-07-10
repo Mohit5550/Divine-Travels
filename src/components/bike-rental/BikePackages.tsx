@@ -283,30 +283,21 @@ export function BikePackages() {
                     {/* Details Section */}
                     <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
                       <div className="hidden sm:block">
-                      {/* Key Specs - Grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                            <MapPin className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground">Location</div>
-                            <div className="text-sm font-semibold text-brand-dark">{pkg.location || 'Rishikesh'}</div>
-                          </div>
+                      {/* Key Specs - Horizontal */}
+                      <div className="flex items-center gap-3 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                          <span className="font-medium text-brand-dark">{pkg.location || 'Rishikesh'}</span>
                         </div>
-                        <div className="bg-brand-cream/70 rounded-xl p-3 flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                            <Clock className="w-4 h-4 text-amber-600" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground">Duration</div>
-                            <div className="text-sm font-semibold text-brand-dark">{pkg.duration || 'Full Day'}</div>
-                          </div>
+                        <div className="w-px h-4 bg-gray-300" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="font-medium text-brand-dark">{pkg.duration || 'Full Day'}</span>
                         </div>
                       </div>
 
                       {/* Description */}
-                      <div className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-sm mt-2">
                         <Bike className="w-4 h-4 text-brand-orange shrink-0" />
                         <span className="text-muted-foreground">{pkg.rapidsDescription || pkg.tagline}</span>
                       </div>
