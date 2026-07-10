@@ -8,7 +8,8 @@ import {
   MapPin,
   Calendar,
   Clock,
-  Users,
+  User,
+  Phone,
   FileText,
   ArrowRight,
   ArrowLeftRight,
@@ -39,6 +40,8 @@ export function TaxiBookingForm() {
       })
       .catch(() => {})
   }, [])
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [pickupLocation, setPickupLocation] = useState('')
@@ -56,6 +59,8 @@ export function TaxiBookingForm() {
     e.preventDefault()
 
     if (!vehicleType) return toast.error('Please select a vehicle type')
+    if (!name) return toast.error('Please enter your name')
+    if (!phone) return toast.error('Please enter your mobile number')
     if (!pickupDate) return toast.error('Please select a pick up date')
     if (!pickupTime) return toast.error('Please select a pick up time')
     if (!pickupLocation) return toast.error('Please enter a pick up location')
@@ -80,8 +85,8 @@ export function TaxiBookingForm() {
           quoteBestPrice,
           bookingAmount: quoteBestPrice ? null : Number(bookingAmount) || null,
         }),
-        name: '',
-        phone: '',
+        name,
+        phone,
         travelDate: pickupDate,
         travelers: 1,
       }
@@ -126,7 +131,7 @@ export function TaxiBookingForm() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                onClick={() => { setSubmitted(false); setVehicleType(''); setPickupDate(''); setPickupTime(''); setPickupLocation(''); setDropLocation(''); setTourDescription(''); setBookingAmount(''); setNumberOfDays(1); setQuoteBestPrice(false) }}
+                onClick={() => { setSubmitted(false); setName(''); setPhone(''); setVehicleType(''); setPickupDate(''); setPickupTime(''); setPickupLocation(''); setDropLocation(''); setTourDescription(''); setBookingAmount(''); setNumberOfDays(1); setQuoteBestPrice(false) }}
                 className="bg-brand-orange hover:bg-brand-orange/90 text-white"
               >
                 Book Another Taxi
@@ -231,6 +236,42 @@ export function TaxiBookingForm() {
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* Name & Phone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-brand-dark mb-3">
+                Your Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-brand-dark mb-3">
+                Mobile Number <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your mobile number"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+                  required
+                />
+              </div>
             </div>
           </div>
 
