@@ -33,33 +33,6 @@ const vehicleTypes = [
   'Bus',
 ]
 
-const popularLocations = [
-  'Delhi',
-  'Noida',
-  'Gurugram',
-  'Ghaziabad',
-  'Faridabad',
-  'Rishikesh',
-  'Haridwar',
-  'Dehradun',
-  'Mussoorie',
-  'Nainital',
-  'Jim Corbett',
-  'Shimla',
-  'Manali',
-  'Chandigarh',
-  'Jaipur',
-  'Agra',
-  'Mathura',
-  'Vrindavan',
-  'Badrinath',
-  'Kedarnath',
-  'Gangotri',
-  'Yamunotri',
-  'Airport (Delhi)',
-  'Railway Station (Delhi)',
-]
-
 export function TaxiBookingForm() {
   const { navigate } = useAppStore()
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('one-way')
@@ -83,8 +56,8 @@ export function TaxiBookingForm() {
     if (!vehicleType) return toast.error('Please select a vehicle type')
     if (!pickupDate) return toast.error('Please select a pick up date')
     if (!pickupTime) return toast.error('Please select a pick up time')
-    if (!pickupLocation) return toast.error('Please select a pick up location')
-    if (!dropLocation) return toast.error('Please select a drop location')
+    if (!pickupLocation) return toast.error('Please enter a pick up location')
+    if (!dropLocation) return toast.error('Please enter a drop location')
     if (pickupLocation === dropLocation) return toast.error('Pick up and drop locations must be different')
 
     setSubmitting(true)
@@ -298,40 +271,34 @@ export function TaxiBookingForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-brand-dark mb-3">
-                Select Pickup Location <span className="text-red-500">*</span>
+                Enter Pickup Location <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select
+                <input
+                  type="text"
                   value={pickupLocation}
                   onChange={(e) => setPickupLocation(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none appearance-none bg-white"
+                  placeholder="e.g. Delhi Airport, Rishikesh Hotel..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
                   required
-                >
-                  <option value="">Select Location</option>
-                  {popularLocations.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-brand-dark mb-3">
-                Select Drop Location <span className="text-red-500">*</span>
+                Enter Drop Location <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400" />
-                <select
+                <input
+                  type="text"
                   value={dropLocation}
                   onChange={(e) => setDropLocation(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none appearance-none bg-white"
+                  placeholder="e.g. Manali, Dehradun Railway Station..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
                   required
-                >
-                  <option value="">Select Location</option>
-                  {popularLocations.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
           </div>
