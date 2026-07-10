@@ -8,6 +8,9 @@ CREATE TABLE "User" (
     "avatar" TEXT,
     "role" TEXT NOT NULL DEFAULT 'user',
     "preferences" TEXT NOT NULL DEFAULT '{}',
+    "resetToken" TEXT,
+    "resetCode" TEXT,
+    "resetTokenExpiry" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );

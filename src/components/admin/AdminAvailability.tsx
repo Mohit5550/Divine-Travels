@@ -23,19 +23,27 @@ interface PriceRecord {
 const SERVICE_LABELS: Record<string, string> = {
   rafting: 'Rafting',
   trekking: 'Trekking',
-  taxi: 'Taxi Rental',
-  bike: 'Bike Rental',
-  stay: 'Hotel & Camping',
-  'tour-packages': 'Tour Packages',
+  adventure: 'Adventure Activities',
+  'bike-rental': 'Bike Rental',
+  'taxi-booking': 'Taxi Booking',
+  'stay-hotel': 'Hotel Packages',
+  'stay-camping': 'Camping Packages',
+  'domestic-tours': 'Domestic Tours',
+  'spiritual-tours': 'Spiritual Tours',
+  'international-tours': 'International Tours',
 }
 
 const SERVICE_ICONS: Record<string, string> = {
   rafting: '🚣',
   trekking: '🥾',
-  taxi: '🚕',
-  bike: '🏍️',
-  stay: '🏨',
-  'tour-packages': '🧳',
+  adventure: '⚡',
+  'bike-rental': '🏍️',
+  'taxi-booking': '🚕',
+  'stay-hotel': '🏨',
+  'stay-camping': '⛺',
+  'domestic-tours': '🇮🇳',
+  'spiritual-tours': '🙏',
+  'international-tours': '🌍',
 }
 
 const serviceKeys = Object.keys(SERVICE_LABELS)

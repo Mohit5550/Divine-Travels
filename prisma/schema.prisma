@@ -8,25 +8,28 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  name            String
-  password        String
-  phone           String?
-  avatar          String?
-  role            String           @default("user")
-  preferences     String           @default("{}")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  bookings        Booking[]
-  reviews         Review[]
-  wishlist        Wishlist[]
-  packageReviews  PackageReview[]
-  packageBookings PackageBooking[]
-  packageWishlist PackageWishlist[]
-  notifications   Notification[]
-  payments        Payment[]
-  tourBookings    TourBooking[]
+  id               String           @id @default(cuid())
+  email            String           @unique
+  name             String
+  password         String
+  phone            String?
+  avatar           String?
+  role             String           @default("user")
+  preferences      String           @default("{}")
+  resetToken       String?
+  resetCode        String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  bookings         Booking[]
+  reviews          Review[]
+  wishlist         Wishlist[]
+  packageReviews   PackageReview[]
+  packageBookings  PackageBooking[]
+  packageWishlist  PackageWishlist[]
+  notifications    Notification[]
+  payments         Payment[]
+  tourBookings     TourBooking[]
 }
 
 model Destination {

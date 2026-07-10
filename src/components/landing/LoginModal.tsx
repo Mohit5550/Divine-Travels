@@ -7,6 +7,7 @@ import { X, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
 
 interface LoginModalProps {
   open: boolean
@@ -18,6 +19,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -70,6 +72,12 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
 
   return (
     <AnimatePresence>
+      <ForgotPasswordModal
+        open={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onBackToLogin={() => { setShowForgotPassword(false); setMode('login') }}
+      />
+
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -152,6 +160,18 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                   )}
                 </button>
               </div>
+
+              {mode === 'login' && (
+                <div className="text-right -mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-brand-orange hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
 
               {mode === 'register' && (
                 <div className="relative">
