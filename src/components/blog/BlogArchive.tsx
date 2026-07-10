@@ -74,7 +74,7 @@ export function BlogArchive() {
             <button onClick={() => navigate('landing')} className="flex items-center gap-1 text-sm text-brand-orange hover:underline mb-4">
               <ArrowLeft className="w-4 h-4" /> Back to Home
             </button>
-            <h1 className="font-serif text-4xl sm:text-5xl text-brand-dark mb-3">Our Blog</h1>
+            <h1 className="font-sans text-4xl sm:text-5xl font-light tracking-tight text-gray-700 mb-3">Our Blog</h1>
             <p className="text-muted-foreground max-w-2xl">Travel stories, guides, and tips from the heart of Uttarakhand. Discover the divine beauty of India with us.</p>
           </motion.div>
 
