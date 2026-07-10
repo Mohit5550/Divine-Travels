@@ -120,7 +120,7 @@ export async function POST(request: Request) {
         howToReach: howToReach || '[]',
         importantInfo: importantInfo || '',
         fixedDepartures: fixedDepartures || '[]',
-        propertyType: propertyType || null,
+        propertyType: propertyType || '',
         amenities: amenities || '[]',
         roomTypes: roomTypes || '[]',
         mealPlans: mealPlans || '[]',
