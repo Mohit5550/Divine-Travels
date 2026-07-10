@@ -10,6 +10,7 @@ import {
   Clock,
   User,
   Phone,
+  Users,
   FileText,
   ArrowRight,
   ArrowLeftRight,
@@ -355,32 +356,39 @@ export function TaxiBookingForm() {
             </div>
           </div>
 
-          {/* Number of Days - Round Trip Only */}
-          {tripType === 'round-trip' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <label className="block text-sm font-semibold text-brand-dark mb-3">
-                Enter Number of Days <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  min={2}
-                  max={30}
-                  value={numberOfDays}
-                  onChange={(e) => setNumberOfDays(Number(e.target.value))}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
-                  required
-                />
-              </div>
-            </motion.div>
-          )}
+          {/* Number of Days - Both trip types */}
+          <label className="block text-sm font-semibold text-brand-dark mb-3">
+            Enter Number of Days <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="number"
+              min={2}
+              max={30}
+              value={numberOfDays}
+              onChange={(e) => setNumberOfDays(Number(e.target.value))}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+              required
+            />
+          </div>
 
-          {/* Tour Description */}
+          {/* Total Number of Passengers */}
+          <label className="block text-sm font-semibold text-brand-dark mb-3 mt-4">
+            Total Number of Passengers <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={numberOfPassengers}
+              onChange={(e) => setNumberOfPassengers(Number(e.target.value))}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-semibold text-brand-dark mb-3">
               Enter Tour Description
