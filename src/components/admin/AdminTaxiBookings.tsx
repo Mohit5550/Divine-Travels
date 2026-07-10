@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -88,6 +89,10 @@ export function AdminTaxiBookings() {
     }
   }
 
+  const getBookingRef = (createdAt: string) => {
+    return `DT${new Date(createdAt).getTime().toString().slice(-8)}`
+  }
+
   const statusColors: Record<string, string> = {
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
     approved: 'bg-green-100 text-green-700 border-green-200',
@@ -146,7 +151,7 @@ export function AdminTaxiBookings() {
                           {details.pickupLocation || '?'} → {details.dropLocation || '?'}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
-                          {details.vehicleType || booking.packageType} · {details.tripType === 'round-trip' ? 'Round Trip' : 'One Way'} · {booking.travelDate}
+                          Ref: <span className="font-mono">{getBookingRef(booking.createdAt)}</span> · {details.vehicleType || booking.packageType} · {details.tripType === 'round-trip' ? 'Round Trip' : 'One Way'} · {booking.travelDate}
                         </p>
                       </div>
                     </div>
@@ -171,6 +176,19 @@ export function AdminTaxiBookings() {
                       <div className="p-4 space-y-4">
                         {/* Details Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-4 h-4 text-brand-orange" />
+                            <span className="text-gray-600">Ref:</span>
+                            <span className="font-mono font-medium">{getBookingRef(booking.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600">Name:</span>
+                            <span className="font-medium">{booking.name || '-'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">{booking.phone || '-'}</span>
+                          </div>
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="w-4 h-4 text-brand-orange" />
                             <span className="text-gray-600">From:</span>
@@ -199,14 +217,6 @@ export function AdminTaxiBookings() {
                           <div className="flex items-center gap-2 text-sm">
                             <span className="text-gray-600">Trip:</span>
                             <span className="font-medium">{details.tripType === 'round-trip' ? 'Round Trip' : 'One Way'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Name:</span>
-                            <span className="font-medium">{booking.name || '-'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Phone:</span>
-                            <span className="font-medium">{booking.phone || '-'}</span>
                           </div>
                           {details.numberOfDays > 1 && (
                             <div className="flex items-center gap-2 text-sm">

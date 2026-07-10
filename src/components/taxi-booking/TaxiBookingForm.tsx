@@ -63,6 +63,7 @@ export function TaxiBookingForm() {
   const [bookingAmount, setBookingAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [bookingRef, setBookingRef] = useState('')
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -111,6 +112,7 @@ export function TaxiBookingForm() {
       })
 
       if (res.ok) {
+        setBookingRef(`DT${Date.now().toString().slice(-8)}`)
         setSubmitted(true)
         toast.success('Booking request submitted! We will contact you shortly.')
       } else {
@@ -131,30 +133,58 @@ export function TaxiBookingForm() {
         <ActivityBar />
         <div className="flex items-center justify-center min-h-[60vh] px-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 sm:p-12 max-w-md w-full text-center"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center"
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="font-serif text-2xl font-bold text-brand-dark mb-3">Booking Request Sent!</h2>
-            <p className="text-gray-600 mb-6">
-              Thank you for your taxi booking request. Our team will review it and contact you shortly with the best quote.
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+              className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6"
+            >
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </motion.div>
+
+            <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-2">Booking Confirmed!</h2>
+            <p className="text-muted-foreground mb-6">
+              Your taxi has been booked successfully. Our team will contact you shortly.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
+            <div className="bg-brand-cream rounded-lg p-4 mb-6 text-left space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-brand-orange" />
+                <span className="text-muted-foreground">Booking Reference:</span>
+                <span className="font-mono font-medium text-brand-dark">{bookingRef}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-brand-orange" />
+                <span className="text-muted-foreground">Traveler:</span>
+                <span className="font-medium text-brand-dark">{user?.name || name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-brand-orange" />
+                <span className="text-muted-foreground">Status:</span>
+                <span className="font-medium text-amber-600">Pending Confirmation</span>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 text-sm text-amber-700">
+              Your booking is pending confirmation. Our team will confirm it within 24 hours.
+            </div>
+
+            <div className="flex flex-col gap-3">
               <Button
-                onClick={() => { setSubmitted(false); setName(''); setPhone(''); setVehicleType(''); setPickupDate(''); setPickupTime(''); setPickupLocation(''); setDropLocation(''); setTourDescription(''); setBookingAmount(''); setNumberOfDays(1); setNumberOfPassengers(1); setQuoteBestPrice(false) }}
+                onClick={() => navigate('user-dashboard')}
                 className="bg-brand-orange hover:bg-brand-orange/90 text-white"
               >
-                Book Another Taxi
+                View My Bookings <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button
-                onClick={() => navigate('taxi-booking')}
                 variant="outline"
-                className="border-brand-dark/20"
+                onClick={() => navigate('landing')}
               >
-                View Taxi Packages
+                Continue Exploring
               </Button>
             </div>
           </motion.div>
