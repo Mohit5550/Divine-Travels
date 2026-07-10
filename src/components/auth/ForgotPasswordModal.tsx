@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Key, Lock, ArrowLeft, CheckCircle } from 'lucide-react'
+import { X, Mail, ArrowLeft, CheckCircle, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -14,14 +14,11 @@ interface ForgotPasswordModalProps {
 }
 
 export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPasswordModalProps) {
-  const [step, setStep] = useState<'email' | 'reset' | 'success'>('email')
+  const [step, setStep] = useState<'email' | 'sent'>('email')
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
 
-  const handleSendCode = async (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) { toast.error('Please enter your email'); return }
     setLoading(true)
@@ -33,31 +30,8 @@ export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPass
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || 'Something went wrong'); return }
-      toast.success('Reset code sent! Check your email.')
-      setStep('reset')
-    } catch {
-      toast.error('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!code) { toast.error('Please enter the reset code'); return }
-    if (password.length < 6) { toast.error('Password must be at least 6 characters'); return }
-    if (password !== confirmPassword) { toast.error('Passwords do not match'); return }
-    setLoading(true)
-    try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Something went wrong'); return }
-      toast.success('Password reset successful! You can now login.')
-      setStep('success')
+      toast.success('Reset link sent!')
+      setStep('sent')
     } catch {
       toast.error('Network error. Please try again.')
     } finally {
@@ -68,18 +42,12 @@ export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPass
   const handleClose = () => {
     setStep('email')
     setEmail('')
-    setCode('')
-    setPassword('')
-    setConfirmPassword('')
     onClose()
   }
 
   const handleBack = () => {
     setStep('email')
     setEmail('')
-    setCode('')
-    setPassword('')
-    setConfirmPassword('')
     onBackToLogin()
   }
 
@@ -109,14 +77,12 @@ export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPass
               </button>
               <h2 className="font-serif text-2xl">Reset Password</h2>
               <p className="text-white/70 text-sm mt-1">
-                {step === 'email' && 'Enter your email to receive a reset code'}
-                {step === 'reset' && 'Enter the code from your email and set a new password'}
-                {step === 'success' && 'Your password has been reset'}
+                {step === 'email' ? 'Enter your email to receive a reset link' : 'Check your inbox'}
               </p>
             </div>
 
             {step === 'email' && (
-              <form onSubmit={handleSendCode} className="p-6 space-y-4">
+              <form onSubmit={handleSend} className="p-6 space-y-4">
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -133,7 +99,7 @@ export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPass
                   disabled={loading}
                   className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-11 rounded-lg text-base"
                 >
-                  {loading ? 'Sending...' : 'Send Reset Code'}
+                  {loading ? 'Sending...' : 'Send Reset Link'}
                 </Button>
                 <div className="text-center">
                   <button
@@ -147,67 +113,22 @@ export function ForgotPasswordModal({ open, onClose, onBackToLogin }: ForgotPass
               </form>
             )}
 
-            {step === 'reset' && (
-              <form onSubmit={handleReset} className="p-6 space-y-4">
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Reset Code (from email)"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="pl-10 h-11 rounded-lg"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="New Password (min. 6 characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-11 rounded-lg"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 h-11 rounded-lg"
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-11 rounded-lg text-base"
-                >
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </Button>
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep('email')}
-                    className="text-sm text-brand-orange hover:underline"
-                  >
-                    Didn't get a code? Resend
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {step === 'success' && (
+            {step === 'sent' && (
               <div className="p-6 text-center space-y-4">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-                <p className="text-brand-dark font-medium">Password reset successful!</p>
-                <p className="text-sm text-muted-foreground">You can now login with your new password.</p>
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="font-medium text-brand-dark text-lg">Email Sent!</p>
+                <p className="text-sm text-muted-foreground">
+                  We've sent a password reset link to <strong>{email}</strong>. Click the link in the email to reset your password.
+                </p>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-start gap-2 text-left">
+                  <ExternalLink className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>The link expires in 1 hour. If you don't see the email, check your spam folder.</span>
+                </div>
                 <Button
                   onClick={handleBack}
-                  className="bg-brand-orange hover:bg-brand-orange/90 text-white h-11 px-8 rounded-lg"
+                  className="bg-brand-orange hover:bg-brand-orange/90 text-white h-11 px-8 rounded-lg w-full"
                 >
                   Back to Login
                 </Button>

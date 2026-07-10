@@ -113,9 +113,10 @@ export function StayPackageView({
 
   const getEffectivePrice = (pkg: PackageData) => {
     const subOption = getSubOptionFromName(pkg.name)
+    const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
+    if (allDayMatch) return allDayMatch.price ?? pkg.price
     if (!subOption) return pkg.price
     const match = availabilityRecords.find((r: any) => {
-      if (r.allDay) return true
       return (r.subOptions || []).includes(subOption)
     })
     return match?.price ?? pkg.price
