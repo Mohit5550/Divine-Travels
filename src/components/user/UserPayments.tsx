@@ -20,23 +20,41 @@ export function UserPayments() {
   })
 
   const downloadInvoice = (payment: any) => {
-    const invoice = {
-      'Invoice #': payment.id.slice(-8).toUpperCase(),
-      Date: new Date(payment.createdAt).toLocaleDateString(),
-      Amount: `₹${payment.amount.toLocaleString()}`,
-      Method: payment.method,
-      'Transaction ID': payment.transactionId || 'N/A',
-      Status: payment.status,
-    }
-    const text = Object.entries(invoice).map(([k, v]) => `${k}: ${v}`).join('\n')
-    const blob = new Blob([text], { type: 'text/plain' })
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Invoice ${payment.id.slice(-8).toUpperCase()}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;color:#333}
+  .header{text-align:center;border-bottom:3px solid #e67e22;padding-bottom:20px;margin-bottom:20px}
+  .header h1{color:#1a1a2e;margin:0;font-size:28px}
+  .header p{color:#e67e22;font-weight:600;margin:4px 0 0}
+  table{width:100%;border-collapse:collapse;margin:20px 0}
+  td{padding:10px 0;border-bottom:1px solid #eee}
+  td:first-child{color:#888;width:40%}
+  td:last-child{font-weight:600;text-align:right}
+  .total{font-size:20px;color:#e67e22;border-top:2px solid #1a1a2e;padding-top:15px}
+  .footer{text-align:center;margin-top:30px;color:#999;font-size:12px;border-top:1px solid #eee;padding-top:15px}
+  .status{display:inline-block;background:#dcfce7;color:#166534;padding:4px 12px;border-radius:20px;font-weight:600;font-size:13px}
+  @media print{body{margin:0}button{display:none!important}}
+</style></head><body>
+  <div class="header"><h1>Divine Travels</h1><p>Payment Invoice</p></div>
+  <table>
+    <tr><td>Invoice #</td><td>INV-${payment.id.slice(-8).toUpperCase()}</td></tr>
+    <tr><td>Date</td><td>${new Date(payment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>
+    <tr><td>Payment Method</td><td>${payment.method}</td></tr>
+    <tr><td>Transaction ID</td><td>${payment.transactionId || 'N/A'}</td></tr>
+    <tr><td>Status</td><td><span class="status">${payment.status === 'completed' ? 'Paid' : payment.status}</span></td></tr>
+    <tr class="total"><td>Amount Paid</td><td>₹${payment.amount.toLocaleString()}</td></tr>
+  </table>
+  <div class="footer">
+    <p>Divine Travels | Rishikesh, Uttarakhand | divinetravels.in</p>
+    <p>Thank you for choosing Divine Travels!</p>
+  </div>
+  <div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="background:#e67e22;color:white;border:none;padding:10px 30px;border-radius:8px;font-size:15px;cursor:pointer">Print / Save as PDF</button></div>
+</body></html>`
+    const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `invoice-${payment.id.slice(-8).toUpperCase()}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Invoice downloaded')
+    window.open(url, '_blank')
+    toast.success('Invoice opened — use Print/Save as PDF')
   }
 
   const statusIcon: Record<string, any> = {

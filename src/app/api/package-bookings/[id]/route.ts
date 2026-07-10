@@ -67,10 +67,10 @@ export async function PUT(
 
     const updateData: Record<string, any> = {}
     if (status) updateData.status = status
-    if (paymentId) updateData.paymentId = paymentId
-    if (paymentOrderId) updateData.paymentOrderId = paymentOrderId
-    if (paymentStatus) updateData.paymentStatus = paymentStatus
-    if (paymentAmount !== undefined) updateData.paymentAmount = paymentAmount
+    if (paymentId) updateData.paymentId = String(paymentId)
+    if (paymentOrderId) updateData.paymentOrderId = String(paymentOrderId)
+    if (paymentStatus) updateData.paymentStatus = String(paymentStatus)
+    if (paymentAmount !== undefined) updateData.paymentAmount = Math.round(Number(paymentAmount))
     if (paymentCompletedAt) updateData.paymentCompletedAt = new Date(paymentCompletedAt)
 
     const booking = await db.packageBooking.update({

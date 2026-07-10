@@ -48,6 +48,31 @@ export async function GET(request: Request) {
       result = bookings.filter((b) => b.package.category === category)
     }
 
+    // Auto-fix: if a booking is "confirmed" but unpaid, check if there's a Payment record
+    // This handles the case where the PUT to update paymentStatus failed
+    for (const booking of result) {
+      if (booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && booking.paymentId) {
+        const payment = await db.payment.findFirst({
+          where: { pkgBookingId: booking.id, status: 'completed' },
+        })
+        if (payment) {
+          try {
+            await db.packageBooking.update({
+              where: { id: booking.id },
+              data: {
+                paymentStatus: 'completed',
+                paymentAmount: payment.amount,
+                paymentCompletedAt: payment.createdAt,
+              },
+            })
+            booking.paymentStatus = 'completed'
+            booking.paymentAmount = payment.amount
+            booking.paymentCompletedAt = payment.createdAt
+          } catch {}
+        }
+      }
+    }
+
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error fetching package bookings:', error)
