@@ -24,7 +24,7 @@ import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 
 export function TaxiBookingForm() {
-  const { navigate } = useAppStore()
+  const { navigate, user, isAuthenticated } = useAppStore()
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('one-way')
   const [vehicleType, setVehicleType] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
@@ -40,8 +40,17 @@ export function TaxiBookingForm() {
       })
       .catch(() => {})
   }, [])
+
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+
+  // Auto-fill name and phone for signed-in users
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.name && !name) setName(user.name)
+      if (user.phone && !phone) setPhone(user.phone)
+    }
+  }, [isAuthenticated, user, name, phone])
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [pickupLocation, setPickupLocation] = useState('')
