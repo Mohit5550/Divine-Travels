@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { htmlToMarkdown, markdownToHtml } from '@/lib/utils'
+import { useRef, useEffect, useCallback } from 'react'
 
 interface BlogEditorProps {
   value: string
@@ -10,87 +9,91 @@ interface BlogEditorProps {
 }
 
 export function BlogEditor({ value, onChange, placeholder }: BlogEditorProps) {
-  const [EditorComponent, setEditorComponent] = useState<any>(null)
-  const [markdown, setMarkdown] = useState('')
-  const [isLoaded, setIsLoaded] = useState(false)
+  const editorRef = useRef<HTMLDivElement>(null)
+  const lastValueRef = useRef('')
+  const isInternalChange = useRef(false)
 
   useEffect(() => {
-    Promise.all([
-      import('@mdxeditor/editor'),
-      import('@mdxeditor/editor/style.css'),
-    ]).then(([editorModule]) => {
-      const {
-        MDXEditor,
-        headingsPlugin,
-        toolbarPlugin,
-        BoldItalicUnderlineToggles,
-        UndoRedo,
-        listsPlugin,
-        linkDialogPlugin,
-        imagePlugin,
-        codeBlockPlugin,
-        thematicBreakPlugin,
-        markdownShortcutPlugin,
-      } = editorModule
+    if (editorRef.current && !isInternalChange.current) {
+      if (value !== lastValueRef.current) {
+        const sel = window.getSelection()
+        const hadFocus = document.activeElement === editorRef.current
 
-      const plugins = [
-        headingsPlugin(),
-        toolbarPlugin({
-          contents: (
-            <>
-              <UndoRedo />
-              <BoldItalicUnderlineToggles />
-            </>
-          ),
-        }),
-        listsPlugin(),
-        linkDialogPlugin(),
-        imagePlugin(),
-        codeBlockPlugin(),
-        thematicBreakPlugin(),
-        markdownShortcutPlugin(),
-      ]
+        editorRef.current.innerHTML = value || ''
+        lastValueRef.current = value || ''
 
-      setEditorComponent({ MDXEditor, plugins })
-    })
-  }, [])
-
-  useEffect(() => {
-    if (EditorComponent && !isLoaded) {
-      if (value) {
-        const md = htmlToMarkdown(value)
-        setMarkdown(md)
-      } else {
-        setMarkdown('')
+        if (hadFocus && editorRef.current.childNodes.length > 0) {
+          const range = document.createRange()
+          range.selectNodeContents(editorRef.current)
+          range.collapse(false)
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+        }
       }
-      setIsLoaded(true)
     }
-  }, [value, EditorComponent, isLoaded])
+    isInternalChange.current = false
+  }, [value])
 
-  const handleChange = (newMarkdown: string) => {
-    setMarkdown(newMarkdown)
-    const html = markdownToHtml(newMarkdown)
-    onChange(html)
-  }
+  const emitChange = useCallback(() => {
+    if (!editorRef.current) return
+    const html = editorRef.current.innerHTML
+    if (html !== lastValueRef.current) {
+      lastValueRef.current = html
+      isInternalChange.current = true
+      onChange(html)
+    }
+  }, [onChange])
 
-  if (!EditorComponent || !isLoaded) {
-    return (
-      <div className="h-96 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">
-        Loading editor...
-      </div>
-    )
-  }
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const html = e.clipboardData.getData('text/html')
+    const text = e.clipboardData.getData('text/plain')
 
-  const { MDXEditor, plugins } = EditorComponent
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+
+    if (html) {
+      const temp = document.createElement('div')
+      temp.innerHTML = html
+      const frag = document.createDocumentFragment()
+      let lastNode: Node | null = null
+      while (temp.firstChild) {
+        lastNode = temp.firstChild
+        frag.appendChild(lastNode)
+      }
+      range.insertNode(frag)
+
+      if (lastNode && lastNode.nodeType === Node.ELEMENT_NODE) {
+        const newRange = document.createRange()
+        newRange.selectNodeContents(lastNode)
+        newRange.collapse(false)
+        selection.removeAllRanges()
+        selection.addRange(newRange)
+      } else {
+        range.collapse(false)
+      }
+    } else {
+      range.insertNode(document.createTextNode(text))
+      range.collapse(false)
+    }
+
+    emitChange()
+  }, [emitChange])
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <MDXEditor
-        markdown={markdown}
-        onChange={handleChange}
-        placeholder={placeholder || 'Start writing your blog post...'}
-        className="min-h-[400px]"
-        plugins={plugins}
+    <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-brand-orange/50 focus-within:border-brand-orange transition-all">
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        onPaste={handlePaste}
+        onInput={emitChange}
+        onBlur={emitChange}
+        className="min-h-[400px] p-4 prose prose-lg max-w-none focus:outline-none [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400 [&:empty]:before:pointer-events-none"
+        data-placeholder={placeholder || 'Paste your blog content here... Formatting will be preserved.'}
       />
     </div>
   )
