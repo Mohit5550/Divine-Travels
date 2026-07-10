@@ -35,6 +35,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { useSettings } from '@/lib/useSettings'
 
 interface PackageImage {
   url: string
@@ -128,6 +129,7 @@ type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eli
 
 export function PackageDetail() {
   const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
+  const { settings } = useSettings()
   const queryClient = useQueryClient()
   const [activeSection, setActiveSection] = useState<DetailSection>('about')
   const [showGallery, setShowGallery] = useState(false)
@@ -606,8 +608,7 @@ export function PackageDetail() {
                 <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
                 <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
                   onClick={() => {
-                    if (!isAuthenticated) { toast.error('Please login to contact us') }
-                    else { toast.info('Our team will contact you shortly!') }
+                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')
                   }}>
                   <Phone className="w-4 h-4 mr-2" />
                   Connect with Team
@@ -1230,8 +1231,7 @@ export function PackageDetail() {
                 <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
                 <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
                   onClick={() => {
-                    if (!isAuthenticated) { toast.error('Please login to contact us') }
-                    else { toast.info('Our team will contact you shortly!') }
+                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')
                   }}>
                   <Phone className="w-4 h-4 mr-2" />
                   Connect with Team
