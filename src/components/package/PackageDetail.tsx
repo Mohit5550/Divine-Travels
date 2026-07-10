@@ -129,7 +129,7 @@ type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eli
 
 export function PackageDetail() {
   const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
-  const { settings } = useSettings()
+  const settings = useSettings()
   const queryClient = useQueryClient()
   const [activeSection, setActiveSection] = useState<DetailSection>('about')
   const [showGallery, setShowGallery] = useState(false)
