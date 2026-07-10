@@ -561,10 +561,12 @@ export function PackageDetail() {
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3 text-sm">
-                      <Waves className="w-4 h-4 text-red-500" />
-                      <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
-                    </div>
+                    {pkg.category === 'rafting' && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <Waves className="w-4 h-4 text-red-500" />
+                        <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 text-sm">
                       <Clock className="w-4 h-4 text-green-500" />
                       <span className="text-muted-foreground">{pkg.timings}</span>
@@ -678,11 +680,13 @@ export function PackageDetail() {
                   </>
                 ) : (
                   <>
-                    <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
-                      <Waves className="w-5 h-5 text-red-500 mx-auto mb-1" />
-                      <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
-                      <div className="text-xs text-muted-foreground">Rapids</div>
-                    </div>
+                    {pkg.category === 'rafting' && (
+                      <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
+                        <Waves className="w-5 h-5 text-red-500 mx-auto mb-1" />
+                        <div className="text-sm font-semibold text-brand-dark">{pkg.rapidsLevel}</div>
+                        <div className="text-xs text-muted-foreground">Rapids</div>
+                      </div>
+                    )}
                     <div className="bg-brand-cream/70 rounded-xl p-3 text-center">
                       <Clock className="w-5 h-5 text-green-500 mx-auto mb-1" />
                       <div className="text-sm font-semibold text-brand-dark">{pkg.timings}</div>
@@ -1179,10 +1183,12 @@ export function PackageDetail() {
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3 text-sm">
-                      <Waves className="w-4 h-4 text-red-500" />
-                      <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
-                    </div>
+                    {pkg.category === 'rafting' && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <Waves className="w-4 h-4 text-red-500" />
+                        <span className="text-muted-foreground">{pkg.rapidsLevel}{pkg.rapidsDescription ? ` — ${pkg.rapidsDescription}` : ''}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 text-sm">
                       <Clock className="w-4 h-4 text-green-500" />
                       <span className="text-muted-foreground">{pkg.timings}</span>
