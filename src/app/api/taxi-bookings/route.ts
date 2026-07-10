@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         name: name || parsed.name || 'Guest',
         phone: phone || parsed.phone || '',
         travelDate,
-        travelers: 1,
+        travelers: parsed.numberOfPassengers || 1,
         status: 'pending',
         adminNotes: JSON.stringify({
           type: 'taxi-booking',
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
           pickupLocation: parsed.pickupLocation,
           dropLocation: parsed.dropLocation,
           numberOfDays: parsed.numberOfDays,
+          numberOfPassengers: parsed.numberOfPassengers,
           tourDescription: parsed.tourDescription,
           quoteBestPrice: parsed.quoteBestPrice,
           bookingAmount: parsed.bookingAmount,

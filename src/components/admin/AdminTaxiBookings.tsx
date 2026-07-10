@@ -83,7 +83,13 @@ export function AdminTaxiBookings() {
 
   const parseDetails = (booking: TaxiBooking) => {
     try {
-      return JSON.parse(booking.adminNotes || '{}')
+      const admin = JSON.parse(booking.adminNotes || '{}')
+      const programs = JSON.parse(booking.selectedPrograms || '{}')
+      return {
+        ...programs,
+        ...admin,
+        numberOfPassengers: admin.numberOfPassengers || programs.numberOfPassengers || booking.travelers || 1,
+      }
     } catch {
       return {}
     }
