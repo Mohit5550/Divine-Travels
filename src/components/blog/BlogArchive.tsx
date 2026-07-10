@@ -140,7 +140,7 @@ export function BlogArchive() {
                         )}
                         <span className="text-xs text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(post.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       </div>
-                      <h3 className="font-serif text-lg font-bold text-brand-dark mb-2 group-hover:text-brand-orange transition-colors line-clamp-2">{post.title}</h3>
+                      <h3 className="font-serif text-lg font-medium text-brand-dark mb-2 group-hover:text-brand-orange transition-colors line-clamp-2">{post.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{post.excerpt || post.content.replace(/<[^>]*>/g, '').slice(0, 150)}</p>
                       <div className="flex items-center gap-1 text-xs text-gray-400">
                         <User className="w-3 h-3" /> {post.author}
