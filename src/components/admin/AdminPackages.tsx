@@ -171,7 +171,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'basic' | 'specs' | 'content' | 'trek' | 'dates' | 'hotel'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'specs' | 'content' | 'dates' | 'hotel'>('basic')
 
   // Visual builder state
   const [itineraryDays, setItineraryDays] = useState<ItineraryDay[]>([])
@@ -205,7 +205,6 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const categoryName = categoryFilter ? (categoryLabels[categoryFilter] || categoryFilter) : 'All'
 
   useEffect(() => {
-    if (form.category !== 'trekking' && activeTab === 'trek') setActiveTab('basic')
     if (form.category !== 'stay-hotel' && form.category !== 'stay-camping' && activeTab === 'hotel') setActiveTab('basic')
   }, [form.category, activeTab])
 
@@ -486,15 +485,10 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   { id: 'basic', label: 'Basic' },
                   { id: 'specs', label: 'Specs' },
                   { id: 'content', label: 'Content' },
-                  { id: 'trek', label: 'Trek Details' },
                   { id: 'hotel', label: 'Hotel Details' },
                   { id: 'dates', label: 'Dates & Info' },
                 ] as const)
-                  .filter((tab) => {
-                    if (tab.id === 'trek') return form.category === 'trekking'
-                    if (tab.id === 'hotel') return form.category === 'stay-hotel' || form.category === 'stay-camping'
-                    return true
-                  })
+                  .filter((tab) => tab.id !== 'hotel' || form.category === 'stay-hotel' || form.category === 'stay-camping')
                   .map((tab) => (
                   <button
                     key={tab.id}
@@ -805,89 +799,6 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   </>
                 )}
 
-                {activeTab === 'trek' && (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>Itinerary (Day-by-Day)</Label>
-                        <Button type="button" size="sm" variant="outline" onClick={addItineraryDay}>
-                          <PlusIcon className="w-3 h-3 mr-1" /> Add Day
-                        </Button>
-                      </div>
-                      <div className="space-y-3">
-                        {itineraryDays.map((day, idx) => (
-                          <div key={idx} className="border border-border rounded-xl p-3 space-y-2 bg-brand-cream/30">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-brand-orange">Day {day.day}</span>
-                              <Button type="button" size="sm" variant="ghost" onClick={() => removeItineraryDay(idx)}>
-                                <TrashIcon className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </div>
-                            <Input value={day.title} onChange={(e) => updateItineraryDay(idx, 'title', e.target.value)} placeholder="Day title (e.g. Dehradun to Sankri)" />
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                              <Input value={day.startTime} onChange={(e) => updateItineraryDay(idx, 'startTime', e.target.value)} placeholder="Start time" />
-                              <Input value={day.endTime} onChange={(e) => updateItineraryDay(idx, 'endTime', e.target.value)} placeholder="End time" />
-                              <Input value={day.altitude} onChange={(e) => updateItineraryDay(idx, 'altitude', e.target.value)} placeholder="Altitude (e.g. 6400 ft)" />
-                              <Input value={day.altitudeGain} onChange={(e) => updateItineraryDay(idx, 'altitudeGain', e.target.value)} placeholder="Gain/Loss (e.g. 4300 ft)" />
-                              <Input value={day.distance} onChange={(e) => updateItineraryDay(idx, 'distance', e.target.value)} placeholder="Distance (e.g. 220 km)" />
-                              <Input value={day.hours} onChange={(e) => updateItineraryDay(idx, 'hours', e.target.value)} placeholder="Hours (e.g. 10 hrs)" />
-                            </div>
-                            <Textarea value={day.description} onChange={(e) => updateItineraryDay(idx, 'description', e.target.value)} rows={3} placeholder="Day description / activities..." />
-                          </div>
-                        ))}
-                        {itineraryDays.length === 0 && <p className="text-xs text-muted-foreground">No itinerary days. Click Add Day to create day-wise plan.</p>}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>Things To Carry</Label>
-                        <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(thingsToCarryItems, setThingsToCarryItems)}>
-                          <PlusIcon className="w-3 h-3 mr-1" /> Add
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">Add one item per line. E.g. "Backpack with rain cover", "Trekking shoes (waterproof)", etc.</p>
-                      <div className="space-y-2">
-                        {thingsToCarryItems.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx, e.target.value)} placeholder={`Item ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, thingsToCarryItems, setThingsToCarryItems, idx)} />
-                            <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx)}>
-                              <TrashIcon className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        ))}
-                        {thingsToCarryItems.length === 0 && <p className="text-xs text-muted-foreground">No items. Click Add to create.</p>}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>How To Reach</Label>
-                        <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(howToReachItems, setHowToReachItems)}>
-                          <PlusIcon className="w-3 h-3 mr-1" /> Add
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">Add transport options. E.g. "BUS: AC Volvo from Delhi ISBT Kashmere Gate, 6-8 hr journey", "TRAIN: 12017 Dehradun Shatabdi from New Delhi, 6 hr 10 min"</p>
-                      <div className="space-y-2">
-                        {howToReachItems.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, howToReachItems, setHowToReachItems, idx)} />
-                            <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(howToReachItems, setHowToReachItems, idx)}>
-                              <TrashIcon className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        ))}
-                        {howToReachItems.length === 0 && <p className="text-xs text-muted-foreground">No transport options. Click Add to create.</p>}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border pt-4">
-                      <Label htmlFor="importantInfo">Important Information (Waivers, Safety, Disclaimers)</Label>
-                      <Textarea id="importantInfo" value={form.importantInfo} onChange={(e) => setForm({ ...form, importantInfo: e.target.value })} rows={6} placeholder="Personal confirmation statement, parent/guardian approval, medical liability waiver, etc." />
-                    </div>
-                  </>
-                )}
-
                 {activeTab === 'hotel' && (
                   <>
                     <div>
@@ -1062,6 +973,85 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                         ))}
                         {fixedDepartures.length === 0 && <p className="text-xs text-muted-foreground">No departure dates. Click Add Date to schedule batches.</p>}
                       </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Itinerary (Day-by-Day)</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={addItineraryDay}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add Day
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        {itineraryDays.map((day, idx) => (
+                          <div key={idx} className="border border-border rounded-xl p-3 space-y-2 bg-brand-cream/30">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-brand-orange">Day {day.day}</span>
+                              <Button type="button" size="sm" variant="ghost" onClick={() => removeItineraryDay(idx)}>
+                                <TrashIcon className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                            <Input value={day.title} onChange={(e) => updateItineraryDay(idx, 'title', e.target.value)} placeholder="Day title (e.g. Dehradun to Sankri)" />
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              <Input value={day.startTime} onChange={(e) => updateItineraryDay(idx, 'startTime', e.target.value)} placeholder="Start time" />
+                              <Input value={day.endTime} onChange={(e) => updateItineraryDay(idx, 'endTime', e.target.value)} placeholder="End time" />
+                              <Input value={day.altitude} onChange={(e) => updateItineraryDay(idx, 'altitude', e.target.value)} placeholder="Altitude (e.g. 6400 ft)" />
+                              <Input value={day.altitudeGain} onChange={(e) => updateItineraryDay(idx, 'altitudeGain', e.target.value)} placeholder="Gain/Loss (e.g. 4300 ft)" />
+                              <Input value={day.distance} onChange={(e) => updateItineraryDay(idx, 'distance', e.target.value)} placeholder="Distance (e.g. 220 km)" />
+                              <Input value={day.hours} onChange={(e) => updateItineraryDay(idx, 'hours', e.target.value)} placeholder="Hours (e.g. 10 hrs)" />
+                            </div>
+                            <Textarea value={day.description} onChange={(e) => updateItineraryDay(idx, 'description', e.target.value)} rows={3} placeholder="Day description / activities..." />
+                          </div>
+                        ))}
+                        {itineraryDays.length === 0 && <p className="text-xs text-muted-foreground">No itinerary days. Click Add Day to create day-wise plan.</p>}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Things To Carry</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(thingsToCarryItems, setThingsToCarryItems)}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Add one item per line. E.g. "Backpack with rain cover", "Trekking shoes (waterproof)", etc.</p>
+                      <div className="space-y-2">
+                        {thingsToCarryItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Input value={item} onChange={(e) => updateSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx, e.target.value)} placeholder={`Item ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, thingsToCarryItems, setThingsToCarryItems, idx)} />
+                            <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(thingsToCarryItems, setThingsToCarryItems, idx)}>
+                              <TrashIcon className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                        {thingsToCarryItems.length === 0 && <p className="text-xs text-muted-foreground">No items. Click Add to create.</p>}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>How To Reach</Label>
+                        <Button type="button" size="sm" variant="outline" onClick={() => addSimpleItem(howToReachItems, setHowToReachItems)}>
+                          <PlusIcon className="w-3 h-3 mr-1" /> Add
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Add transport options. E.g. "BUS: AC Volvo from Delhi ISBT Kashmere Gate, 6-8 hr journey", "TRAIN: 12017 Dehradun Shatabdi from New Delhi, 6 hr 10 min"</p>
+                      <div className="space-y-2">
+                        {howToReachItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Input value={item} onChange={(e) => updateSimpleItem(howToReachItems, setHowToReachItems, idx, e.target.value)} placeholder={`Transport option ${idx + 1}`} className="item-builder-input" onKeyDown={(e) => handleItemKeyDown(e, howToReachItems, setHowToReachItems, idx)} />
+                            <Button type="button" size="icon" variant="ghost" onClick={() => removeSimpleItem(howToReachItems, setHowToReachItems, idx)}>
+                              <TrashIcon className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                        {howToReachItems.length === 0 && <p className="text-xs text-muted-foreground">No transport options. Click Add to create.</p>}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <Label htmlFor="importantInfo">Important Information (Waivers, Safety, Disclaimers)</Label>
+                      <Textarea id="importantInfo" value={form.importantInfo} onChange={(e) => setForm({ ...form, importantInfo: e.target.value })} rows={6} placeholder="Personal confirmation statement, parent/guardian approval, medical liability waiver, etc." />
                     </div>
                   </>
                 )}
