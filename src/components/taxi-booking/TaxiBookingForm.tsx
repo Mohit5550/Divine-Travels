@@ -398,7 +398,7 @@ export function TaxiBookingForm() {
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="number"
-                  min={2}
+                  min={1}
                   max={30}
                   value={numberOfDays}
                   onChange={(e) => setNumberOfDays(Number(e.target.value))}
