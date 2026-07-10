@@ -216,7 +216,11 @@ export function PackageDetail() {
       toast.error('Please login to book this package')
       return
     }
-    navigate('package-booking', null, pkg?.id)
+    if (pkg?.category === 'taxi-booking') {
+      navigate('taxi-booking-form')
+    } else {
+      navigate('package-booking', null, pkg?.id)
+    }
   }
 
   const handleReview = async (e: React.FormEvent) => {
