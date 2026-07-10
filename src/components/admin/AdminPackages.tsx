@@ -335,7 +335,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
         faqs: JSON.stringify(faqsItems),
         images: JSON.stringify(galleryImages.filter(Boolean)),
         locationUrls: JSON.stringify(locationItems),
-        propertyType: form.propertyType || null,
+        propertyType: form.propertyType || '',
         amenities: JSON.stringify(amenityItems),
         roomTypes: JSON.stringify(roomTypeItems),
         mealPlans: JSON.stringify(mealPlanItems),
@@ -657,8 +657,8 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                         <Input id="duration" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="6N/7D" />
                       </div>
                       <div>
-                        <Label htmlFor="pickupPoint">Pickup Point (e.g. Dehradun)</Label>
-                        <Input id="pickupPoint" value={form.pickupPoint} onChange={(e) => setForm({ ...form, pickupPoint: e.target.value })} placeholder="Dehradun" />
+                        <Label htmlFor="pickupPoint">Rafting Starting Point</Label>
+                        <Input id="pickupPoint" value={form.pickupPoint} onChange={(e) => setForm({ ...form, pickupPoint: e.target.value })} placeholder="e.g. Shivpuri, Marine Drive" />
                       </div>
                       <div>
                         <Label htmlFor="rapidsLevel">Difficulty / Grade</Label>

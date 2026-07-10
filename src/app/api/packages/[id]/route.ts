@@ -54,9 +54,34 @@ export async function PUT(
     }
 
     const body = await request.json()
+    const {
+      name, slug, tagline, subtitle, description, price, originalPrice,
+      image, images, category, distance, duration, rapidsLevel,
+      rapidsDescription, targetDemo, timings, highlights,
+      inclusions, exclusions, eligibility, location, pickupLocationUrl,
+      locationUrls, cancellationPolicy, faqs, badge, badgeColor, gradient,
+      featured, active, routeLength, maxAltitude, baseCamp, pickupPoint,
+      suitableFor, experience, fitness, bestSeason, gstRate,
+      itinerary, thingsToCarry, howToReach, importantInfo, fixedDepartures,
+      propertyType, amenities, roomTypes, mealPlans,
+    } = body
+
     const pkg = await db.package.update({
       where: { id },
-      data: body,
+      data: {
+        name, slug, tagline, subtitle, description,
+        price: price !== undefined ? Number(price) : undefined,
+        originalPrice: originalPrice !== undefined ? (originalPrice ? Number(originalPrice) : null) : undefined,
+        image, images, category, distance, duration, rapidsLevel,
+        rapidsDescription, targetDemo, timings, highlights,
+        inclusions, exclusions, eligibility, location, pickupLocationUrl,
+        locationUrls, cancellationPolicy, faqs, badge, badgeColor, gradient,
+        featured, active, routeLength, maxAltitude, baseCamp, pickupPoint,
+        suitableFor, experience, fitness, bestSeason,
+        gstRate: gstRate !== undefined ? Number(gstRate) : undefined,
+        itinerary, thingsToCarry, howToReach, importantInfo, fixedDepartures,
+        propertyType, amenities, roomTypes, mealPlans,
+      },
     })
 
     return NextResponse.json(pkg)
