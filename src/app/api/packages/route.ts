@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       inclusions, exclusions, eligibility, location, pickupLocationUrl,
       locationUrls,
       cancellationPolicy, faqs, badge, badgeColor, gradient,
-      featured,
+      featured, active,
       routeLength, maxAltitude, baseCamp, pickupPoint,
       suitableFor, experience, fitness, bestSeason, gstRate,
       itinerary, thingsToCarry, howToReach, importantInfo, fixedDepartures,
@@ -66,6 +66,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name, slug, description, and price are required' }, { status: 400 })
     }
 
+    const priceNum = Number(price)
+    if (isNaN(priceNum)) {
+      return NextResponse.json({ error: 'Price must be a valid number' }, { status: 400 })
+    }
+
+    const gstRateNum = typeof gstRate === 'number' && !isNaN(gstRate) ? gstRate : 5
+    const originalPriceNum = originalPrice ? Number(originalPrice) : null
+
     const pkg = await db.package.create({
       data: {
         name,
@@ -73,8 +81,8 @@ export async function POST(request: Request) {
         tagline: tagline || '',
         subtitle: subtitle || '',
         description,
-        price: Number(price),
-        originalPrice: originalPrice ? Number(originalPrice) : null,
+        price: priceNum,
+        originalPrice: originalPriceNum !== null && !isNaN(originalPriceNum) ? originalPriceNum : null,
         image: image || '',
         images: images || '[]',
         category: category || 'rafting',
@@ -97,6 +105,7 @@ export async function POST(request: Request) {
         badgeColor: badgeColor || 'bg-brand-orange',
         gradient: gradient || 'from-brand-orange/80 to-amber-600/80',
         featured: featured || false,
+        active: active !== undefined ? active : true,
         routeLength: routeLength || '',
         maxAltitude: maxAltitude || '',
         baseCamp: baseCamp || '',
@@ -105,7 +114,7 @@ export async function POST(request: Request) {
         experience: experience || '',
         fitness: fitness || '',
         bestSeason: bestSeason || '',
-        gstRate: typeof gstRate === 'number' ? gstRate : 5,
+        gstRate: gstRateNum,
         itinerary: itinerary || '[]',
         thingsToCarry: thingsToCarry || '[]',
         howToReach: howToReach || '[]',
@@ -124,6 +133,7 @@ export async function POST(request: Request) {
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'A package with this slug already exists' }, { status: 409 })
     }
-    return NextResponse.json({ error: 'Failed to create package' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Failed to create package'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
