@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { BlogEditor } from './BlogEditor'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -290,7 +291,11 @@ export function AdminBlogs() {
               </div>
               <div className="mb-4">
                 <Label>Content *</Label>
-                <Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="Full article content (HTML supported)" rows={12} className="font-mono text-sm" />
+                <BlogEditor
+                  value={form.content}
+                  onChange={(value) => setForm({ ...form, content: value })}
+                  placeholder="Start writing your blog post..."
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
