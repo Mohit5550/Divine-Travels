@@ -22,7 +22,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: { status, adminNotes: adminNotes || null },
     })
 
-    return NextResponse.json({ ...booking, selectedPrograms: JSON.parse(booking.selectedPrograms) })
+    let programs: string[] = []
+    const sp = booking.selectedPrograms
+    if (Array.isArray(sp)) {
+      programs = sp
+    } else if (typeof sp === 'string') {
+      try {
+        const parsed = JSON.parse(sp)
+        programs = Array.isArray(parsed) ? parsed : [parsed]
+      } catch {
+        programs = sp ? [sp] : []
+      }
+    }
+    return NextResponse.json({ ...booking, selectedPrograms: programs })
   } catch (error) {
     console.error('Admin tour booking update error:', error)
     return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 })

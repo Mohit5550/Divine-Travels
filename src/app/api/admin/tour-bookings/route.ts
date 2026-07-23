@@ -20,10 +20,20 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const parsed = bookings.map((b) => ({
-      ...b,
-      selectedPrograms: JSON.parse(b.selectedPrograms),
-    }))
+    const parsed = bookings.map((b) => {
+      let programs: string[] = []
+      if (Array.isArray(b.selectedPrograms)) {
+        programs = b.selectedPrograms
+      } else if (typeof b.selectedPrograms === 'string') {
+        try {
+          const parsed = JSON.parse(b.selectedPrograms)
+          programs = Array.isArray(parsed) ? parsed : [parsed]
+        } catch {
+          programs = b.selectedPrograms ? [b.selectedPrograms] : []
+        }
+      }
+      return { ...b, selectedPrograms: programs }
+    })
 
     return NextResponse.json(parsed)
   } catch (error) {
