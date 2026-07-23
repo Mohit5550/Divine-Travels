@@ -244,7 +244,6 @@ export function AdventurePackages() {
                       </div>
                       <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
                         <h3 className="text-white font-bold text-sm sm:text-xl leading-tight">{pkg.name}</h3>
-                        <p className="text-white/80 text-sm mt-0.5">{pkg.subtitle}</p>
                       </div>
                     </div>
                     <div className="p-3 sm:p-6 space-y-2 sm:space-y-4">
