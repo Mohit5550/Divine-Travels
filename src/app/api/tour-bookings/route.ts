@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
         destination,
         dayLabel: dayLabel || null,
         packageType: packageType || '',
-        selectedPrograms: JSON.stringify(selectedPrograms || []),
+        selectedPrograms: typeof selectedPrograms === 'string'
+          ? selectedPrograms
+          : JSON.stringify(selectedPrograms || []),
         name,
         phone,
         travelDate,

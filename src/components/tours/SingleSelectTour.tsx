@@ -95,9 +95,16 @@ export function SingleSelectTour({
         packageType: formData.get('Package_Type') || packageTypeLabel,
         selectedPrograms: [formData.get('Selected_Tour') || ''],
         name: formData.get('Name'),
-        phone: formData.get('Phone'),
+        phone: (formData.get('Phone') as string)?.replace(/[^0-9]/g, '').slice(-10) || '',
         travelDate: formData.get('Date'),
         travelers: parseInt(formData.get('Travelers') as string) || 1,
+      }
+
+      if (!payload.name || !payload.phone || payload.phone.length !== 10) {
+        toast.error('Please fill all fields correctly. Phone must be 10 digits.')
+        btn.disabled = false
+        btn.textContent = 'Confirm Booking'
+        return
       }
 
       const res = await fetch('/api/tour-bookings', {
@@ -386,11 +393,15 @@ export function SingleSelectTour({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone (10 digits)</label>
                         <input
                           type="tel"
                           name="Phone"
                           required
+                          maxLength={10}
+                          pattern="[0-9]{10}"
+                          placeholder="9876543210"
+                          title="Please enter a valid 10-digit phone number"
                           className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange bg-white"
                         />
                       </div>
