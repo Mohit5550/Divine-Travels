@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  async rewrites() {
+    return [
+      {
+        source: '/:path((?!api|_next|assets|images|favicon.ico|robots.txt|sitemap.xml|payment|reset-password).*)',
+        destination: '/',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
