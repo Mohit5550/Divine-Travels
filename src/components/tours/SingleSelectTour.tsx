@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Mountain } from 'lucide-react'
+import { Check, Mountain, Star, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
@@ -10,11 +10,25 @@ import { ActivityBar } from '@/components/landing/ActivityBar'
 import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
 
-interface TourItem {
-  id: number
+interface TourHighlight {
+  icon: string
+  label: string
+}
+
+interface TourDataItem {
   title: string
+  description: string
+  highlights: TourHighlight[]
   img: string
   itinerary: string[]
+  price: string
+  actualPrice: number
+  discountedPrice: number
+}
+
+interface FAQ {
+  q: string
+  a: string
 }
 
 interface SingleSelectTourProps {
@@ -23,9 +37,13 @@ interface SingleSelectTourProps {
   heroSubtitle: string
   heroTag: string
   sectionTitle: string
-  destinationName: string
-  packageTypeLabel: string
-  tours: TourItem[]
+  destinationName?: string
+  packageTypeLabel?: string
+  tourData: TourDataItem[]
+  inclusions: string[]
+  exclusions: string[]
+  faqs: FAQ[]
+  bookingTitle: string
 }
 
 const fadeInUp = {
@@ -40,21 +58,27 @@ export function SingleSelectTour({
   heroSubtitle,
   heroTag,
   sectionTitle,
-  destinationName,
-  packageTypeLabel,
-  tours,
+  destinationName = heroTitle,
+  packageTypeLabel = heroTag,
+  tourData = [],
+  inclusions = [],
+  exclusions = [],
+  faqs = [],
+  bookingTitle = heroTitle,
 }: SingleSelectTourProps) {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [showPanel, setShowPanel] = useState(false)
+  const [showFaqs, setShowFaqs] = useState(false)
 
   const today = new Date().toISOString().split('T')[0]
 
-  const handleSelect = (id: number) => {
-    setSelectedId(id)
+  const handleSelect = (idx: number) => {
+    setSelectedIdx(idx)
     setShowPanel(true)
+    setShowFaqs(false)
   }
 
-  const selectedTour = selectedId ? tours.find((t) => t.id === selectedId) : null
+  const selectedTour = selectedIdx != null ? tourData[selectedIdx] : null
 
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -132,87 +156,215 @@ export function SingleSelectTour({
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14">
-          <span className="text-brand-orange text-sm font-semibold tracking-wider uppercase">
-            {destinationName}
-          </span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-dark mt-2">
             {sectionTitle}
           </h2>
           <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-            Select a tour package to view the detailed itinerary and booking form
+            Select a tour package to view the detailed itinerary and pricing
           </p>
         </motion.div>
 
         {/* Tour Grid */}
-        <motion.div {...fadeInUp} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {tours.map((tour) => {
-            const isSelected = selectedId === tour.id
-            return (
-              <motion.div
-                key={tour.id}
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleSelect(tour.id)}
-                className={`relative bg-white rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 ${
-                  isSelected
-                    ? 'border-brand-orange shadow-xl shadow-brand-orange/20'
-                    : 'border-gray-100 hover:border-brand-orange/30 shadow-md hover:shadow-lg'
-                }`}
-              >
-                <div className="relative h-32 sm:h-40 overflow-hidden">
-                  <img
-                    src={tour.img}
-                    alt={tour.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 w-7 h-7 bg-brand-orange rounded-full flex items-center justify-center shadow-lg">
-                      <Check className="w-4 h-4 text-white" />
+        {tourData.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">No tour packages available.</div>
+        ) : (
+          <motion.div {...fadeInUp} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tourData.map((tour, idx) => {
+              const isSelected = selectedIdx === idx
+              return (
+                <motion.div
+                  key={idx}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleSelect(idx)}
+                  className={`relative bg-white rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border-2 ${
+                    isSelected
+                      ? 'border-brand-orange shadow-xl shadow-brand-orange/20'
+                      : 'border-gray-100 hover:border-brand-orange/30 shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  <div className="relative h-40 sm:h-48 overflow-hidden">
+                    <img
+                      src={tour.img}
+                      alt={tour.title}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 w-7 h-7 bg-brand-orange rounded-full flex items-center justify-center shadow-lg">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {tour.highlights?.slice(0, 3).map((h, i) => (
+                          <span key={i} className="bg-white/90 text-brand-dark text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                            {h.icon} {h.label}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="text-xs sm:text-sm font-bold text-brand-dark text-center leading-tight">
-                    {tour.title}
-                  </h3>
-                </div>
-              </motion.div>
-            )
-          })}
-        </motion.div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-sm sm:text-base font-bold text-brand-dark leading-tight mb-1">
+                      {tour.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                      {tour.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        {tour.discountedPrice < tour.actualPrice ? (
+                          <>
+                            <span className="text-lg font-bold text-brand-orange">₹{tour.discountedPrice.toLocaleString()}</span>
+                            <span className="text-xs text-muted-foreground line-through ml-2">₹{tour.actualPrice.toLocaleString()}</span>
+                            <span className="text-emerald-500 text-[10px] font-semibold ml-1">Save ₹{(tour.actualPrice - tour.discountedPrice).toLocaleString()}</span>
+                          </>
+                        ) : (
+                          <span className="text-lg font-bold text-brand-orange">{tour.price}</span>
+                        )}
+                      </div>
+                      <span className="text-brand-orange text-xs font-medium flex items-center gap-1">
+                        View <Star className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </motion.div>
+        )}
 
-        {/* Itinerary Panel */}
+        {/* Detail Panel */}
         <AnimatePresence>
           {showPanel && selectedTour && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="mt-8 bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-border/50"
+              className="mt-10 bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-border/50"
             >
-              <div className="bg-gradient-to-r from-brand-orange/10 to-brand-gold/10 px-6 py-4 border-b border-border/50">
+              <div className="bg-gradient-to-r from-brand-orange/10 to-brand-gold/10 px-6 py-4 border-b border-border/50 flex items-center justify-between">
                 <h3 className="font-bold text-lg sm:text-xl text-brand-dark">
                   {selectedTour.title}
                 </h3>
+                <button
+                  onClick={() => setShowPanel(false)}
+                  className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="p-4 sm:p-6 space-y-4">
-                <div className="bg-brand-cream rounded-xl p-4 border-l-4 border-brand-orange">
-                  <h4 className="font-bold text-brand-dark text-sm sm:text-base mb-2">Itinerary</h4>
-                  <ul className="space-y-1.5">
-                    {selectedTour.itinerary.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <span className="text-brand-orange mt-0.5 shrink-0">&#9670;</span>
-                        {item}
-                      </li>
+              <div className="p-4 sm:p-6 space-y-6">
+                {/* Highlights */}
+                {selectedTour.highlights && selectedTour.highlights.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTour.highlights.map((h, i) => (
+                      <span key={i} className="bg-brand-cream text-brand-dark text-xs font-medium px-3 py-1.5 rounded-full border border-border/50">
+                        {h.icon} {h.label}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
+                )}
+
+                {/* Pricing */}
+                <div className="bg-brand-cream rounded-xl p-4 border-l-4 border-brand-orange">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl font-bold text-brand-orange">{selectedTour.price}</span>
+                    {selectedTour.discountedPrice < selectedTour.actualPrice && (
+                      <>
+                        <span className="text-sm text-muted-foreground line-through">₹{selectedTour.actualPrice.toLocaleString()}</span>
+                        <span className="text-emerald-500 text-sm font-semibold">₹{selectedTour.discountedPrice.toLocaleString()} (Special Offer)</span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
+                {/* Description */}
+                {selectedTour.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">{selectedTour.description}</p>
+                )}
+
+                {/* Itinerary */}
+                {selectedTour.itinerary && selectedTour.itinerary.length > 0 && (
+                  <div className="bg-brand-cream rounded-xl p-4 border-l-4 border-brand-orange">
+                    <h4 className="font-bold text-brand-dark text-sm sm:text-base mb-3">Itinerary</h4>
+                    <ul className="space-y-2">
+                      {selectedTour.itinerary.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <span className="text-brand-orange mt-0.5 shrink-0 font-bold text-sm">{i + 1}.</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Inclusions / Exclusions */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {inclusions.length > 0 && (
+                    <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                      <h4 className="font-bold text-green-700 text-sm sm:text-base mb-2">✓ Inclusions</h4>
+                      <ul className="space-y-1">
+                        {inclusions.map((item, i) => (
+                          <li key={i} className="text-xs sm:text-sm text-green-800 flex items-start gap-1.5">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {exclusions.length > 0 && (
+                    <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                      <h4 className="font-bold text-red-700 text-sm sm:text-base mb-2">✗ Exclusions</h4>
+                      <ul className="space-y-1">
+                        {exclusions.map((item, i) => (
+                          <li key={i} className="text-xs sm:text-sm text-red-800 flex items-start gap-1.5">
+                            <span className="text-red-500 mt-0.5">✗</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* FAQs */}
+                {faqs.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setShowFaqs(!showFaqs)}
+                      className="flex items-center gap-2 text-brand-dark font-semibold text-sm mb-2"
+                    >
+                      <span className="text-brand-orange">?</span> Frequently Asked Questions
+                      <span className={`transition-transform ${showFaqs ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+                    <AnimatePresence>
+                      {showFaqs && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden space-y-2"
+                        >
+                          {faqs.map((faq, i) => (
+                            <div key={i} className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm font-semibold text-brand-dark">Q: {faq.q}</p>
+                              <p className="text-xs text-muted-foreground mt-1">A: {faq.a}</p>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* Booking Form */}
                 <div className="bg-white rounded-xl border border-border/50 p-4 sm:p-5">
                   <h4 className="font-bold text-brand-dark text-base sm:text-lg mb-3 border-b-2 border-brand-orange inline-block">
-                    Booking Inquiry
+                    Book {bookingTitle}
                   </h4>
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 text-sm text-brand-dark">
                     Selected Package: <strong>{selectedTour.title}</strong>

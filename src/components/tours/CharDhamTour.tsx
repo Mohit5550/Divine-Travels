@@ -168,14 +168,37 @@ export function CharDhamTour() {
   const [inclusions, setInclusions] = useState(defaultInclusions)
   const [exclusions, setExclusions] = useState(defaultExclusions)
 
+  const mapProgramsToTourData = (programs: any[]) =>
+    programs.map((p) => {
+      const days = p.itinerary?.length || 1
+      return {
+        title: p.title,
+        description: p.description || `Explore ${p.title} with Divine Travels.`,
+        highlights: p.highlights?.length ? p.highlights : [
+          { icon: days > 1 ? '🏔️' : '🚗', label: days > 1 ? `${days - 1} Night / ${days} Days` : '1 Day Trip' },
+          { icon: '📍', label: 'Haridwar/Rishikesh to Haridwar/Rishikesh' },
+          { icon: '🚗', label: 'Private Vehicle' },
+          { icon: '🍽️', label: 'Meals Included' },
+        ],
+        img: p.img,
+        itinerary: p.itinerary || [],
+        price: p.price || 'Contact for price',
+        actualPrice: p.actualPrice || 0,
+        discountedPrice: p.discountedPrice || 0,
+      }
+    })
+
   useEffect(() => {
-    fetch('/api/tour-destinations?slug=chardham')
+    fetch('/api/tour-destinations?slug=char-dham')
       .then(r => r.json())
       .then(data => {
         if (data && data.config) {
-          setTourData(data.tourData || defaultTourData)
-          setInclusions(data.inclusions?.length ? data.inclusions : defaultInclusions)
-          setExclusions(data.exclusions?.length ? data.exclusions : defaultExclusions)
+          if (data.programs?.length) {
+            setTourData(mapProgramsToTourData(data.programs))
+          }
+          const cfg = data.config
+          if (cfg.inclusions?.length) setInclusions(cfg.inclusions)
+          if (cfg.exclusions?.length) setExclusions(cfg.exclusions)
         }
       })
       .catch(() => {})

@@ -238,12 +238,64 @@ export function UserPackageBookings() {
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-border/50">
+                <div className="p-4 border-t border-border/50 flex gap-2">
                   <Button
-                    className="w-full bg-brand-dark hover:bg-brand-dark/90 text-white rounded-xl"
+                    className="flex-1 bg-brand-dark hover:bg-brand-dark/90 text-white rounded-xl"
                     onClick={() => setReceiptBooking(null)}
                   >
                     Close
+                  </Button>
+                  <Button
+                    className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl"
+                    onClick={() => {
+                      const b = receiptBooking
+                      const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Receipt ${b.id.slice(-8).toUpperCase()}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;color:#333}
+  .header{text-align:center;border-bottom:3px solid #e67e22;padding-bottom:20px;margin-bottom:20px}
+  .header h1{color:#1a1a2e;margin:0;font-size:28px}
+  .header p{color:#e67e22;font-weight:600;margin:4px 0 0;font-size:14px}
+  .package{text-align:center;padding:20px;background:#fdf2e9;border-radius:12px;margin-bottom:20px}
+  .package h2{margin:0 0 4px;color:#1a1a2e}
+  .package span{color:#e67e22;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:15px 0}
+  td{padding:10px 0;border-bottom:1px solid #eee;font-size:14px}
+  td:first-child{color:#888;width:45%}
+  td:last-child{font-weight:600;text-align:right;color:#1a1a2e}
+  .total td{font-size:18px;color:#e67e22;border-top:2px solid #1a1a2e;padding-top:12px}
+  .notes{margin-top:15px;padding:12px;background:#f9f9f9;border-radius:8px;font-size:13px;color:#555}
+  .footer{text-align:center;margin-top:25px;color:#999;font-size:11px;border-top:1px solid #eee;padding-top:12px}
+  .status{display:inline-block;background:#dcfce7;color:#166534;padding:4px 14px;border-radius:20px;font-weight:700;font-size:13px}
+  @media print{body{margin:0}}
+</style></head><body>
+  <div class="header"><h1>Divine Travels</h1><p>Payment Receipt</p></div>
+  <div class="package"><h2>${b.package?.name || 'Package'}</h2><span>${b.package?.category || ''}</span></div>
+  <table>
+    <tr><td>Booking ID</td><td>${b.id}</td></tr>
+    <tr><td>Customer Name</td><td>${b.fullName || ''}</td></tr>
+    <tr><td>Mobile</td><td>${b.mobile || ''}</td></tr>
+    <tr><td>Date</td><td>${b.preferredDate ? new Date(b.preferredDate).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : ''}</td></tr>
+    <tr><td>Time</td><td>${b.preferredTime || 'No preference'}</td></tr>
+    <tr><td>Number of People</td><td>${b.numberOfPeople || 1}</td></tr>
+    <tr><td>Payment ID</td><td>${b.paymentId || '—'}</td></tr>
+    <tr><td>Status</td><td><span class="status">${b.paymentStatus === 'completed' ? 'Paid' : b.paymentStatus}</span></td></tr>
+    <tr class="total"><td>Total Paid</td><td>₹${(b.paymentAmount || b.totalPrice || 0).toLocaleString()}</td></tr>
+  </table>
+  ${b.additionalNotes ? `<div class="notes"><strong>Notes:</strong><br>${b.additionalNotes}</div>` : ''}
+  <div class="footer">
+    <p>Divine Travels | Rishikesh, Uttarakhand | divinetravels.in</p>
+    <p>Booked on ${b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN') : ''}</p>
+    <p>Thank you for choosing Divine Travels!</p>
+  </div>
+  <div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="background:#e67e22;color:white;border:none;padding:10px 30px;border-radius:8px;font-size:15px;cursor:pointer">Print / Save as PDF</button></div>
+</body></html>`
+                      const blob = new Blob([html], { type: 'text/html' })
+                      const url = URL.createObjectURL(blob)
+                      window.open(url, '_blank')
+                    }}
+                  >
+                    Download Receipt
                   </Button>
                 </div>
               </motion.div>

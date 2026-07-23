@@ -36,6 +36,14 @@ const LISTING_VIEWS = [
 
 const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single', 'hotel-detail']
 
+const ALL_VALID_VIEWS = new Set([
+  'landing', 'user-dashboard', 'admin-dashboard', 'destination-detail',
+  'booking-success', 'about-us', 'contact', 'privacy-policy', 'terms-of-service',
+  'refund-policy', 'cancellation-policy',
+  ...LISTING_VIEWS,
+  ...DETAIL_VIEWS,
+])
+
 function getBackView(currentView: string): string {
   if (DETAIL_VIEWS.includes(currentView)) return ''
   if (LISTING_VIEWS.includes(currentView)) return 'landing'
@@ -140,6 +148,15 @@ export const useAppStore = create<AppStore>()(
         selectedDestinationId: state.selectedDestinationId,
         selectedPackageId: state.selectedPackageId,
       }),
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as Partial<AppStore>) }
+        if (merged.currentView && !ALL_VALID_VIEWS.has(merged.currentView)) {
+          merged.currentView = 'landing'
+          merged.selectedDestinationId = null
+          merged.selectedPackageId = null
+        }
+        return merged
+      },
     }
   )
 )
