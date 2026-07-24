@@ -20,6 +20,7 @@ import {
   Users,
   Bed,
   Maximize,
+  ChevronLeft,
   ChevronRight,
   Share2,
   Clock,
@@ -447,6 +448,22 @@ export function HotelDetail() {
       {showAllImages && (
         <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setShowAllImages(false)}>
           <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white z-10" onClick={() => setShowAllImages(false)}>✕</button>
+          {parsed.images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSelectedImage((selectedImage - 1 + parsed.images.length) % parsed.images.length) }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white z-10 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSelectedImage((selectedImage + 1) % parsed.images.length) }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white z-10 transition-colors"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
           <img src={parsed.images[selectedImage] || pkg.image} alt="" className="max-w-full max-h-[80vh] object-contain rounded-xl" onClick={e => e.stopPropagation()} />
           <div className="flex items-center justify-center gap-2 mt-4 absolute bottom-6 left-0 right-0">
             {parsed.images.map((_, i) => (

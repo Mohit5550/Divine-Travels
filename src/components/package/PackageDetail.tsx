@@ -14,6 +14,7 @@ import {
   Check,
   X,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Send,
   Heart,
@@ -320,6 +321,22 @@ export function PackageDetail() {
             >
               <X className="w-5 h-5" />
             </button>
+            {parsedData.images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedImage((selectedImage - 1 + parsedData.images.length) % parsedData.images.length) }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white z-10 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedImage((selectedImage + 1) % parsedData.images.length) }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white z-10 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
             <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
               <img
                 src={parsedData.images[selectedImage] || pkg.image}
