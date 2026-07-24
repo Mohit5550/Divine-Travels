@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const all = searchParams.get('all')
     const category = searchParams.get('category')
+    const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
     const paginate = searchParams.has('page')
@@ -23,6 +24,16 @@ export async function GET(request: Request) {
     const where: Record<string, unknown> = {}
     if (!user || user.role !== 'admin' || !all) {
       where.userId = userId
+    }
+
+    // Apply status filter at DB level
+    if (status && status !== 'all') {
+      where.status = status
+    }
+
+    // Apply category filter at DB level (via relation)
+    if (category && user?.role === 'admin') {
+      where.package = { category }
     }
 
     const [bookings, total] = await Promise.all([
@@ -52,9 +63,6 @@ export async function GET(request: Request) {
     ])
 
     let result = bookings
-    if (category && user?.role === 'admin') {
-      result = bookings.filter((b) => b.package.category === category)
-    }
 
     // Auto-fix: if a booking is "confirmed" but unpaid, check if there's a Payment record
     // This handles the case where the PUT to update paymentStatus failed

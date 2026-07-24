@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
@@ -199,9 +199,11 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [page, setPage] = useState(1)
 
   const { data: packagesResponse, isLoading } = useQuery({
-    queryKey: ['admin-packages', page],
+    queryKey: ['admin-packages', page, categoryFilter],
     queryFn: async () => {
-      const res = await fetch(`/api/packages?page=${page}&limit=20`, {
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (categoryFilter) params.set('category', categoryFilter)
+      const res = await fetch(`/api/packages?${params}`, {
         headers: { 'x-user-id': user?.id || '' },
       })
       return res.json()
@@ -211,10 +213,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const packages: PackageData[] = Array.isArray(packagesResponse) ? packagesResponse : (packagesResponse?.data || [])
   const totalPages = Array.isArray(packagesResponse) ? 1 : (packagesResponse?.totalPages || 1)
 
-  const filteredPackages = useMemo(() => {
-    if (!categoryFilter) return packages
-    return packages.filter((p) => p.category === categoryFilter)
-  }, [packages, categoryFilter])
+  const filteredPackages = packages
 
   const categoryName = categoryFilter ? (categoryLabels[categoryFilter] || categoryFilter) : 'All'
 

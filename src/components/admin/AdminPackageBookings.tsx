@@ -78,15 +78,9 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
   const allBookings: PackageBookingData[] = Array.isArray(data) ? data : (data?.data || [])
   const totalPages = Array.isArray(data) ? 1 : (data?.totalPages || 1)
 
-  const filtered = categoryFilter
-    ? allBookings.filter((b) => b.package.category === categoryFilter)
-    : allBookings
+  const displayBookings = allBookings
 
-  const displayBookings = statusFilter === 'all'
-    ? filtered
-    : filtered.filter((b) => b.status === statusFilter)
-
-  const pendingCount = filtered.filter((b) => b.status === 'pending').length
+  const pendingCount = allBookings.filter((b) => b.status === 'pending').length
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -151,7 +145,7 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
             }`}
           >
             {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-            {s !== 'all' && ` (${filtered.filter((b) => b.status === s).length})`}
+            {s !== 'all' && ` (${allBookings.filter((b) => b.status === s).length})`}
           </button>
         ))}
       </div>
