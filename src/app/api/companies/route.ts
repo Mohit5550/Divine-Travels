@@ -5,7 +5,10 @@ export async function GET() {
   try {
     const companies = await db.company.findMany({
       where: { active: true },
-      include: { _count: { select: { plans: true } } },
+      include: {
+        plans: { where: { active: true }, select: { packageSlug: true } },
+        _count: { select: { plans: true } },
+      },
       orderBy: { order: 'asc' },
     })
     return NextResponse.json(companies)

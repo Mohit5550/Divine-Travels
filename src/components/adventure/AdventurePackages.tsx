@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -16,6 +17,7 @@ import {
   MessageCircle,
   Phone,
   Waves,
+  Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -27,6 +29,7 @@ import { Footer } from '@/components/landing/Footer'
 interface PackageData {
   id: string
   name: string
+  slug: string
   tagline: string
   subtitle: string
   price: number
@@ -46,6 +49,19 @@ interface PackageData {
   featured: boolean
   location: string
 }
+
+const FILTER_COLORS = [
+  'bg-brand-orange text-white',
+  'bg-blue-500 text-white',
+  'bg-emerald-500 text-white',
+  'bg-purple-500 text-white',
+  'bg-cyan-600 text-white',
+  'bg-rose-500 text-white',
+  'bg-amber-500 text-white',
+  'bg-indigo-500 text-white',
+  'bg-teal-600 text-white',
+  'bg-pink-500 text-white',
+]
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -86,6 +102,7 @@ function getSubOptionFromName(name: string): string | undefined {
 
 export function AdventurePackages() {
   const { navigate, isAuthenticated } = useAppStore()
+  const [activeCompany, setActiveCompany] = useState('all')
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['adventure-packages'],
@@ -105,6 +122,65 @@ export function AdventurePackages() {
       return data.records || []
     },
   })
+
+  const { data: companies = [] } = useQuery({
+    queryKey: ['companies-for-adventure'],
+    queryFn: async () => {
+      const res = await fetch('/api/companies')
+      if (!res.ok) return []
+      const data = await res.json()
+      return data as { id: string; name: string; slug: string; plans: { packageSlug: string | null }[] }[]
+    },
+  })
+
+  const slugToCompany = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const company of companies) {
+      for (const plan of company.plans) {
+        if (plan.packageSlug) {
+          map[plan.packageSlug] = company.name
+        }
+      }
+    }
+    return map
+  }, [companies])
+
+  const companyCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const pkg of packages) {
+      const company = slugToCompany[pkg.slug]
+      if (company) {
+        counts[company] = (counts[company] || 0) + 1
+      } else {
+        counts['Uncategorized'] = (counts['Uncategorized'] || 0) + 1
+      }
+    }
+    return counts
+  }, [packages, slugToCompany])
+
+  const filterOptions = useMemo(() => {
+    const options: { key: string; label: string; count: number }[] = [
+      { key: 'all', label: 'All Activities', count: packages.length },
+    ]
+    const sortedCompanies = Object.entries(companyCounts)
+      .filter(([k]) => k !== 'Uncategorized')
+      .sort((a, b) => b[1] - a[1])
+    for (const [name, count] of sortedCompanies) {
+      options.push({ key: name, label: name, count })
+    }
+    if (companyCounts['Uncategorized']) {
+      options.push({ key: 'Uncategorized', label: 'Uncategorized', count: companyCounts['Uncategorized'] })
+    }
+    return options
+  }, [packages.length, companyCounts])
+
+  const filteredPackages = useMemo(() => {
+    if (activeCompany === 'all') return packages
+    return packages.filter((pkg) => {
+      const company = slugToCompany[pkg.slug]
+      return activeCompany === 'Uncategorized' ? !company : company === activeCompany
+    })
+  }, [packages, slugToCompany, activeCompany])
 
   const getEffectivePrice = (pkg: PackageData) => {
     const subOption = getSubOptionFromName(pkg.name)
@@ -162,7 +238,7 @@ export function AdventurePackages() {
             </p>
             <div className="flex items-center justify-center gap-6 sm:gap-10 mt-6">
               <div className="text-center">
-                <div className="text-white font-bold text-xl sm:text-2xl">{packages.length || 26}</div>
+                <div className="text-white font-bold text-xl sm:text-2xl">{activeCompany === 'all' ? packages.length : filteredPackages.length}</div>
                 <div className="text-white/50 text-xs">Activities</div>
               </div>
               <div className="w-px h-8 bg-white/20" />
@@ -181,11 +257,40 @@ export function AdventurePackages() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14">
+        <motion.div {...fadeInUp} className="text-center mb-6 sm:mb-8">
           <span className="text-brand-orange text-sm font-semibold tracking-wider uppercase">Choose Your Adventure</span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-dark mt-2">Adventure Activities</h2>
           <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">From bungee jumping to water sports — pick your thrill in Rishikesh</p>
         </motion.div>
+
+        {filterOptions.length > 1 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-8">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground font-medium">Filter by company</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+              {filterOptions.map((opt, idx) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setActiveCompany(opt.key)}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 border-2 ${
+                    activeCompany === opt.key
+                      ? 'border-brand-dark bg-brand-dark text-white shadow-lg scale-105'
+                      : 'bg-white text-brand-dark border-border hover:border-brand-orange/50 hover:shadow-md'
+                  }`}
+                >
+                  {opt.label}
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                    activeCompany === opt.key ? 'bg-white/20 text-white' : 'bg-brand-cream text-muted-foreground'
+                  }`}>
+                    {opt.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
@@ -202,9 +307,15 @@ export function AdventurePackages() {
               </div>
             ))}
           </div>
+        ) : filteredPackages.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center">
+            <Zap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg">No activities found for this company</p>
+            <button onClick={() => setActiveCompany('all')} className="mt-3 text-brand-orange font-semibold hover:underline text-sm">View all activities</button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-            {packages.map((pkg, index) => {
+            {filteredPackages.map((pkg, index) => {
               const CatIcon = getCategoryIcon(pkg.subtitle)
               const isBungy = pkg.badge === 'Bungy'
               const isWater = pkg.badge === 'Water Sports'
