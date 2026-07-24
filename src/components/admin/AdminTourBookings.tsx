@@ -30,7 +30,7 @@ export function AdminTourBookings() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
 
-  const { data: bookings = [], isLoading, totalPages } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['admin-tour-bookings', statusFilter, page],
     queryFn: async () => {
       const res = await fetch(`/api/admin/tour-bookings?status=${statusFilter}&page=${page}&limit=20`, {
@@ -44,6 +44,9 @@ export function AdminTourBookings() {
       return { bookings: json as TourBooking[], totalPages: 1 }
     },
   })
+
+  const bookings = data?.bookings ?? []
+  const totalPages = data?.totalPages ?? 1
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, adminNotes }: { id: string; status: string; adminNotes?: string }) => {
