@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Calendar, Phone, User, Check, X, Clock, Eye, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface TourBooking {
   id: string
@@ -27,15 +28,20 @@ export function AdminTourBookings() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['admin-tour-bookings', statusFilter],
+  const { data: bookings = [], isLoading, totalPages } = useQuery({
+    queryKey: ['admin-tour-bookings', statusFilter, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/tour-bookings?status=${statusFilter}`, {
+      const res = await fetch(`/api/admin/tour-bookings?status=${statusFilter}&page=${page}&limit=20`, {
         headers: { 'x-user-id': user?.id || '' },
       })
       if (!res.ok) throw new Error('Failed to fetch')
-      return res.json() as Promise<TourBooking[]>
+      const json = await res.json()
+      if (json.data && Array.isArray(json.data)) {
+        return { bookings: json.data, totalPages: json.totalPages || 1 }
+      }
+      return { bookings: json as TourBooking[], totalPages: 1 }
     },
   })
 
@@ -55,6 +61,11 @@ export function AdminTourBookings() {
     },
     onError: () => toast.error('Failed to update booking'),
   })
+
+  const handleFilterChange = (s: string) => {
+    setStatusFilter(s)
+    setPage(1)
+  }
 
   const pendingCount = bookings.filter((b) => b.status === 'pending').length
 
@@ -79,7 +90,7 @@ export function AdminTourBookings() {
           {['all', 'pending', 'approved', 'rejected'].map((s) => (
             <button
               key={s}
-              onClick={() => setStatusFilter(s)}
+              onClick={() => handleFilterChange(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 statusFilter === s ? 'bg-brand-orange text-white' : 'bg-white text-muted-foreground border border-border hover:bg-brand-cream'
               }`}
@@ -107,104 +118,107 @@ export function AdminTourBookings() {
           <p className="text-muted-foreground">No tour bookings found</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {bookings.map((booking) => (
-            <motion.div
-              key={booking.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`bg-white rounded-xl overflow-hidden border-l-4 ${
-                booking.status === 'pending' ? 'border-l-amber-500' : booking.status === 'approved' ? 'border-l-green-500' : 'border-l-red-500'
-              }`}
-            >
-              <div
-                className="p-4 sm:p-5 cursor-pointer"
-                onClick={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
+        <>
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <motion.div
+                key={booking.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`bg-white rounded-xl overflow-hidden border-l-4 ${
+                  booking.status === 'pending' ? 'border-l-amber-500' : booking.status === 'approved' ? 'border-l-green-500' : 'border-l-red-500'
+                }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      {getStatusBadge(booking.status)}
-                      <span className="text-xs text-muted-foreground bg-brand-cream px-2 py-0.5 rounded-full">
-                        {booking.destination}
-                      </span>
-                      {booking.dayLabel && (
-                        <span className="text-xs text-muted-foreground bg-brand-cream px-2 py-0.5 rounded-full">
-                          {booking.dayLabel}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      <span className="font-semibold text-brand-dark flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        {booking.name}
-                      </span>
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5" />
-                        {booking.phone}
-                      </span>
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {booking.travelDate}
-                      </span>
-                      <span className="text-muted-foreground">{booking.travelers} traveler{booking.travelers > 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {booking.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ id: booking.id, status: 'approved' }) }}
-                          className="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ id: booking.id, status: 'rejected' }) }}
-                          className="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                    <button className="w-8 h-8 rounded-lg bg-gray-100 text-muted-foreground hover:bg-gray-200 flex items-center justify-center transition-colors">
-                      {expandedId === booking.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {new Date(booking.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-
-              {expandedId === booking.id && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="border-t border-border/50 px-4 sm:px-5 py-4 bg-brand-cream/50"
+                <div
+                  className="p-4 sm:p-5 cursor-pointer"
+                  onClick={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Selected Programs</h4>
-                      <div className="space-y-1">
-                        {booking.selectedPrograms.map((prog: string, i: number) => (
-                          <p key={i} className="text-sm text-brand-dark flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
-                            {prog}
-                          </p>
-                        ))}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {getStatusBadge(booking.status)}
+                        <span className="text-xs text-muted-foreground bg-brand-cream px-2 py-0.5 rounded-full">
+                          {booking.destination}
+                        </span>
+                        {booking.dayLabel && (
+                          <span className="text-xs text-muted-foreground bg-brand-cream px-2 py-0.5 rounded-full">
+                            {booking.dayLabel}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="font-semibold text-brand-dark flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          {booking.name}
+                        </span>
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5" />
+                          {booking.phone}
+                        </span>
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {booking.travelDate}
+                        </span>
+                        <span className="text-muted-foreground">{booking.travelers} traveler{booking.travelers > 1 ? 's' : ''}</span>
                       </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Package Details</h4>
-                      <p className="text-sm text-brand-dark">Type: {booking.packageType}</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {booking.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ id: booking.id, status: 'approved' }) }}
+                            className="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ id: booking.id, status: 'rejected' }) }}
+                            className="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      <button className="w-8 h-8 rounded-lg bg-gray-100 text-muted-foreground hover:bg-gray-200 flex items-center justify-center transition-colors">
+                        {expandedId === booking.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {new Date(booking.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+
+                {expandedId === booking.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="border-t border-border/50 px-4 sm:px-5 py-4 bg-brand-cream/50"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Selected Programs</h4>
+                        <div className="space-y-1">
+                          {booking.selectedPrograms.map((prog: string, i: number) => (
+                            <p key={i} className="text-sm text-brand-dark flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
+                              {prog}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Package Details</h4>
+                        <p className="text-sm text-brand-dark">Type: {booking.packageType}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   )

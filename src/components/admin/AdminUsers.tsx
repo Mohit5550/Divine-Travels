@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { Shield, Mail, Calendar, User as UserIcon, Package } from 'lucide-react'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface UserData {
   id: string
@@ -19,24 +21,36 @@ interface UserData {
 
 export function AdminUsers() {
   const { user } = useAppStore()
+  const [page, setPage] = useState(1)
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['admin-users', user?.id],
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-users', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch(`/api/admin/users?page=${page}&limit=20`, {
         headers: { 'x-user-id': user?.id || '' },
       })
-      if (!res.ok) return []
-      return res.json() as Promise<UserData[]>
+      if (!res.ok) return { users: [], total: 0, totalPages: 1 }
+      const json = await res.json()
+      if (Array.isArray(json)) {
+        return { users: json, total: json.length, totalPages: 1 }
+      }
+      return {
+        users: json.data,
+        total: json.total,
+        totalPages: json.totalPages,
+      }
     },
   })
+
+  const users = data?.users ?? []
+  const totalPages = data?.totalPages ?? 1
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">Manage Users</h2>
-          <p className="text-sm text-gray-500 mt-1">{users.length} total user{users.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-500 mt-1">{data?.total ?? users.length} total user{(data?.total ?? users.length) !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -127,6 +141,16 @@ export function AdminUsers() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      )}
     </div>
   )
 }

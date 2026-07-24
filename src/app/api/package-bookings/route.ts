@@ -13,6 +13,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const all = searchParams.get('all')
     const category = searchParams.get('category')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
     const user = await db.user.findUnique({ where: { id: userId } })
 
@@ -21,27 +25,31 @@ export async function GET(request: Request) {
       where.userId = userId
     }
 
-    const bookings = await db.packageBooking.findMany({
-      where,
-      include: {
-        package: {
-          select: {
-            id: true,
-            name: true,
-            subtitle: true,
-            image: true,
-            price: true,
-            duration: true,
-            distance: true,
-            category: true,
+    const [bookings, total] = await Promise.all([
+      db.packageBooking.findMany({
+        where,
+        include: {
+          package: {
+            select: {
+              id: true,
+              name: true,
+              subtitle: true,
+              image: true,
+              price: true,
+              duration: true,
+              distance: true,
+              category: true,
+            },
+          },
+          user: {
+            select: { id: true, name: true, email: true, phone: true },
           },
         },
-        user: {
-          select: { id: true, name: true, email: true, phone: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.packageBooking.count({ where }) : Promise.resolve(0),
+    ])
 
     let result = bookings
     if (category && user?.role === 'admin') {
@@ -73,6 +81,9 @@ export async function GET(request: Request) {
       }
     }
 
+    if (paginate) {
+      return NextResponse.json({ data: result, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error fetching package bookings:', error)

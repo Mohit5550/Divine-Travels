@@ -12,7 +12,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const media = await db.media.findMany({ orderBy: { createdAt: 'desc' } })
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
+
+    const [media, total] = await Promise.all([
+      db.media.findMany({
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.media.count() : Promise.resolve(0),
+    ])
+
+    if (paginate) {
+      return NextResponse.json({ data: media, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(media)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

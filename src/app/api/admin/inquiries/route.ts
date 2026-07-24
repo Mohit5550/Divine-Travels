@@ -21,10 +21,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
-    const inquiries = await db.contactInquiry.findMany({
-      orderBy: { createdAt: 'desc' },
-    })
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
+    const [inquiries, total] = await Promise.all([
+      db.contactInquiry.findMany({
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.contactInquiry.count() : Promise.resolve(0),
+    ])
+
+    if (paginate) {
+      return NextResponse.json({ data: inquiries, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(inquiries)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

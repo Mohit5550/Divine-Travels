@@ -13,24 +13,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const users = await db.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        createdAt: true,
-        _count: {
-          select: {
-            bookings: true,
-            packageBookings: true,
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
+
+    const [users, total] = await Promise.all([
+      db.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          createdAt: true,
+          _count: {
+            select: {
+              bookings: true,
+              packageBookings: true,
+            },
           },
         },
-      },
-    })
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.user.count() : Promise.resolve(0),
+    ])
 
+    if (paginate) {
+      return NextResponse.json({ data: users, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(users)
   } catch (error) {
     console.error('Error fetching users:', error)

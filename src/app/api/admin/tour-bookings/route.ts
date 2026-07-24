@@ -15,10 +15,19 @@ export async function GET(request: NextRequest) {
     const where: Record<string, string> = {}
     if (status && status !== 'all') where.status = status
 
-    const bookings = await db.tourBooking.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
+
+    const [bookings, total] = await Promise.all([
+      db.tourBooking.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.tourBooking.count({ where }) : Promise.resolve(0),
+    ])
 
     const parsed = bookings.map((b) => {
       let programs: string[] = []
@@ -35,6 +44,9 @@ export async function GET(request: NextRequest) {
       return { ...b, selectedPrograms: programs }
     })
 
+    if (paginate) {
+      return NextResponse.json({ data: parsed, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(parsed)
   } catch (error) {
     console.error('Admin tour bookings error:', error)

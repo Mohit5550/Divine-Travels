@@ -12,10 +12,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const coupons = await db.coupon.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { bookings: true } } },
-    })
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
+
+    const [coupons, total] = await Promise.all([
+      db.coupon.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { bookings: true } } },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.coupon.count() : Promise.resolve(0),
+    ])
+
+    if (paginate) {
+      return NextResponse.json({ data: coupons, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(coupons)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

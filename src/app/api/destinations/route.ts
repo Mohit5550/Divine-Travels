@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const search = searchParams.get('search')
     const featured = searchParams.get('featured')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = { active: true }
 
@@ -27,11 +31,18 @@ export async function GET(request: NextRequest) {
       where.featured = true
     }
 
-    const destinations = await db.destination.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const [destinations, total] = await Promise.all([
+      db.destination.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.destination.count({ where }) : Promise.resolve(0),
+    ])
 
+    if (paginate) {
+      return NextResponse.json({ data: destinations, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(destinations)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

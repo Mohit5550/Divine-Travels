@@ -1,24 +1,30 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { CheckCircle, XCircle, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Pagination } from '@/components/ui/Pagination'
 import { toast } from 'sonner'
 
 export function AdminBookings() {
   const { user, navigate } = useAppStore()
   const queryClient = useQueryClient()
+  const [page, setPage] = useState(1)
 
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['admin-bookings', user?.id],
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-bookings', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/bookings?all=true', {
+      const res = await fetch(`/api/bookings?page=${page}&limit=20`, {
         headers: { 'x-user-id': user?.id || '' },
       })
       return res.json()
     },
   })
+
+  const bookings = Array.isArray(data) ? data : (data?.data || [])
+  const totalPages = Array.isArray(data) ? 1 : (data?.totalPages || 1)
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -162,6 +168,11 @@ export function AdminBookings() {
           </div>
         )}
       </div>
+      {!Array.isArray(data) && totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   )
 }

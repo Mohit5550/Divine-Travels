@@ -6,6 +6,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const all = searchParams.get('all') === 'true'
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
     const where: any = {
       adminNotes: { contains: 'taxi-booking' },
@@ -14,11 +18,18 @@ export async function GET(request: NextRequest) {
       where.status = 'pending'
     }
 
-    const bookings = await db.tourBooking.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const [bookings, total] = await Promise.all([
+      db.tourBooking.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.tourBooking.count({ where }) : Promise.resolve(0),
+    ])
 
+    if (paginate) {
+      return NextResponse.json({ data: bookings, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(bookings)
   } catch (error) {
     console.error('Error fetching taxi bookings:', error)

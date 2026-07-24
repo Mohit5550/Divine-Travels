@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Trash2, Copy, Check, X, Image } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,15 +20,19 @@ export function AdminMedia() {
   const [category, setCategory] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const { data: media = [], isLoading } = useQuery({
-    queryKey: ['admin-media', user?.id],
+  const [page, setPage] = useState(1)
+
+  const { data: mediaResponse, isLoading } = useQuery({
+    queryKey: ['admin-media', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/media', { headers: { 'x-user-id': user?.id || '' } })
-      if (!res.ok) return []
-      const data = await res.json()
-      return Array.isArray(data) ? data : []
+      const res = await fetch(`/api/admin/media?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { data: [], totalPages: 1 }
+      return res.json()
     },
   })
+
+  const media = Array.isArray(mediaResponse) ? mediaResponse : (mediaResponse?.data || [])
+  const totalPages = Array.isArray(mediaResponse) ? 1 : (mediaResponse?.totalPages || 1)
 
   const handleAdd = async () => {
     if (!url) { toast.error('URL is required'); return }
@@ -164,6 +169,11 @@ export function AdminMedia() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

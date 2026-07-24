@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, X, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,15 +29,19 @@ export function AdminCoupons() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
 
-  const { data: coupons = [], isLoading } = useQuery({
-    queryKey: ['admin-coupons', user?.id],
+  const [page, setPage] = useState(1)
+
+  const { data: couponsResponse, isLoading } = useQuery({
+    queryKey: ['admin-coupons', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/coupons', { headers: { 'x-user-id': user?.id || '' } })
-      if (!res.ok) return []
-      const data = await res.json()
-      return Array.isArray(data) ? data : []
+      const res = await fetch(`/api/admin/coupons?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { data: [], totalPages: 1 }
+      return res.json()
     },
   })
+
+  const coupons = Array.isArray(couponsResponse) ? couponsResponse : (couponsResponse?.data || [])
+  const totalPages = Array.isArray(couponsResponse) ? 1 : (couponsResponse?.totalPages || 1)
 
   const openEdit = (c: Record<string, unknown>) => {
     setEditingId(c.id as string)
@@ -220,6 +225,11 @@ export function AdminCoupons() {
           </div>
         )}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   )
 }

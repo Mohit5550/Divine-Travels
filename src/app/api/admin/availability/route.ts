@@ -23,17 +23,30 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const service = searchParams.get('service')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
-    const records = await db.dateAvailability.findMany({
-      where: service ? { service } : {},
-      orderBy: [{ date: 'asc' }, { service: 'asc' }],
-    })
+    const where = service ? { service } : {}
+
+    const [records, total] = await Promise.all([
+      db.dateAvailability.findMany({
+        where,
+        orderBy: [{ date: 'asc' }, { service: 'asc' }],
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.dateAvailability.count({ where }) : Promise.resolve(0),
+    ])
 
     const parsed = records.map((r) => ({
       ...r,
       subOptions: JSON.parse(r.subOptions),
     }))
 
+    if (paginate) {
+      return NextResponse.json({ records: parsed, total, page, totalPages: Math.ceil(total / limit), serviceOptions })
+    }
     return NextResponse.json({ records: parsed, serviceOptions })
   } catch (error) {
     console.error('Availability fetch error:', error)

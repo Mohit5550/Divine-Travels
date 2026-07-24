@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const all = searchParams.get('all')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
     const user = await db.user.findUnique({ where: { id: userId } })
 
@@ -22,15 +26,22 @@ export async function GET(request: NextRequest) {
       where.userId = userId
     }
 
-    const bookings = await db.booking.findMany({
-      where,
-      include: {
-        destination: true,
-        user: { select: { id: true, name: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+    const [bookings, total] = await Promise.all([
+      db.booking.findMany({
+        where,
+        include: {
+          destination: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.booking.count({ where }) : Promise.resolve(0),
+    ])
 
+    if (paginate) {
+      return NextResponse.json({ data: bookings, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(bookings)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

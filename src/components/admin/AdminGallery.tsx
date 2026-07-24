@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Star, Trash2, X, Camera, Eye, EyeOff, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,15 +32,19 @@ export function AdminGallery() {
   const [form, setForm] = useState({ url: '', title: '', alt: '', category: '', featured: false, active: true })
   const [saving, setSaving] = useState(false)
 
-  const { data: images = [], isLoading } = useQuery({
-    queryKey: ['admin-gallery', user?.id],
+  const [page, setPage] = useState(1)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-gallery', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/gallery', { headers: { 'x-user-id': user?.id || '' } })
-      if (!res.ok) return []
-      const data = await res.json()
-      return Array.isArray(data) ? (data as GalleryImage[]) : []
+      const res = await fetch(`/api/admin/gallery?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { data: [], totalPages: 1 }
+      return res.json()
     },
   })
+
+  const images: GalleryImage[] = Array.isArray(data) ? data : (data?.data || [])
+  const totalPages = Array.isArray(data) ? 1 : (data?.totalPages || 1)
 
   const featuredCount = images.filter((i) => i.featured).length
   const activeCount = images.filter((i) => i.active).length
@@ -290,6 +295,11 @@ export function AdminGallery() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

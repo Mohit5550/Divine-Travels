@@ -1,33 +1,47 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { CheckCircle, XCircle, Trash2, Star, Package, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Pagination } from '@/components/ui/Pagination'
 import { toast } from 'sonner'
 
 export function AdminReviews() {
   const { user } = useAppStore()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'destination' | 'package'>('all')
+  const [page, setPage] = useState(1)
+  const destTotalPagesRef = useRef(1)
+  const pkgTotalPagesRef = useRef(1)
 
   const { data: destReviews = [], isLoading: loading1 } = useQuery({
-    queryKey: ['admin-reviews-dest', user?.id],
+    queryKey: ['admin-reviews-dest', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/reviews?for=destination', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=destination`, { headers: { 'x-user-id': user?.id || '' } })
       if (!res.ok) return []
-      const data = await res.json()
-      return Array.isArray(data) ? data : []
+      const json = await res.json()
+      if (json && !Array.isArray(json) && json.data) {
+        destTotalPagesRef.current = json.totalPages || 1
+        return json.data
+      }
+      destTotalPagesRef.current = 1
+      return Array.isArray(json) ? json : []
     },
   })
 
   const { data: pkgReviews = [], isLoading: loading2 } = useQuery({
-    queryKey: ['admin-reviews-pkg', user?.id],
+    queryKey: ['admin-reviews-pkg', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/reviews?for=package', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=package`, { headers: { 'x-user-id': user?.id || '' } })
       if (!res.ok) return []
-      const data = await res.json()
-      return Array.isArray(data) ? data : []
+      const json = await res.json()
+      if (json && !Array.isArray(json) && json.data) {
+        pkgTotalPagesRef.current = json.totalPages || 1
+        return json.data
+      }
+      pkgTotalPagesRef.current = 1
+      return Array.isArray(json) ? json : []
     },
   })
 
@@ -63,6 +77,14 @@ export function AdminReviews() {
     : pkgReviews.map((r: Record<string, unknown>) => ({ ...r, _type: 'package' }))
 
   const isLoading = loading1 || loading2
+  const currentTotalPages = filter === 'destination' ? destTotalPagesRef.current
+    : filter === 'package' ? pkgTotalPagesRef.current
+    : Math.max(destTotalPagesRef.current, pkgTotalPagesRef.current)
+
+  const handleFilterChange = (f: typeof filter) => {
+    setFilter(f)
+    setPage(1)
+  }
 
   return (
     <div>
@@ -70,7 +92,7 @@ export function AdminReviews() {
         <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">Reviews Moderation</h2>
         <div className="flex gap-2">
           {['all', 'destination', 'package'].map((f) => (
-            <Button key={f} variant={filter === f ? 'default' : 'outline'} size="sm" onClick={() => setFilter(f as typeof filter)} className={filter === f ? 'bg-brand-orange text-white' : ''}>
+            <Button key={f} variant={filter === f ? 'default' : 'outline'} size="sm" onClick={() => handleFilterChange(f as typeof filter)} className={filter === f ? 'bg-brand-orange text-white' : ''}>
               {f === 'all' ? 'All' : f === 'destination' ? 'Destinations' : 'Packages'}
             </Button>
           ))}
@@ -152,6 +174,8 @@ export function AdminReviews() {
           </div>
         )}
       </div>
+
+      <Pagination currentPage={page} totalPages={currentTotalPages} onPageChange={setPage} />
     </div>
   )
 }

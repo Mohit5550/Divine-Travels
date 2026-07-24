@@ -5,6 +5,7 @@ import { Mail, Phone, Trash2, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface Inquiry {
   id: string; name: string; email: string; phone: string | null; message: string
@@ -15,16 +16,24 @@ export function AdminInquiries() {
   const { user } = useAppStore()
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<Inquiry | null>(null)
+  const [page, setPage] = useState(1)
 
-  const { data: inquiries = [], isLoading } = useQuery({
-    queryKey: ['admin-inquiries', user?.id],
+  const { data: response, isLoading } = useQuery({
+    queryKey: ['admin-inquiries', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/inquiries', { headers: { 'x-user-id': user?.id || '' } })
-      if (!res.ok) return []
+      const res = await fetch(`/api/admin/inquiries?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      if (!res.ok) return { data: [], totalPages: 1 }
       const data = await res.json()
-      return Array.isArray(data) ? data : []
+      if (data && typeof data === 'object' && Array.isArray(data.data)) {
+        return { data: data.data, totalPages: data.totalPages }
+      }
+      if (Array.isArray(data)) return { data, totalPages: 1 }
+      return { data: [], totalPages: 1 }
     },
   })
+
+  const inquiries = response?.data ?? []
+  const totalPages = response?.totalPages ?? 1
 
   const markRead = async (id: string) => {
     await fetch(`/api/admin/inquiries?markRead=${id}`, { headers: { 'x-user-id': user?.id || '' } })
@@ -60,27 +69,34 @@ export function AdminInquiries() {
           ) : inquiries.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">No inquiries yet</div>
           ) : (
-            <div className="divide-y divide-border/50 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              {inquiries.map((inquiry: Inquiry) => (
-                <button
-                  key={inquiry.id}
-                  onClick={() => { setSelected(inquiry); if (!inquiry.read) markRead(inquiry.id) }}
-                  className={`w-full text-left p-4 hover:bg-brand-cream/30 transition-colors ${selected?.id === inquiry.id ? 'bg-brand-cream/50' : ''} ${!inquiry.read ? 'bg-brand-orange/5' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className={`text-sm truncate ${!inquiry.read ? 'font-semibold text-brand-dark' : 'text-muted-foreground'}`}>
-                        {inquiry.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{inquiry.subject || inquiry.message.slice(0, 50)}</p>
+            <>
+              <div className="divide-y divide-border/50 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {inquiries.map((inquiry: Inquiry) => (
+                  <button
+                    key={inquiry.id}
+                    onClick={() => { setSelected(inquiry); if (!inquiry.read) markRead(inquiry.id) }}
+                    className={`w-full text-left p-4 hover:bg-brand-cream/30 transition-colors ${selected?.id === inquiry.id ? 'bg-brand-cream/50' : ''} ${!inquiry.read ? 'bg-brand-orange/5' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className={`text-sm truncate ${!inquiry.read ? 'font-semibold text-brand-dark' : 'text-muted-foreground'}`}>
+                          {inquiry.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{inquiry.subject || inquiry.message.slice(0, 50)}</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {new Date(inquiry.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {new Date(inquiry.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="border-t border-border p-4">
+                  <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+                </div>
+              )}
+            </>
           )}
         </div>
 

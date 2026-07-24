@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, X, Check, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -68,10 +69,12 @@ export function AdminBlogs() {
   const [catForm, setCatForm] = useState({ name: '', slug: '', description: '' })
   const [catSaving, setCatSaving] = useState(false)
 
+  const [page, setPage] = useState(1)
+
   const { data: postsData, isLoading: postsLoading } = useQuery({
-    queryKey: ['admin-blogs', user?.id],
+    queryKey: ['admin-blogs', user?.id, page],
     queryFn: async () => {
-      const res = await fetch('/api/admin/blogs', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/blogs?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
       if (!res.ok) return { blogs: [], total: 0, page: 1, totalPages: 0 }
       return res.json()
     },
@@ -399,6 +402,12 @@ export function AdminBlogs() {
                   </table>
                 </div>
               )}
+            </div>
+          )}
+
+          {postsData && postsData.totalPages > 1 && !showForm && (
+            <div className="mt-4 border-t border-border p-4">
+              <Pagination currentPage={page} totalPages={postsData.totalPages} onPageChange={setPage} />
             </div>
           )}
         </>

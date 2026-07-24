@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Pagination } from '@/components/ui/Pagination'
 import { motion } from 'framer-motion'
 import { CalendarDays, Save, CheckCircle, Loader2, ChevronDown, ChevronUp, Plus, Trash2, Edit3, X, IndianRupee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,8 @@ export function AdminAvailability() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [expandedService, setExpandedService] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -71,12 +74,19 @@ export function AdminAvailability() {
   const fetchRecords = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/availability', {
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      const res = await fetch(`/api/admin/availability?${params}`, {
         headers: { 'x-user-id': user?.id || '' },
       })
       const data = await res.json()
       if (res.ok) {
-        setRecords(data.records)
+        if (data.records) {
+          setRecords(data.records)
+          setTotalPages(data.totalPages || 1)
+        } else {
+          setRecords(data)
+          setTotalPages(1)
+        }
         setServiceOptions(data.serviceOptions)
       } else {
         toast.error(data.error || 'Failed to load')
@@ -86,7 +96,7 @@ export function AdminAvailability() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, page])
 
   useEffect(() => {
     if (user?.id) fetchRecords()
@@ -421,6 +431,11 @@ export function AdminAvailability() {
               </motion.div>
             )
           })}
+        </div>
+      )}
+      {totalPages > 1 && (
+        <div className="border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

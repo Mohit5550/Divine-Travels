@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Car,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface TaxiBooking {
   id: string
@@ -39,24 +40,33 @@ export function AdminTaxiBookings() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/taxi-bookings?all=true')
+      const res = await fetch(`/api/taxi-bookings?page=${page}&limit=20`)
       if (res.ok) {
         const data = await res.json()
-        setBookings(data)
+        if (Array.isArray(data)) {
+          setBookings(data)
+          setTotalPages(1)
+        } else {
+          setBookings(data.data || [])
+          setTotalPages(data.totalPages || 1)
+        }
       }
     } catch {
       toast.error('Failed to fetch taxi bookings')
     } finally {
       setLoading(false)
     }
-  }
+  }, [page])
 
   useEffect(() => {
     fetchBookings()
-  }, [])
+  }, [fetchBookings])
 
   const updateStatus = async (id: string, status: string) => {
     setUpdatingId(id)
@@ -307,6 +317,11 @@ export function AdminTaxiBookings() {
               </motion.div>
             )
           })}
+        </div>
+      )}
+      {totalPages > 1 && (
+        <div className="border-t border-gray-100 p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => { setPage(p); }} />
         </div>
       )}
     </div>

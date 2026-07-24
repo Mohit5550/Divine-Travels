@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Eye, Users, Calendar, Phone, MessageSquare, X } f
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { Pagination } from '@/components/ui/Pagination'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface PackageBookingData {
@@ -59,20 +60,27 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
   const queryClient = useQueryClient()
   const [selectedBooking, setSelectedBooking] = useState<PackageBookingData | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['admin-package-bookings', user?.id],
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-package-bookings', user?.id, statusFilter, categoryFilter, page],
     queryFn: async () => {
-      const res = await fetch('/api/package-bookings?all=true', {
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (categoryFilter) params.set('category', categoryFilter)
+      const res = await fetch(`/api/package-bookings?${params}`, {
         headers: { 'x-user-id': user?.id || '' },
       })
-      return res.json() as Promise<PackageBookingData[]>
+      return res.json()
     },
   })
 
+  const allBookings: PackageBookingData[] = Array.isArray(data) ? data : (data?.data || [])
+  const totalPages = Array.isArray(data) ? 1 : (data?.totalPages || 1)
+
   const filtered = categoryFilter
-    ? bookings.filter((b) => b.package.category === categoryFilter)
-    : bookings
+    ? allBookings.filter((b) => b.package.category === categoryFilter)
+    : allBookings
 
   const displayBookings = statusFilter === 'all'
     ? filtered
@@ -414,6 +422,11 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
           </div>
         )}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   )
 }

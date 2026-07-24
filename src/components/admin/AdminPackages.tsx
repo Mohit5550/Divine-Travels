@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, X, Star, Plus as PlusIcon, Trash2 as TrashIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -195,15 +196,20 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
   const [mealPlanItems, setMealPlanItems] = useState<MealPlan[]>([])
   const [locationItems, setLocationItems] = useState<LocationUrl[]>([])
 
-  const { data: packages = [], isLoading } = useQuery({
-    queryKey: ['admin-packages'],
+  const [page, setPage] = useState(1)
+
+  const { data: packagesResponse, isLoading } = useQuery({
+    queryKey: ['admin-packages', page],
     queryFn: async () => {
-      const res = await fetch('/api/packages', {
+      const res = await fetch(`/api/packages?page=${page}&limit=20`, {
         headers: { 'x-user-id': user?.id || '' },
       })
-      return res.json() as Promise<PackageData[]>
+      return res.json()
     },
   })
+
+  const packages: PackageData[] = Array.isArray(packagesResponse) ? packagesResponse : (packagesResponse?.data || [])
+  const totalPages = Array.isArray(packagesResponse) ? 1 : (packagesResponse?.totalPages || 1)
 
   const filteredPackages = useMemo(() => {
     if (!categoryFilter) return packages
@@ -1251,6 +1257,11 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
           </div>
         )}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   )
 }

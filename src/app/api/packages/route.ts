@@ -7,6 +7,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const featured = searchParams.get('featured')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const paginate = searchParams.has('page')
+    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = { active: true }
 
@@ -17,16 +21,23 @@ export async function GET(request: Request) {
       where.featured = true
     }
 
-    const packages = await db.package.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { reviews: true, bookings: true },
+    const [packages, total] = await Promise.all([
+      db.package.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: { reviews: true, bookings: true },
+          },
         },
-      },
-    })
+        ...(paginate ? { take: limit, skip } : {}),
+      }),
+      paginate ? db.package.count({ where }) : Promise.resolve(0),
+    ])
 
+    if (paginate) {
+      return NextResponse.json({ data: packages, total, page, totalPages: Math.ceil(total / limit) })
+    }
     return NextResponse.json(packages)
   } catch (error) {
     console.error('Error fetching packages:', error)

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, X, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -53,13 +54,18 @@ export function AdminDestinations() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
 
-  const { data: destinations = [], isLoading } = useQuery({
-    queryKey: ['admin-destinations'],
+  const [page, setPage] = useState(1)
+
+  const { data: destinationsResponse, isLoading } = useQuery({
+    queryKey: ['admin-destinations', page],
     queryFn: async () => {
-      const res = await fetch('/api/destinations')
-      return res.json() as Promise<Destination[]>
+      const res = await fetch(`/api/destinations?page=${page}&limit=20`)
+      return res.json()
     },
   })
+
+  const destinations: Destination[] = Array.isArray(destinationsResponse) ? destinationsResponse : (destinationsResponse?.data || [])
+  const totalPages = Array.isArray(destinationsResponse) ? 1 : (destinationsResponse?.totalPages || 1)
 
   const openEdit = (dest: Destination) => {
     setEditingId(dest.id)
@@ -326,6 +332,11 @@ export function AdminDestinations() {
           </div>
         )}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-4 border-t border-border p-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   )
 }
