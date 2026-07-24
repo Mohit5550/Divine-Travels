@@ -414,12 +414,14 @@ export function AdminDashboard() {
       >
         <div className="p-4 flex items-center justify-between border-b border-white/10">
           {!sidebarCollapsed && (
-                <img
-                  src="/logo-white.png"
-                  alt="Divine Travel"
-              className="h-9 w-auto object-contain"
-              draggable={false}
-            />
+            <button onClick={() => navigate('landing')} className="cursor-pointer">
+              <img
+                src="/logo-white.png"
+                alt="Divine Travel"
+                className="h-9 w-auto object-contain"
+                draggable={false}
+              />
+            </button>
           )}
           <div className="flex items-center gap-2">
             <button
@@ -470,12 +472,14 @@ export function AdminDashboard() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 border-b border-white/10">
-                <img
-              src="/logo-white.png"
-                  alt="Divine Travel"
-className="h-9 w-auto object-contain"
-                  draggable={false}
-                />
+                <button onClick={() => navigate('landing')} className="cursor-pointer">
+                  <img
+                    src="/logo-white.png"
+                    alt="Divine Travel"
+                    className="h-9 w-auto object-contain"
+                    draggable={false}
+                  />
+                </button>
               </div>
               <SidebarContent
                 user={user}
