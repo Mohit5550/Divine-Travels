@@ -224,7 +224,7 @@ export function SingleSelectTour({
                         {tour.discountedPrice < tour.actualPrice ? (
                           <>
                             <span className="text-lg font-bold text-brand-orange">₹{tour.discountedPrice.toLocaleString()}</span>
-                            <span className="text-xs text-muted-foreground line-through ml-2">₹{tour.actualPrice.toLocaleString()}</span>
+                            <span className="text-xs text-red-500 font-medium line-through ml-2">₹{tour.actualPrice.toLocaleString()}</span>
                             <span className="text-emerald-500 text-[10px] font-semibold ml-1">Save ₹{(tour.actualPrice - tour.discountedPrice).toLocaleString()}</span>
                           </>
                         ) : (
@@ -281,7 +281,7 @@ export function SingleSelectTour({
                     <span className="text-2xl font-bold text-brand-orange">{selectedTour.price}</span>
                     {selectedTour.discountedPrice < selectedTour.actualPrice && (
                       <>
-                        <span className="text-sm text-muted-foreground line-through">₹{selectedTour.actualPrice.toLocaleString()}</span>
+                        <span className="text-sm text-red-500 font-medium line-through">₹{selectedTour.actualPrice.toLocaleString()}</span>
                         <span className="text-emerald-500 text-sm font-semibold">₹{selectedTour.discountedPrice.toLocaleString()} (Special Offer)</span>
                       </>
                     )}

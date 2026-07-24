@@ -404,7 +404,7 @@ export function HotelDetail() {
                   <p className="text-xs text-gray-400 uppercase tracking-wider">Starting from</p>
                   <div className="flex items-baseline gap-2 mt-1">
                     {pkg.originalPrice && pkg.originalPrice > lowestRoomPrice && (
-                      <span className="text-lg line-through text-gray-400">₹{pkg.originalPrice.toLocaleString()}</span>
+                      <span className="text-lg line-through text-red-500 font-medium">₹{pkg.originalPrice.toLocaleString()}</span>
                     )}
                     <span className="text-3xl font-bold text-brand-dark">₹{lowestRoomPrice.toLocaleString()}</span>
                   </div>

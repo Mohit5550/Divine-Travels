@@ -282,7 +282,7 @@ export function TrekkingPackages() {
                       <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
                         {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                           <div className="flex flex-col items-end">
-                            <span className="line-through text-white/60 text-[10px] sm:text-xs">₹{pkg.originalPrice}</span>
+                            <span className="line-through text-red-500 text-[10px] sm:text-xs font-medium">₹{pkg.originalPrice}</span>
                             <div className="text-brand-orange font-bold text-sm sm:text-lg leading-none">₹{ep}</div>
                             <span className="text-emerald-500 text-[9px] sm:text-[10px] font-semibold">Save ₹{pkg.originalPrice - ep}</span>
                           </div>
@@ -378,7 +378,7 @@ export function TrekkingPackages() {
                         <div className="hidden sm:block">
                           {(() => { const ep = getEffectivePrice(pkg); return pkg.originalPrice != null && pkg.originalPrice > ep ? (
                             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                              <span className="text-sm sm:text-lg line-through text-muted-foreground">₹{pkg.originalPrice}</span>
+                              <span className="text-sm sm:text-lg line-through text-red-500 font-medium">₹{pkg.originalPrice}</span>
                               <span className="text-lg sm:text-2xl font-bold text-brand-dark">₹{ep}</span>
                               <span className="text-emerald-600 text-[10px] sm:text-xs font-semibold hidden sm:inline">Save ₹{pkg.originalPrice - ep}</span>
                             </div>

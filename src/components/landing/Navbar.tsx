@@ -174,7 +174,7 @@ export function Navbar() {
                             <span className="text-sm font-bold text-brand-orange shrink-0">
                               {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
                                 <>
-                                  <span className="line-through text-muted-foreground text-[10px]">₹{pkg.originalPrice}</span>
+                                  <span className="line-through text-red-500 font-medium text-[10px]">₹{pkg.originalPrice}</span>
                                   {' '}₹{pkg.price}
                                   <span className="text-emerald-500 text-[10px] font-semibold ml-0.5">Save ₹{pkg.originalPrice - pkg.price}</span>
                                 </>
@@ -336,7 +336,7 @@ export function Navbar() {
                           <span className="text-xs font-bold text-brand-orange">
                             {pkg.originalPrice != null && pkg.originalPrice > pkg.price ? (
                               <>
-                                <span className="line-through text-muted-foreground text-[9px]">₹{pkg.originalPrice}</span>
+                                <span className="line-through text-red-500 font-medium text-[9px]">₹{pkg.originalPrice}</span>
                                 {' '}₹{pkg.price}
                                 <span className="text-emerald-500 text-[9px] font-semibold ml-0.5">Save ₹{pkg.originalPrice - pkg.price}</span>
                               </>
