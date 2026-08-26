@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { BookingCardActions } from '../booking/BookingCardActions'
+import { parseHotelNotes, parseCampingNotes } from '@/lib/hotelBooking'
+import { BookingVoucherModal } from '@/components/booking/BookingVoucherModal'
 
 export function UserPackageBookings() {
   const { user, navigate } = useAppStore()
@@ -23,6 +26,7 @@ export function UserPackageBookings() {
       if (!res.ok) return []
       return res.json()
     },
+    refetchInterval: 12000,
   })
 
   const cancelBooking = async (id: string) => {
@@ -84,7 +88,10 @@ export function UserPackageBookings() {
         </div>
       ) : (
         <div className="space-y-4">
-          {bookings.map((booking: any) => (
+          {bookings.map((booking: any) => {
+            const hotel = parseHotelNotes(booking.additionalNotes)
+            const camping = parseCampingNotes(booking.additionalNotes)
+            return (
             <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 <img src={booking.package?.image || '/placeholder.svg'} alt={booking.package?.name} className="w-full sm:w-40 h-32 sm:h-auto object-cover" />
@@ -102,13 +109,28 @@ export function UserPackageBookings() {
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                    {camping ? (
+                      <div>
+                        <span className="text-muted-foreground text-xs">Camping</span>
+                        <p className="font-medium">{new Date(camping.checkIn).toLocaleDateString()} → {new Date(camping.checkOut).toLocaleDateString()}</p>
+                      </div>
+                    ) : hotel ? (
+                      <div>
+                        <span className="text-muted-foreground text-xs">Stay</span>
+                        <p className="font-medium">{new Date(hotel.checkIn).toLocaleDateString()} → {new Date(hotel.checkOut).toLocaleDateString()}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <span className="text-muted-foreground text-xs">Date</span>
+                        <p className="font-medium">{new Date(booking.preferredDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
                     <div>
-                      <span className="text-muted-foreground text-xs">Date</span>
-                      <p className="font-medium">{new Date(booking.preferredDate).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">People</span>
-                      <p className="font-medium flex items-center gap-1"><Users className="w-3 h-3" />{booking.numberOfPeople}</p>
+                      <span className="text-muted-foreground text-xs">{hotel ? 'Rooms / Guests' : 'People'}</span>
+                      <p className="font-medium flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {hotel ? `${hotel.rooms} rm · ${hotel.adults}A${hotel.children ? `/${hotel.children}C` : ''}` : booking.numberOfPeople}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground text-xs">Total</span>
@@ -155,154 +177,78 @@ export function UserPackageBookings() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-
-          {/* Receipt Modal */}
-          {receiptBooking && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
-              onClick={() => setReceiptBooking(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Receipt Header */}
-                <div className="bg-gradient-to-r from-brand-dark to-brand-navy p-6 text-center">
-                  <Receipt className="w-10 h-10 text-brand-orange mx-auto mb-2" />
-                  <h3 className="text-white font-bold text-lg">Payment Receipt</h3>
-                  <p className="text-white/50 text-xs mt-1">Booking #{receiptBooking.id.slice(-8).toUpperCase()}</p>
-                </div>
-
-                {/* Booking Details */}
-                <div className="p-6 space-y-4">
-                  <div className="text-center pb-4 border-b border-border/50">
-                    <p className="font-serif text-xl text-brand-dark">{receiptBooking.package?.name}</p>
-                    <p className="text-muted-foreground text-sm">{receiptBooking.package?.category}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground text-xs">Customer Name</p>
-                      <p className="font-medium text-brand-dark">{receiptBooking.fullName}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Mobile</p>
-                      <p className="font-medium text-brand-dark">{receiptBooking.mobile}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Date</p>
-                      <p className="font-medium text-brand-dark">{new Date(receiptBooking.preferredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Time</p>
-                      <p className="font-medium text-brand-dark">{receiptBooking.preferredTime || 'No preference'}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Number of People</p>
-                      <p className="font-medium text-brand-dark">{receiptBooking.numberOfPeople}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Total Paid</p>
-                      <p className="font-bold text-brand-orange">₹{receiptBooking.paymentAmount?.toLocaleString() || receiptBooking.totalPrice?.toLocaleString()}</p>
-                    </div>
-                  </div>
-
-                  {receiptBooking.additionalNotes && (
-                    <div className="pt-3 border-t border-border/50">
-                      <p className="text-muted-foreground text-xs mb-1">Additional Notes</p>
-                      <p className="text-sm text-brand-dark">{receiptBooking.additionalNotes}</p>
-                    </div>
-                  )}
-
-                  <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs">
-                    <div>
-                      <p className="text-muted-foreground">Payment ID</p>
-                      <p className="text-brand-dark font-mono">{receiptBooking.paymentId || '—'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-muted-foreground">Status</p>
-                      <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">{receiptBooking.paymentStatus === 'completed' ? 'Paid' : receiptBooking.paymentStatus}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-border/50 text-center">
-                    <p className="text-[10px] text-muted-foreground">Booking ID: {receiptBooking.id}</p>
-                    <p className="text-[10px] text-muted-foreground">Booked on {new Date(receiptBooking.createdAt).toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
-
-                <div className="p-4 border-t border-border/50 flex gap-2">
-                  <Button
-                    className="flex-1 bg-brand-dark hover:bg-brand-dark/90 text-white rounded-xl"
-                    onClick={() => setReceiptBooking(null)}
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl"
-                    onClick={() => {
-                      const b = receiptBooking
-                      const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Receipt ${b.id.slice(-8).toUpperCase()}</title>
-<style>
-  body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;color:#333}
-  .header{text-align:center;border-bottom:3px solid #e67e22;padding-bottom:20px;margin-bottom:20px}
-  .header h1{color:#1a1a2e;margin:0;font-size:28px}
-  .header p{color:#e67e22;font-weight:600;margin:4px 0 0;font-size:14px}
-  .package{text-align:center;padding:20px;background:#fdf2e9;border-radius:12px;margin-bottom:20px}
-  .package h2{margin:0 0 4px;color:#1a1a2e}
-  .package span{color:#e67e22;font-size:13px}
-  table{width:100%;border-collapse:collapse;margin:15px 0}
-  td{padding:10px 0;border-bottom:1px solid #eee;font-size:14px}
-  td:first-child{color:#888;width:45%}
-  td:last-child{font-weight:600;text-align:right;color:#1a1a2e}
-  .total td{font-size:18px;color:#e67e22;border-top:2px solid #1a1a2e;padding-top:12px}
-  .notes{margin-top:15px;padding:12px;background:#f9f9f9;border-radius:8px;font-size:13px;color:#555}
-  .footer{text-align:center;margin-top:25px;color:#999;font-size:11px;border-top:1px solid #eee;padding-top:12px}
-  .status{display:inline-block;background:#dcfce7;color:#166534;padding:4px 14px;border-radius:20px;font-weight:700;font-size:13px}
-  @media print{body{margin:0}}
-</style></head><body>
-  <div class="header"><h1>Divine Travels</h1><p>Payment Receipt</p></div>
-  <div class="package"><h2>${b.package?.name || 'Package'}</h2><span>${b.package?.category || ''}</span></div>
-  <table>
-    <tr><td>Booking ID</td><td>${b.id}</td></tr>
-    <tr><td>Customer Name</td><td>${b.fullName || ''}</td></tr>
-    <tr><td>Mobile</td><td>${b.mobile || ''}</td></tr>
-    <tr><td>Date</td><td>${b.preferredDate ? new Date(b.preferredDate).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : ''}</td></tr>
-    <tr><td>Time</td><td>${b.preferredTime || 'No preference'}</td></tr>
-    <tr><td>Number of People</td><td>${b.numberOfPeople || 1}</td></tr>
-    <tr><td>Payment ID</td><td>${b.paymentId || '—'}</td></tr>
-    <tr><td>Status</td><td><span class="status">${b.paymentStatus === 'completed' ? 'Paid' : b.paymentStatus}</span></td></tr>
-    <tr class="total"><td>Total Paid</td><td>₹${(b.paymentAmount || b.totalPrice || 0).toLocaleString()}</td></tr>
-  </table>
-  ${b.additionalNotes ? `<div class="notes"><strong>Notes:</strong><br>${b.additionalNotes}</div>` : ''}
-  <div class="footer">
-    <p>Divine Travels | Rishikesh, Uttarakhand | divinetravels.in</p>
-    <p>Booked on ${b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN') : ''}</p>
-    <p>Thank you for choosing Divine Travels!</p>
-  </div>
-  <div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="background:#e67e22;color:white;border:none;padding:10px 30px;border-radius:8px;font-size:15px;cursor:pointer">Print / Save as PDF</button></div>
-</body></html>`
-                      const blob = new Blob([html], { type: 'text/html' })
-                      const url = URL.createObjectURL(blob)
-                      window.open(url, '_blank')
-                    }}
-                  >
-                    Download Receipt
-                  </Button>
+                <div className="border-t border-border/50 pt-3 mt-3">
+                  <BookingCardActions type="package" id={booking.id} isAdmin={false} userId={user?.id} />
                 </div>
               </motion.div>
-            </motion.div>
-          )}
+            )
+          })}
         </div>
       )}
+
+      <BookingVoucherModal
+        isOpen={!!receiptBooking}
+        onClose={() => setReceiptBooking(null)}
+        booking={
+          receiptBooking
+            ? {
+                bookingId: receiptBooking.id,
+                bookingType: 'package',
+                title: receiptBooking.package?.name || 'Package Booking',
+                subtitle: receiptBooking.package?.subtitle || null,
+                category: receiptBooking.package?.category || null,
+                guestName: receiptBooking.fullName || user?.name || 'Valued Traveler',
+                guestPhone: receiptBooking.mobile || user?.phone,
+                guestEmail: user?.email,
+                travelDate: receiptBooking.preferredDate || new Date().toISOString(),
+                travelers: receiptBooking.numberOfPeople || 1,
+                pickupLocation: receiptBooking.package?.location || null,
+                totalPrice: receiptBooking.totalPrice || 0,
+                originalPrice: receiptBooking.originalPrice ?? receiptBooking.package?.originalPrice ?? null,
+                basePrice: receiptBooking.basePrice ?? receiptBooking.package?.price ?? null,
+                unitPrice: receiptBooking.unitPrice ?? null,
+                couponDiscount: receiptBooking.discountAmount || 0,
+                isHotel: (() => {
+                  const h = parseHotelNotes(receiptBooking.additionalNotes)
+                  return !!h
+                })(),
+                hotelBreakdown: (() => {
+                  const h = parseHotelNotes(receiptBooking.additionalNotes)
+                  return h
+                })(),
+                isCamping: (() => {
+                  const c = parseCampingNotes(receiptBooking.additionalNotes)
+                  return !!c
+                })(),
+                campingBreakdown: (() => {
+                  const c = parseCampingNotes(receiptBooking.additionalNotes)
+                  return c
+                })(),
+                amountPaid:
+                  receiptBooking.paymentStatus === 'completed'
+                    ? (receiptBooking.paymentAmount || receiptBooking.totalPrice)
+                    : (receiptBooking.paymentAmount || 0),
+                balanceDue:
+                  receiptBooking.paymentStatus === 'completed'
+                    ? 0
+                    : Math.max(
+                        0,
+                        (receiptBooking.totalPrice || 0) - (receiptBooking.paymentAmount || 0)
+                      ),
+                paymentStatus: receiptBooking.paymentStatus || 'pending',
+                status: receiptBooking.status || 'pending',
+                specialReqs: (() => {
+                  const h = parseHotelNotes(receiptBooking.additionalNotes)
+                  if (h) return h.specialRequests || null
+                  const c = parseCampingNotes(receiptBooking.additionalNotes)
+                  if (c) return c.specialRequests || null
+                  return receiptBooking.additionalNotes || null
+                })(),
+                createdAt: receiptBooking.createdAt,
+              }
+            : null
+        }
+      />
     </div>
   )
 }

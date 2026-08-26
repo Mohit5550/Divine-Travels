@@ -4,9 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, User, LogOut, LayoutDashboard, Heart, ShoppingCart, Loader2 } from 'lucide-react'
+import { Search, Menu, X, Heart, ShoppingCart, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoginModal } from './LoginModal'
+import { NavbarNotifications } from './NavbarNotifications'
+import NavbarUserMenu from './NavbarUserMenu'
+import { useCart } from '@/lib/cart'
 
 interface SearchPackage {
   id: string
@@ -41,13 +44,43 @@ const categoryColors: Record<string, string> = {
 }
 
 export function Navbar() {
-  const { isAuthenticated, user, isAdmin, navigate, logout } = useAppStore()
+  const { isAuthenticated, user, isAdmin, navigate, logout, setDashboardTab } = useAppStore()
   const [scrolled, setScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const cartCount = useCart((s) => s.items.length)
+  const [mounted, setMounted] = useState(false)
+
+  const { data: destWishlist = [] } = useQuery({
+    queryKey: ['wishlist', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return []
+      const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user.id } })
+      if (!res.ok) return []
+      return res.json()
+    },
+    enabled: isAuthenticated && !!user?.id,
+  })
+
+  const { data: pkgWishlist = [] } = useQuery({
+    queryKey: ['package-wishlist', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return []
+      const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user.id } })
+      if (!res.ok) return []
+      return res.json()
+    },
+    enabled: isAuthenticated && !!user?.id,
+  })
+
+  const wishlistCount = destWishlist.length + pkgWishlist.length
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -151,9 +184,9 @@ export function Navbar() {
                       </div>
                     ) : (
                       <div className="py-2">
-                        {searchResults.map((pkg: SearchPackage) => (
+                        {searchResults.map((pkg: SearchPackage, index: number) => (
                           <button
-                            key={pkg.id}
+                            key={pkg.id || `search-result-${index}`}
                             onClick={() => handleSelectPackage(pkg)}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-brand-cream transition-colors text-left"
                           >
@@ -192,61 +225,53 @@ export function Navbar() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden rounded-full"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <Search className="w-5 h-5" />
-              </Button>
+                  <div className="sm:hidden">
+                    <NavbarNotifications onNavigate={() => setMobileMenuOpen(false)} />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden rounded-full"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" />
+                  </Button>
 
-              {isAuthenticated ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate('landing')}
-                    className="hidden sm:flex rounded-full relative"
-                  >
-                    <Heart className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden sm:flex rounded-full relative"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                  </Button>
-                  {isAdmin && (
+                {isAuthenticated ? (
+                  <>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('admin-dashboard')}
-                      className="hidden sm:flex items-center gap-1 text-brand-teal"
+                      size="icon"
+                      onClick={() => { setDashboardTab('wishlist'); navigate('user-dashboard') }}
+                      className="hidden sm:flex rounded-full relative"
+                      aria-label="Wishlist"
                     >
-                      <LayoutDashboard className="w-4 h-4" />
-                      Admin
+                      <Heart className="w-5 h-5" />
+                      {mounted && wishlistCount > 0 && (
+                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                          {wishlistCount}
+                        </span>
+                      )}
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('user-dashboard')}
-                    className="hidden sm:flex items-center gap-1"
-                  >
-                    <User className="w-4 h-4" />
-                    Dashboard
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { setDashboardTab('cart'); navigate('user-dashboard') }}
+                      className="hidden sm:flex rounded-full relative"
+                      aria-label="Cart"
+                    >
+                    <ShoppingCart className="w-5 h-5" />
+                    {mounted && cartCount > 0 && (
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                        {cartCount}
+                      </span>
+                    )}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={logout}
-                    className="hidden sm:flex items-center gap-1"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </Button>
+                  <div className="hidden sm:block">
+                    <NavbarNotifications />
+                  </div>
+                  <NavbarUserMenu />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -269,10 +294,16 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="hidden sm:flex rounded-full"
+                    className="hidden sm:flex rounded-full relative"
                     onClick={() => setLoginOpen(true)}
+                    aria-label="Cart"
                   >
                     <ShoppingCart className="w-5 h-5" />
+                    {mounted && cartCount > 0 && (
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                        {cartCount}
+                      </span>
+                    )}
                   </Button>
                   <Button
                     onClick={() => setLoginOpen(true)}
@@ -320,9 +351,9 @@ export function Navbar() {
                     {searchResults.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-2">No results found</p>
                     ) : (
-                      searchResults.slice(0, 5).map((pkg: SearchPackage) => (
+                      searchResults.slice(0, 5).map((pkg: SearchPackage, index: number) => (
                         <button
-                          key={pkg.id}
+                          key={pkg.id || `mobile-search-result-${index}`}
                           onClick={() => { handleSelectPackage(pkg); setMobileMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-brand-cream transition-colors text-left"
                         >
@@ -355,14 +386,20 @@ export function Navbar() {
                 >
                   Home
                 </button>
-                {isAuthenticated ? (
-                  <>
+                <button
+                  onClick={() => { navigate('collaborate'); setMobileMenuOpen(false) }}
+                  className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium text-brand-orange flex items-center gap-1.5"
+                >
+                  <span>✨ Creator Program</span>
+                </button>
                 <button
                   onClick={() => { navigate('blog-archive'); setMobileMenuOpen(false) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"
                 >
                   Blog
                 </button>
+                {isAuthenticated ? (
+                  <>
                 <button
                   onClick={() => { navigate('user-dashboard'); setMobileMenuOpen(false) }}
                   className="text-left px-3 py-2 rounded-lg hover:bg-brand-cream text-sm font-medium"

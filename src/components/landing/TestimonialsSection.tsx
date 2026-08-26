@@ -86,8 +86,8 @@ export function TestimonialsSection() {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
+  const [reviews] = useState<Review[]>(GOOGLE_REVIEWS)
+  const [loading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -96,23 +96,6 @@ export function TestimonialsSection() {
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
-  }, [])
-
-  useEffect(() => {
-    fetch('/api/reviews/recent')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setReviews(data)
-        } else {
-          setReviews(GOOGLE_REVIEWS)
-        }
-        setLoading(false)
-      })
-      .catch(() => {
-        setReviews(GOOGLE_REVIEWS)
-        setLoading(false)
-      })
   }, [])
 
   const itemsPerSlide = isMobile ? 1 : 3

@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { CheckCircle, XCircle, Eye } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { toast } from 'sonner'
+import { BookingCardActions } from '../booking/BookingCardActions'
 
 export function AdminBookings() {
   const { user, navigate } = useAppStore()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-bookings', user?.id, page],
@@ -28,13 +30,13 @@ export function AdminBookings() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`/api/bookings/${id}`, {
-        method: 'PUT',
+      const res = await fetch('/api/admin/bookings/update-status', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': user?.id || '',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ bookingId: id, type: 'destination', status }),
       })
 
       if (!res.ok) {
@@ -43,8 +45,11 @@ export function AdminBookings() {
         return
       }
 
-      toast.success(`Booking ${status} successfully`)
+      toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
       queryClient.invalidateQueries({ queryKey: ['admin-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })
     } catch {
       toast.error('Failed to update booking')
     }
@@ -54,15 +59,18 @@ export function AdminBookings() {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-700'
       case 'pending': return 'bg-amber-100 text-amber-700'
-      case 'cancelled': return 'bg-red-100 text-red-700'
-      case 'completed': return 'bg-blue-100 text-blue-700'
+      case 'ready': return 'bg-orange-100 text-orange-700'
+      case 'in_progress': return 'bg-blue-100 text-blue-700 font-bold'
+      case 'cancelled':
+      case 'rejected': return 'bg-red-100 text-red-700'
+      case 'completed': return 'bg-purple-100 text-purple-700'
       default: return 'bg-gray-100 text-gray-700'
     }
   }
 
   return (
     <div>
-      <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">Manage Bookings</h2>
+      <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">Manage Destination Bookings</h2>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
@@ -96,79 +104,82 @@ export function AdminBookings() {
                   status: string
                   paymentStatus: string
                 }) => (
-                  <tr key={booking.id} className="border-b border-border/50 hover:bg-brand-cream/30">
-                    <td className="py-3 px-4 font-mono text-xs">{booking.id.slice(0, 8)}...</td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-brand-dark">{booking.user.name}</p>
-                        <p className="text-xs text-muted-foreground">{booking.user.email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">{booking.destination.name}</td>
-                    <td className="py-3 px-4">
-                      <div className="text-xs">
-                        <div>{new Date(booking.checkIn).toLocaleDateString()}</div>
-                        <div className="text-muted-foreground">→ {new Date(booking.checkOut).toLocaleDateString()}</div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-medium">₹{booking.totalPrice.toLocaleString()}</td>
-                    <td className="py-3 px-4">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(booking.status)}`}>
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        booking.paymentStatus === 'paid' ? 'bg-green-50 text-green-600' :
-                        booking.paymentStatus === 'refunded' ? 'bg-blue-50 text-blue-600' :
-                        'bg-amber-50 text-amber-600'
-                      }`}>
-                        {booking.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-1">
-                        {booking.status === 'pending' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-green-600 hover:bg-green-50"
-                              onClick={() => updateStatus(booking.id, 'confirmed')}
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-500 hover:bg-red-50"
-                              onClick={() => updateStatus(booking.id, 'cancelled')}
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                        {booking.status === 'confirmed' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-blue-600 hover:bg-blue-50"
-                            onClick={() => updateStatus(booking.id, 'completed')}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Complete
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                  <Fragment key={booking.id}>
+                    <tr className="border-b border-border/50 hover:bg-brand-cream/30">
+                      <td className="py-3 px-4 font-mono text-xs">{booking.id.slice(0, 8)}...</td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-brand-dark">{booking.user?.name || 'Traveler'}</p>
+                          <p className="text-xs text-muted-foreground">{booking.user?.email || '—'}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">{booking.destination?.name || 'Destination'}</td>
+                      <td className="py-3 px-4">
+                        <div className="text-xs">
+                          <div>{booking.checkIn ? new Date(booking.checkIn).toLocaleDateString() : 'N/A'}</div>
+                          {booking.checkOut && (
+                            <div className="text-muted-foreground">→ {new Date(booking.checkOut).toLocaleDateString()}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-medium">₹{(booking.totalPrice || 0).toLocaleString()}</td>
+                      <td className="py-3 px-4">
+                        <select
+                          value={booking.status || 'pending'}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => updateStatus(booking.id, e.target.value)}
+                          className={`text-xs font-semibold rounded-lg px-2.5 py-1 border cursor-pointer transition-colors focus:ring-2 focus:ring-brand-orange/20 outline-none ${
+                            booking.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
+                            booking.status === 'ready' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                            booking.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold' :
+                            booking.status === 'completed' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                            booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
+                          <option value="pending">🟡 Pending</option>
+                          <option value="confirmed">🟢 Confirmed</option>
+                          <option value="ready">🟠 Stay Ready</option>
+                          <option value="in_progress">🔵 In-Progress</option>
+                          <option value="completed">🟣 Completed</option>
+                          <option value="cancelled">🔴 Cancelled</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          booking.paymentStatus === 'paid' || booking.paymentStatus === 'completed' ? 'bg-green-50 text-green-600 font-semibold' :
+                          booking.paymentStatus === 'refunded' ? 'bg-blue-50 text-blue-600' :
+                          'bg-amber-50 text-amber-600'
+                        }`}>
+                          {booking.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
+                        >
+                          {expandedId === booking.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+                      </td>
+                    </tr>
+                    {expandedId === booking.id && (
+                      <tr key={`${booking.id}-expanded`}>
+                        <td colSpan={8} className="bg-brand-cream/30 px-4 py-4">
+                          <BookingCardActions type="destination" id={booking.id} isAdmin={true} userId={user?.id} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
-      {!Array.isArray(data) && totalPages > 1 && (
+
+      {totalPages > 1 && (
         <div className="mt-4 border-t border-border p-4">
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>

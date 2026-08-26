@@ -1,34 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserFromToken } from '@/lib/with-auth'
 
-// GET /api/wishlist - Get user's wishlist
+// GET /api/wishlist - Get user's destination wishlist
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
+    const user = await getUserFromToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-
     const wishlist = await db.wishlist.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: { destination: true },
       orderBy: { createdAt: 'desc' },
     })
-
     return NextResponse.json(wishlist)
   } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch wishlist' }, { status: 500 })
   }
 }
 
-// POST /api/wishlist - Add to wishlist
+// POST /api/wishlist - Add destination to wishlist
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
+    const user = await getUserFromToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-
     const body = await request.json()
     const { destinationId } = body
 
@@ -38,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Check if already in wishlist
     const existing = await db.wishlist.findFirst({
-      where: { userId, destinationId },
+      where: { userId: user.id, destinationId },
     })
 
     if (existing) {
@@ -46,24 +44,23 @@ export async function POST(request: NextRequest) {
     }
 
     const item = await db.wishlist.create({
-      data: { userId, destinationId },
+      data: { userId: user.id, destinationId },
       include: { destination: true },
     })
 
     return NextResponse.json(item, { status: 201 })
   } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to add to wishlist' }, { status: 500 })
   }
 }
 
 // DELETE /api/wishlist - Remove from wishlist
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
+    const user = await getUserFromToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-
     const body = await request.json()
     const { destinationId } = body
 
@@ -72,11 +69,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     await db.wishlist.deleteMany({
-      where: { userId, destinationId },
+      where: { userId: user.id, destinationId },
     })
 
     return NextResponse.json({ message: 'Removed from wishlist' })
   } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to remove from wishlist' }, { status: 500 })
   }
 }

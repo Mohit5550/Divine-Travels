@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
+import { getUserFromToken } from '@/lib/with-auth'
 
 // GET /api/reviews?destinationId=
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromToken(request)
+
     const { searchParams } = new URL(request.url)
     const destinationId = searchParams.get('destinationId')
 
-    if (!destinationId) {
-      return NextResponse.json({ error: 'destinationId is required' }, { status: 400 })
+    const where: Record<string, unknown> = { approved: true }
+    if (destinationId) {
+      where.destinationId = destinationId
     }
 
     const reviews = await db.review.findMany({
-      where: { destinationId },
+      where,
       include: { user: { select: { id: true, name: true, avatar: true } } },
       orderBy: { createdAt: 'desc' },
+      take: destinationId ? undefined : 20,
     })
 
     return NextResponse.json(reviews)
@@ -27,8 +32,8 @@ export async function GET(request: NextRequest) {
 // POST /api/reviews - Create review
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
+    const user = await getUserFromToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
@@ -39,9 +44,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 })
     }
 
+    if (rating < 1 || rating > 5) {
+      return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
+    }
+
     const review = await db.review.create({
       data: {
-        userId,
+        userId: user.id,
         destinationId,
         rating: Number(rating),
         comment,
@@ -57,8 +66,7 @@ export async function POST(request: NextRequest) {
       data: { rating: Math.round(avgRating * 10) / 10, reviewCount: reviews.length },
     })
 
-    const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } })
-    notifyAdmin('New Review', `${user?.name || 'Someone'} left a ${rating}-star review`, 'review')
+    notifyAdmin('New Review', `${user.name} left a ${rating}-star review`, 'review')
 
     return NextResponse.json(review, { status: 201 })
   } catch {

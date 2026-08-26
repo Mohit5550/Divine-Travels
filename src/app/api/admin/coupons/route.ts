@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = parseInt(searchParams.get('limit') || '50')
     const paginate = searchParams.has('page')
     const skip = (page - 1) * limit
 
@@ -48,21 +48,39 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { code, description, discountPct, maxDiscount, minAmount, maxUses, expiresAt } = body
+    const {
+      code,
+      description,
+      discountPct,
+      maxDiscount,
+      minAmount,
+      maxUses,
+      expiresAt,
+      type = 'public',
+      isPrivate = false,
+      applicableCategory = 'all',
+      userEligibility = 'all',
+      creatorName,
+    } = body
 
     if (!code || !discountPct) {
       return NextResponse.json({ error: 'Code and discountPct are required' }, { status: 400 })
     }
 
-    const coupon = await db.coupon.create({
+    const coupon = await (db as any).coupon.create({
       data: {
-        code: code.toUpperCase(),
+        code: code.trim().toUpperCase(),
         description,
         discountPct: Number(discountPct),
         maxDiscount: maxDiscount ? Number(maxDiscount) : null,
         minAmount: minAmount ? Number(minAmount) : null,
         maxUses: maxUses ? Number(maxUses) : null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        type: type || 'public',
+        isPrivate: isPrivate || type === 'influencer' || type === 'referral',
+        applicableCategory: applicableCategory || 'all',
+        userEligibility: userEligibility || 'all',
+        creatorName: creatorName || null,
       },
     })
 
@@ -87,14 +105,29 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, code, description, discountPct, maxDiscount, minAmount, maxUses, expiresAt, active } = body
+    const {
+      id,
+      code,
+      description,
+      discountPct,
+      maxDiscount,
+      minAmount,
+      maxUses,
+      expiresAt,
+      active,
+      type,
+      isPrivate,
+      applicableCategory,
+      userEligibility,
+      creatorName,
+    } = body
 
     if (!id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 })
     }
 
     const data: Record<string, unknown> = {}
-    if (code !== undefined) data.code = code.toUpperCase()
+    if (code !== undefined) data.code = code.trim().toUpperCase()
     if (description !== undefined) data.description = description
     if (discountPct !== undefined) data.discountPct = Number(discountPct)
     if (maxDiscount !== undefined) data.maxDiscount = maxDiscount ? Number(maxDiscount) : null
@@ -102,8 +135,13 @@ export async function PUT(request: NextRequest) {
     if (maxUses !== undefined) data.maxUses = maxUses ? Number(maxUses) : null
     if (expiresAt !== undefined) data.expiresAt = expiresAt ? new Date(expiresAt) : null
     if (active !== undefined) data.active = active
+    if (type !== undefined) data.type = type
+    if (isPrivate !== undefined) data.isPrivate = isPrivate
+    if (applicableCategory !== undefined) data.applicableCategory = applicableCategory
+    if (userEligibility !== undefined) data.userEligibility = userEligibility
+    if (creatorName !== undefined) data.creatorName = creatorName
 
-    const coupon = await db.coupon.update({ where: { id }, data })
+    const coupon = await (db as any).coupon.update({ where: { id }, data })
     return NextResponse.json(coupon)
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {

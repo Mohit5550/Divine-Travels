@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { PackageWishlistOverlay } from '@/components/cart/PackageWishlistOverlay'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -224,6 +225,13 @@ export function TaxiPackages() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+            {packages.length === 0 && (
+              <div className="text-center py-16">
+                <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">No taxi options available yet.</p>
+                <p className="text-sm text-muted-foreground mt-1">Check back soon for updated vehicle options.</p>
+              </div>
+            )}
             {packages.map((pkg, index) => {
               const TargetIcon = getTargetIcon(pkg.subtitle)
               const isSUV = pkg.badge === 'SUV'
@@ -256,6 +264,7 @@ export function TaxiPackages() {
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <PackageWishlistOverlay packageId={pkg.id} />
 
                       {/* Badge */}
                       <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>

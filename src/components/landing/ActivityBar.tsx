@@ -39,7 +39,7 @@ export function ActivityBar() {
   }
 
   return (
-    <section className="bg-white border-b border-gray-100 shadow-sm pt-16 sm:pt-[72px]">
+    <section className="bg-white border-b border-gray-100 shadow-sm pt-[92px] sm:pt-[104px]">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-5">
         <div className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-auto hide-scrollbar pb-1 justify-start sm:justify-center">
           {activities.map((activity, index) => {

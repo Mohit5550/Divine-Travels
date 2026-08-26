@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -23,7 +24,7 @@ import { toast } from 'sonner'
 import { useState } from 'react'
 
 export function DestinationDetail() {
-  const { selectedDestinationId, navigate, isAuthenticated, user } = useAppStore()
+  const { selectedDestinationId, navigate, goBack, isAuthenticated, user } = useAppStore()
   const queryClient = useQueryClient()
   const [bookingForm, setBookingForm] = useState({
     checkIn: '',
@@ -75,6 +76,7 @@ export function DestinationDetail() {
           body: JSON.stringify({ destinationId: selectedDestinationId }),
         })
         setIsWishlisted(false)
+        queryClient.invalidateQueries({ queryKey: ['wishlist'] })
         toast.success('Removed from wishlist')
       } else {
         await fetch('/api/wishlist', {
@@ -83,6 +85,7 @@ export function DestinationDetail() {
           body: JSON.stringify({ destinationId: selectedDestinationId }),
         })
         setIsWishlisted(true)
+        queryClient.invalidateQueries({ queryKey: ['wishlist'] })
         toast.success('Added to wishlist')
       }
     } catch {
@@ -204,7 +207,7 @@ export function DestinationDetail() {
         <Button
           variant="ghost"
           className="mb-4"
-          onClick={() => navigate('landing')}
+          onClick={() => goBack()}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Destinations
@@ -272,7 +275,7 @@ export function DestinationDetail() {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mt-4">
-                {destination.tags.split(',').map((tag: string) => (
+                {(destination.tags || '').split(',').filter(Boolean).map((tag: string) => (
                   <span
                     key={tag}
                     className="bg-brand-orange/10 text-brand-orange text-sm px-3 py-1 rounded-full"
@@ -400,6 +403,7 @@ export function DestinationDetail() {
                       type="date"
                       value={bookingForm.checkIn}
                       onChange={(e) => setBookingForm({ ...bookingForm, checkIn: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
                       className="h-10 text-sm"
                       required
                     />
@@ -410,6 +414,7 @@ export function DestinationDetail() {
                       type="date"
                       value={bookingForm.checkOut}
                       onChange={(e) => setBookingForm({ ...bookingForm, checkOut: e.target.value })}
+                      min={bookingForm.checkIn || new Date().toISOString().split('T')[0]}
                       className="h-10 text-sm"
                       required
                     />
@@ -467,13 +472,20 @@ export function DestinationDetail() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={submittingBooking}
-                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base"
-                >
-                  {submittingBooking ? 'Processing...' : 'Book Now'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={submittingBooking}
+                    className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base"
+                  >
+                    {submittingBooking ? 'Processing...' : 'Book Now'}
+                  </Button>
+                  <AddToCartButton
+                    item={{ key: `destination:${selectedDestinationId}`, type: 'destination', refId: selectedDestinationId, title: destination.name, image: destination.image, price: destination.price }}
+                    className="h-12"
+                    variant="outline"
+                  />
+                </div>
               </form>
             </motion.div>
           </div>

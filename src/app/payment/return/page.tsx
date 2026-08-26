@@ -32,25 +32,22 @@ function PaymentContent() {
         let verifyData: any = null
         let paymentSuccess = false
 
-        // Try to verify payment
+        // Verify payment
         try {
           const verifyRes = await fetch(`/api/kwikupi/verify-payment?payment_id=${paymentId}`)
           if (verifyRes.ok) {
             verifyData = await verifyRes.json()
-            paymentSuccess = verifyData.status === 'TXN_SUCCESS' || verifyData.status === 'PENDING'
+            const statusUpper = (verifyData.status || '').toUpperCase()
+            paymentSuccess = ['TXN_SUCCESS', 'SUCCESS', 'COMPLETED', 'CAPTURED', 'PENDING'].includes(statusUpper)
           }
-        } catch {}
-
-        // If verification API fails but we have a paymentId, assume success
-        // (user returned from KwikUPi, payment was likely processed)
-        if (!verifyData) {
-          verifyData = { payment_id: paymentId, order_id: paymentId, status: 'UNKNOWN', amount: 0 }
-          paymentSuccess = true
+        } catch (err) {
+          console.error('Verification error:', err)
         }
 
-        if (paymentSuccess) {
+        if (paymentSuccess && verifyData) {
           // Best-effort: try to update/create booking, but don't fail the whole flow
           let bookingUpdated = false
+          const userId = localStorage.getItem('dt_user_id')
 
           if (pendingApp) {
             try {
@@ -75,7 +72,6 @@ function PaymentContent() {
               }
             } catch {}
           } else if (bookingId && service === 'package') {
-            const userId = localStorage.getItem('dt_user_id')
             if (userId) {
               try {
                 const updateRes = await fetch(`/api/package-bookings/${bookingId}`, {
@@ -91,6 +87,22 @@ function PaymentContent() {
                 })
                 bookingUpdated = updateRes.ok
               } catch {}
+            }
+
+            } else if (bookingId && service === 'unified') {
+              const userId = localStorage.getItem('dt_user_id')
+              const btype = localStorage.getItem('dt_booking_type') || 'package'
+              const payType = localStorage.getItem('dt_pay_type') || 'balance'
+              if (userId) {
+                try {
+                  const updateRes = await fetch(`/api/booking-flow/${btype}/${bookingId}/payments/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+                    body: JSON.stringify({ paymentId: verifyData.payment_id, payType }),
+                  })
+                  bookingUpdated = updateRes.ok
+                } catch {}
+              }
             }
 
             // Always try to create a Payment record as backup
@@ -117,7 +129,6 @@ function PaymentContent() {
                 })
               } catch {}
             }
-          }
 
           // Clean up localStorage
           localStorage.removeItem('dt_payment_id')

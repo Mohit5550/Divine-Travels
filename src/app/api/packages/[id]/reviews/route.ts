@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
+import { getUserFromToken } from '@/lib/with-auth'
 
 // GET /api/packages/[id]/reviews - Get reviews for a package
 export async function GET(
@@ -9,8 +10,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+
     const reviews = await db.packageReview.findMany({
-      where: { packageId: id },
+      where: { packageId: id, approved: true },
       include: {
         user: {
           select: { id: true, name: true, avatar: true },
@@ -28,16 +30,16 @@ export async function GET(
 
 // POST /api/packages/[id]/reviews - Create a review for a package
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
+    const user = await getUserFromToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const { rating, comment } = body
 
@@ -57,7 +59,7 @@ export async function POST(
 
     const review = await db.packageReview.create({
       data: {
-        userId,
+        userId: user.id,
         packageId: id,
         rating: Number(rating),
         comment,
@@ -79,13 +81,12 @@ export async function POST(
     await db.package.update({
       where: { id },
       data: {
-        rating: stats._avg.rating || 0,
+        rating: Math.round((stats._avg.rating || 0) * 10) / 10,
         reviewCount: stats._count.rating || 0,
       },
     })
 
-    const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } })
-    notifyAdmin('New Package Review', `${user?.name || 'Someone'} left a ${rating}-star review on "${pkg.name}"`, 'review')
+    notifyAdmin('New Package Review', `${user.name} left a ${rating}-star review on "${pkg.name}"`, 'review')
 
     return NextResponse.json(review, { status: 201 })
   } catch (error) {

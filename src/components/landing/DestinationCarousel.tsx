@@ -30,11 +30,13 @@ export function DestinationCarousel() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['discover-destinations'],
     queryFn: async () => {
-      const [domestic, spiritual] = await Promise.all([
-        fetch('/api/packages?category=domestic-tours').then(r => r.json()),
-        fetch('/api/packages?category=spiritual-tours').then(r => r.json()),
+      const [domRes, spirRes] = await Promise.all([
+        fetch('/api/packages?category=domestic-tours').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch('/api/packages?category=spiritual-tours').then(r => r.ok ? r.json() : []).catch(() => []),
       ])
-      const all = [...(domestic || []), ...(spiritual || [])]
+      const domestic = Array.isArray(domRes) ? domRes : []
+      const spiritual = Array.isArray(spirRes) ? spirRes : []
+      const all = [...domestic, ...spiritual]
       return all.slice(0, 12) as Pkg[]
     },
     staleTime: 60000,

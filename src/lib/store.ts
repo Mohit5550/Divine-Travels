@@ -10,6 +10,13 @@ interface AppUser {
   role: string
 }
 
+interface NavEntry {
+  view: string
+  packageId: string | null
+  destinationId: string | null
+  sourceView: string | null
+}
+
 interface AppStore {
   currentView: string
   selectedDestinationId: string | null
@@ -18,9 +25,10 @@ interface AppStore {
   isAuthenticated: boolean
   isAdmin: boolean
   sourceView: string | null
+  navHistory: NavEntry[]
   dashboardTab: string | null
   navigate: (view: string, destId?: string | null, pkgId?: string | null) => void
-  goBack: () => void
+  goBack: (fallbackView?: string | null) => void
   setUser: (user: AppUser | null) => void
   setDashboardTab: (tab: string) => void
   logout: () => void
@@ -31,7 +39,7 @@ const LISTING_VIEWS = [
   'domestic-tours', 'spiritual-tours', 'international-tours', 'hotel-packages',
   'camping-packages', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour',
   'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'taxi-booking-form',
-  'gallery', 'company-detail', 'blog-archive',
+  'gallery', 'blog-archive', 'collaborate', 'partner',
 ]
 
 const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single', 'hotel-detail']
@@ -39,7 +47,7 @@ const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'de
 const ALL_VALID_VIEWS = new Set([
   'landing', 'user-dashboard', 'admin-dashboard', 'destination-detail',
   'booking-success', 'about-us', 'contact', 'privacy-policy', 'terms-of-service',
-  'refund-policy', 'cancellation-policy',
+  'refund-policy', 'cancellation-policy', 'collaborate', 'partner',
   ...LISTING_VIEWS,
   ...DETAIL_VIEWS,
 ])
@@ -64,6 +72,8 @@ const VIEW_TO_PATH: Record<string, string> = {
   'hotel-packages': '/hotels',
   'camping-packages': '/camping',
   'gallery': '/gallery',
+  'collaborate': '/collaborate',
+  'partner': '/partner',
   'about-us': '/about',
   'contact': '/contact',
   'user-dashboard': '/dashboard',
@@ -73,20 +83,39 @@ const VIEW_TO_PATH: Record<string, string> = {
   'refund-policy': '/refund',
   'cancellation-policy': '/cancellation',
   'blog-archive': '/blog',
+  'destination-detail': '/destination/:id',
+  'booking-success': '/booking-success',
+  'package-detail': '/package/:id',
+  'package-booking': '/package/:id/book',
+  'company-detail': '/company/:slug',
+  'blog-single': '/blog/:slug',
+  'hotel-detail': '/hotel/:id',
 }
 
 const PATH_TO_VIEW: Record<string, string> = Object.fromEntries(
   Object.entries(VIEW_TO_PATH).map(([view, path]) => [path, view])
 )
 
-function getViewFromURL(): string {
-  if (typeof window === 'undefined') return 'landing'
+function resolveFromURL(): { view: string; packageId: string | null; destinationId: string | null } {
+  if (typeof window === 'undefined') return { view: 'landing', packageId: null, destinationId: null }
   const path = window.location.pathname
-  return PATH_TO_VIEW[path] || 'landing'
+  let m = path.match(/^\/package\/([^/]+)\/book$/)
+  if (m) return { view: 'package-booking', packageId: m[1], destinationId: null }
+  m = path.match(/^\/package\/([^/]+)$/)
+  if (m) return { view: 'package-detail', packageId: m[1], destinationId: null }
+  m = path.match(/^\/hotel\/([^/]+)$/)
+  if (m) return { view: 'hotel-detail', packageId: m[1], destinationId: null }
+  m = path.match(/^\/destination\/([^/]+)$/)
+  if (m) return { view: 'destination-detail', destinationId: m[1], packageId: null }
+  return { view: PATH_TO_VIEW[path] || 'landing', packageId: null, destinationId: null }
 }
 
 function getPathForView(view: string): string {
-  return VIEW_TO_PATH[view] || '/'
+  const path = VIEW_TO_PATH[view] || '/'
+  const state = useAppStore.getState()
+  return path
+    .replace(':id', state.selectedPackageId || ':id')
+    .replace(':slug', state.selectedDestinationId || ':slug')
 }
 
 function syncURL(view: string) {
@@ -94,66 +123,91 @@ function syncURL(view: string) {
   const path = getPathForView(view)
   const currentPath = window.location.pathname
   if (path !== currentPath) {
-    window.history.pushState({ view }, '', path)
+    const isListingTarget = LISTING_VIEWS.includes(view)
+    const currentViewFromPath = PATH_TO_VIEW[currentPath]
+    const isListingCurrent = currentViewFromPath ? LISTING_VIEWS.includes(currentViewFromPath) : false
+    if (isListingTarget && isListingCurrent) {
+      window.history.replaceState({ view }, '', path)
+    } else {
+      window.history.pushState({ view }, '', path)
+    }
   }
 }
 
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
-      currentView: getViewFromURL(),
+      currentView: 'landing',
       selectedDestinationId: null,
       selectedPackageId: null,
       user: null,
       isAuthenticated: false,
       isAdmin: false,
       sourceView: null,
+      navHistory: [],
       dashboardTab: null,
 
       navigate: (view: string, destId?: string | null, pkgId?: string | null) => {
         const state = get()
-        const prevSource = state.sourceView
-        let newSource = prevSource
+        const sameView =
+          view === state.currentView &&
+          (pkgId ?? null) === (state.selectedPackageId ?? null) &&
+          (destId ?? null) === (state.selectedDestinationId ?? null)
 
+        let newSource = state.sourceView
         if (DETAIL_VIEWS.includes(view)) {
           newSource = state.currentView
-        } else if (LISTING_VIEWS.includes(view) && state.currentView === 'landing') {
+        } else if (LISTING_VIEWS.includes(view)) {
           newSource = 'landing'
         } else if (view === 'landing') {
           newSource = null
         }
+
+        const navHistory = sameView
+          ? state.navHistory
+          : [
+              ...state.navHistory,
+              {
+                view: state.currentView,
+                packageId: state.selectedPackageId,
+                destinationId: state.selectedDestinationId,
+                sourceView: state.sourceView,
+              },
+            ].slice(-50)
 
         set({
           currentView: view,
           selectedDestinationId: destId ?? null,
           selectedPackageId: pkgId ?? null,
           sourceView: newSource,
+          navHistory,
         })
         syncURL(view)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
 
-      goBack: () => {
+      goBack: (fallbackView?: string | null) => {
         const state = get()
-        const source = state.sourceView
-
-        if (DETAIL_VIEWS.includes(state.currentView) && source) {
-          const backView = LISTING_VIEWS.includes(source) ? 'landing' : source
+        if (state.navHistory.length > 0) {
+          const prev = state.navHistory[state.navHistory.length - 1]
           set({
-            currentView: source,
-            selectedDestinationId: null,
-            selectedPackageId: null,
-            sourceView: backView === 'landing' ? null : backView,
+            currentView: prev.view,
+            selectedDestinationId: prev.destinationId,
+            selectedPackageId: prev.packageId,
+            sourceView: prev.sourceView,
+            navHistory: state.navHistory.slice(0, -1),
           })
-          syncURL(source)
+          syncURL(prev.view)
         } else {
+          const fb = fallbackView || 'landing'
           set({
-            currentView: 'landing',
+            currentView: fb,
             selectedDestinationId: null,
             selectedPackageId: null,
             sourceView: null,
+            navHistory: [],
           })
-          syncURL('landing')
+          syncURL(fb)
         }
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
@@ -179,6 +233,7 @@ export const useAppStore = create<AppStore>()(
           selectedDestinationId: null,
           selectedPackageId: null,
           sourceView: null,
+          navHistory: [],
           dashboardTab: null,
         })
         syncURL('landing')
@@ -186,6 +241,7 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'divine-travel-store',
+      skipHydration: true,
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
@@ -193,24 +249,26 @@ export const useAppStore = create<AppStore>()(
       }),
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as Partial<AppStore>) }
-        merged.currentView = getViewFromURL()
-        merged.selectedDestinationId = null
-        merged.selectedPackageId = null
+        const r = resolveFromURL()
+        merged.currentView = r.view
+        merged.selectedDestinationId = r.destinationId
+        merged.selectedPackageId = r.packageId
         return merged
       },
     }
   )
 )
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !(window as any).__divineStorePopstate) {
+  ;(window as any).__divineStorePopstate = true
   window.addEventListener('popstate', () => {
-    const view = getViewFromURL()
+    const r = resolveFromURL()
     const state = useAppStore.getState()
-    if (state.currentView !== view) {
+    if (state.currentView !== r.view || state.selectedPackageId !== r.packageId || state.selectedDestinationId !== r.destinationId) {
       useAppStore.setState({
-        currentView: view,
-        selectedDestinationId: null,
-        selectedPackageId: null,
+        currentView: r.view,
+        selectedDestinationId: r.destinationId,
+        selectedPackageId: r.packageId,
       })
     }
   })

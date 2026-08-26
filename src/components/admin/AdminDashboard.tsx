@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useAppStore } from '@/lib/store'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -34,11 +35,16 @@ import {
   ChevronRight,
   Building2,
   Bell,
+  RefreshCw,
+  Megaphone,
+  Sparkles,
+  HelpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
 import { AdminDestinations } from './AdminDestinations'
 import { AdminBookings } from './AdminBookings'
+import { AdminAllBookings } from './AdminAllBookings'
 import { AdminUsers } from './AdminUsers'
 import { AdminPackages } from './AdminPackages'
 import { AdminPackageBookings } from './AdminPackageBookings'
@@ -58,19 +64,24 @@ import { AdminCompanyPlans } from './AdminCompanyPlans'
 import { AdminHeroNotices } from './AdminHeroNotices'
 import { AdminBookingsPanel } from './AdminBookingsPanel'
 import { AdminBlogs } from './AdminBlogs'
+import { AdminFAQs } from './AdminFAQs'
+import { AdminCollaborations } from './AdminCollaborations'
+import { AdminVendors } from './AdminVendors'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices' | 'blogs'
+  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices' | 'blogs' | 'faqs' | 'collaborations' | 'vendors'
   | 'bkg-rafting' | 'bkg-trekking' | 'bkg-adventure' | 'bkg-bike-rental' | 'bkg-taxi'
   | 'bkg-domestic-tours' | 'bkg-spiritual-tours' | 'bkg-international-tours'
-  | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour'
+  | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour' | 'all-bookings'
 
 const mainTabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
+  { id: 'vendors' as AdminTab, label: 'Partners & Vendors', icon: Building2 },
+  { id: 'collaborations' as AdminTab, label: 'Creator Collabs', icon: Sparkles },
   { id: 'destinations' as AdminTab, label: 'Destinations', icon: MapPin },
   { id: 'users' as AdminTab, label: 'Users', icon: Users },
   { id: 'reviews' as AdminTab, label: 'Reviews', icon: Star },
@@ -83,8 +94,10 @@ const mainTabs = [
   { id: 'tour-destinations' as AdminTab, label: 'Tour Content', icon: Map },
   { id: 'availability' as AdminTab, label: 'Availability', icon: CalendarCheck },
   { id: 'company-plans' as AdminTab, label: 'Company Plans', icon: Building2 },
-  { id: 'hero-notices' as AdminTab, label: 'Hero Notices', icon: Bell },
+  { id: 'hero-notices' as AdminTab, label: 'Hero Notices & Deals', icon: Megaphone },
+  { id: 'faqs' as AdminTab, label: 'Home FAQs', icon: HelpCircle },
   { id: 'blogs' as AdminTab, label: 'Blog', icon: FileText },
+  { id: 'all-bookings' as AdminTab, label: 'All Bookings', icon: CalendarCheck },
 ]
 
 const bookingSubTabs = [
@@ -311,10 +324,21 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
 
 export function AdminDashboard() {
   const { user, logout, navigate } = useAppStore()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [bookingsExpanded, setBookingsExpanded] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await queryClient.invalidateQueries()
+    setTimeout(() => {
+      setIsRefreshing(false)
+      toast.success('Live data synced')
+    }, 400)
+  }
 
   const { data: countsData } = useQuery({
     queryKey: ['admin-booking-counts', user?.id],
@@ -334,11 +358,13 @@ export function AdminDashboard() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <AdminOverview />
+        return <AdminOverview setActiveTab={(t: string) => setActiveTab(t as AdminTab)} setBookingsExpanded={setBookingsExpanded} />
       case 'destinations':
         return <AdminDestinations />
       case 'bookings':
         return <AdminBookings />
+      case 'all-bookings':
+        return <AdminAllBookings />
       case 'packages':
         return <AdminPackages />
       case 'users':
@@ -367,8 +393,14 @@ export function AdminDashboard() {
         return <AdminCompanyPlans />
       case 'hero-notices':
         return <AdminHeroNotices />
+      case 'faqs':
+        return <AdminFAQs />
       case 'blogs':
         return <AdminBlogs />
+      case 'collaborations':
+        return <AdminCollaborations />
+      case 'vendors':
+        return <AdminVendors />
 
       // Booking sub-tabs
       case 'bkg-rafting':
@@ -499,15 +531,35 @@ export function AdminDashboard() {
       </AnimatePresence>
 
       <div className="flex-1 min-w-0 overflow-auto">
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-end gap-3 shadow-sm">
-          <AdminNotificationBell />
-          <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-            <div className="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white text-sm font-bold">
-              {user?.name?.charAt(0).toUpperCase() || 'A'}
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-medium text-brand-dark leading-tight">{user?.name}</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Admin</p>
+        <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 shadow-sm">
+          {/* Left: Live Auto-Sync Status */}
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-semibold text-gray-700 hidden sm:inline">Live Auto-Sync (10s)</span>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-2 py-1 rounded-lg text-gray-600 hover:text-brand-orange hover:bg-gray-100 transition-all flex items-center gap-1.5 text-xs font-medium border border-gray-200 shadow-2xs"
+              title="Refresh now"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-orange' : ''}`} />
+              <span className="hidden md:inline">{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <AdminNotificationBell onSelectTab={(t: string) => setActiveTab(t as AdminTab)} />
+            <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+              <div className="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white text-sm font-bold">
+                {user?.name?.charAt(0).toUpperCase() || 'A'}
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-medium text-brand-dark leading-tight">{user?.name}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Admin</p>
+              </div>
             </div>
           </div>
         </div>

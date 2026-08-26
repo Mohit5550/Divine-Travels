@@ -28,7 +28,6 @@ import {
   Map,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { useState } from 'react'
 
@@ -37,8 +36,10 @@ interface RoomType {
   price: number
   plan: string
   guests: number
-  bed: string
-  size: string
+  maxAdults?: number
+  maxChildren?: number
+  bed?: string
+  size?: string
 }
 
 interface MealPlan {
@@ -111,7 +112,7 @@ function getSubOptionFromName(name: string): string | undefined {
 }
 
 export function HotelDetail() {
-  const { selectedPackageId, navigate } = useAppStore()
+  const { selectedPackageId, navigate, goBack } = useAppStore()
   const [selectedImage, setSelectedImage] = useState(0)
   const [showAllImages, setShowAllImages] = useState(false)
 
@@ -170,7 +171,6 @@ export function HotelDetail() {
   if (isLoading || !pkg || !parsed) {
     return (
       <div className="min-h-screen bg-brand-cream">
-        <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="h-96 bg-muted rounded-2xl animate-pulse" />
         </div>
@@ -181,15 +181,10 @@ export function HotelDetail() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
-      <Navbar />
-
       {/* Hero */}
       <div className="relative h-64 sm:h-80 md:h-[420px] overflow-hidden">
         <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <button onClick={() => navigate('hotel-packages')} className="absolute top-4 left-4 z-10 flex items-center gap-1 text-white/80 hover:text-white text-sm bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
         <div className="absolute bottom-4 left-4 right-4 z-10">
           <div className="max-w-7xl mx-auto flex items-end justify-between">
             <div>
@@ -202,6 +197,13 @@ export function HotelDetail() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <button onClick={() => goBack()}
+          className="inline-flex items-center gap-1 text-brand-dark bg-white shadow-sm border border-gray-200 rounded-full px-3 py-1.5 text-sm hover:bg-brand-cream transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

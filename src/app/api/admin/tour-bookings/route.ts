@@ -20,23 +20,30 @@ export async function GET(request: NextRequest) {
     const paginate = searchParams.has('page')
     const skip = (page - 1) * limit
 
-    const [bookings, total] = await Promise.all([
-      db.tourBooking.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        ...(paginate ? { take: limit, skip } : {}),
-      }),
-      paginate ? db.tourBooking.count({ where }) : Promise.resolve(0),
-    ])
+    const isTaxiBooking = (b: { adminNotes?: string | null }) => {
+      try {
+        const notes = JSON.parse(b.adminNotes || '{}')
+        return notes?.type === 'taxi-booking'
+      } catch {
+        return false
+      }
+    }
 
-    const parsed = bookings.map((b) => {
+    const all = await db.tourBooking.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const filtered = all.filter((b) => !isTaxiBooking(b))
+
+    const parsed = filtered.map((b) => {
       let programs: string[] = []
       if (Array.isArray(b.selectedPrograms)) {
         programs = b.selectedPrograms
       } else if (typeof b.selectedPrograms === 'string') {
         try {
           const parsed = JSON.parse(b.selectedPrograms)
-          programs = Array.isArray(parsed) ? parsed : [parsed]
+          programs = Array.isArray(parsed) ? parsed : typeof parsed === 'string' ? [parsed] : []
         } catch {
           programs = b.selectedPrograms ? [b.selectedPrograms] : []
         }
@@ -45,7 +52,9 @@ export async function GET(request: NextRequest) {
     })
 
     if (paginate) {
-      return NextResponse.json({ data: parsed, total, page, totalPages: Math.ceil(total / limit) })
+      const total = parsed.length
+      const data = parsed.slice(skip, skip + limit)
+      return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
     }
     return NextResponse.json(parsed)
   } catch (error) {

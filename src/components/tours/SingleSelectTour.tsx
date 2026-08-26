@@ -9,6 +9,8 @@ import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
+import { useAppStore } from '@/lib/store'
+import { LoginModal } from '@/components/landing/LoginModal'
 
 interface TourHighlight {
   icon: string
@@ -79,6 +81,8 @@ export function SingleSelectTour({
   }
 
   const selectedTour = selectedIdx != null ? tourData[selectedIdx] : null
+  const { user, isAuthenticated } = useAppStore()
+  const [loginOpen, setLoginOpen] = useState(false)
 
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -88,6 +92,13 @@ export function SingleSelectTour({
 
     btn.disabled = true
     btn.textContent = 'Sending...'
+
+    if (!isAuthenticated) {
+      btn.disabled = false
+      btn.textContent = 'Confirm Booking'
+      setLoginOpen(true)
+      return
+    }
 
     try {
       const payload = {
@@ -109,7 +120,7 @@ export function SingleSelectTour({
 
       const res = await fetch('/api/tour-bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
         body: JSON.stringify(payload),
       })
 
@@ -477,6 +488,7 @@ export function SingleSelectTour({
       </div>
 
       <Footer />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, ChevronRight } from 'lucide-react'
 
 const companyMap: Record<string, string> = {
   'indias-highest-bungy': 'Himalayan Bungy',
@@ -41,8 +41,9 @@ export function AdventureGrid() {
     queryKey: ['adventure-packages-home'],
     queryFn: async () => {
       const res = await fetch('/api/packages?category=adventure')
+      if (!res.ok) return []
       const data = await res.json()
-      return data.slice(0, 20)
+      return Array.isArray(data) ? data.slice(0, 20) : []
     },
     staleTime: 60000,
   })
@@ -53,6 +54,13 @@ export function AdventureGrid() {
     }
   }
 
+  const handleBookNow = (e: React.MouseEvent, pkg: any) => {
+    e.stopPropagation()
+    if (pkg.id) {
+      navigate('package-booking', null, pkg.id)
+    }
+  }
+
   const displayItems = adventurePkgs.map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -60,6 +68,7 @@ export function AdventureGrid() {
     company: companyMap[p.slug] || '',
     image: p.image,
     price: p.price,
+    originalPrice: p.originalPrice,
     location: p.location,
   }))
 
@@ -100,34 +109,58 @@ export function AdventureGrid() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.03 }}
                 whileHover={{ y: -4 }}
-                className="cursor-pointer group"
-                onClick={() => handleCardClick(item)}
+                className="cursor-pointer group rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100"
               >
-                <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                <div className="relative aspect-[16/10] overflow-hidden" onClick={() => handleCardClick(item)}>
                   <img
                     src={item.image}
                     alt={item.name}
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                    <h3 className="text-white font-bold text-sm sm:text-base leading-tight">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  {item.price && (
+                    <div className="absolute top-3 right-3 bg-brand-orange text-white rounded-lg px-2.5 py-1 text-xs font-bold shadow-lg">
+                      ₹{item.price}
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <h3 className="text-white font-bold text-sm sm:text-base leading-tight drop-shadow">
                       {item.name}
                     </h3>
                     {item.company && (
-                      <span className="text-red-400 text-[11px] sm:text-xs font-semibold">
+                      <span className="text-white/80 text-[11px] sm:text-xs font-medium drop-shadow">
                         {item.company}
                       </span>
                     )}
-                    {item.location && (
-                      <p className="text-white/50 text-[10px] mt-0.5">{item.location}</p>
-                    )}
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="bg-white/90 text-brand-dark rounded-full px-5 py-2 text-xs sm:text-sm font-semibold shadow-lg">
-                      View Details
-                    </span>
+                </div>
+                <div className="p-3 sm:p-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="text-gray-400 line-through text-sm">₹{item.originalPrice}</span>
+                    )}
+                    <span className="text-lg font-bold text-brand-dark">₹{item.price}</span>
+                  </div>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <p className="text-green-600 text-xs font-medium mb-0.5">Save ₹{item.originalPrice - item.price}</p>
+                  )}
+                  <p className="text-gray-400 text-xs mb-3">/ Person</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCardClick(item) }}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-brand-orange border border-brand-orange/30 rounded-xl py-2 hover:bg-brand-orange/5 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Details
+                    </button>
+                    <button
+                      onClick={(e) => handleBookNow(e, item)}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-brand-teal rounded-xl py-2 hover:bg-brand-teal/90 transition-colors"
+                    >
+                      Book
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </motion.div>

@@ -55,6 +55,9 @@ export function Footer() {
                   {[
                     { label: 'Home', action: () => navigate('landing') },
                     { label: 'Destinations', action: handleDestClick },
+                    { label: '🧭 Local Experiences', href: '/experiences' },
+                    { label: '🤝 Partner / List Property', action: () => navigate('partner') },
+                    { label: '✨ Creator Program', action: () => navigate('collaborate') },
                     { label: 'About Us', action: () => navigate('about-us') },
                     { label: 'Blog', action: () => navigate('blog-archive') },
                     { label: 'Contact Us', action: () => navigate('contact') },
@@ -63,16 +66,26 @@ export function Footer() {
                     { label: 'Refund Policy', action: () => navigate('refund-policy') },
                     { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
                   ].map((link) => (
-                    <button
-                      key={link.label}
-                      onClick={link.action}
-                      className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                    >
-                      {link.label}
-                      {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
-                        <ArrowUpRight className="w-3 h-3" />
-                      )}
-                    </button>
+                    link.href ? (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <button
+                        key={link.label}
+                        onClick={link.action}
+                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                      >
+                        {link.label}
+                        {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
+                          <ArrowUpRight className="w-3 h-3" />
+                        )}
+                      </button>
+                    )
                   ))}
                 </div>
               </div>
@@ -108,6 +121,9 @@ export function Footer() {
               {[
                 { label: 'Home', action: () => navigate('landing') },
                 { label: 'Destinations', action: handleDestClick },
+                { label: '🧭 Local Experiences', href: '/experiences' },
+                { label: '🤝 Partner / List Property', action: () => navigate('partner') },
+                { label: '✨ Creator Program', action: () => navigate('collaborate') },
                 { label: 'About Us', action: () => navigate('about-us') },
                 { label: 'Contact Us', action: () => navigate('contact') },
                 { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
@@ -115,16 +131,26 @@ export function Footer() {
                 { label: 'Refund Policy', action: () => navigate('refund-policy') },
                 { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
               ].map((link) => (
-                <button
-                  key={link.label}
-                  onClick={link.action}
-                  className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                >
-                  {link.label}
-                  {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
-                    <ArrowUpRight className="w-3 h-3" />
-                  )}
-                </button>
+                link.href ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <button
+                    key={link.label}
+                    onClick={link.action}
+                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                  >
+                    {link.label}
+                    {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
+                      <ArrowUpRight className="w-3 h-3" />
+                    )}
+                  </button>
+                )
               ))}
             </div>
           </div>

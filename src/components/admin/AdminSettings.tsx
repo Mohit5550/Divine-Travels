@@ -19,6 +19,7 @@ const defaultSettings: Record<string, string> = {
   youtube: 'https://youtube.com/@divinetravels',
   siteName: 'Divine Travels',
   tagline: 'Explore the Divine with Us',
+  seasonAdvisory: '☀️ Ganga Rafting Season is OPEN in Rishikesh · Clear Weather 24°C · Advance Bookings Active 🟢',
 }
 
 export function AdminSettings() {
@@ -52,17 +53,19 @@ export function AdminSettings() {
       if (!res.ok) { toast.error('Failed to save'); return }
       toast.success('Settings saved!')
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] })
+      queryClient.invalidateQueries({ queryKey: ['public-settings'] })
     } catch { toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 
   const fields = [
-    { key: 'siteName', label: 'Site Name', type: 'text' },
-    { key: 'tagline', label: 'Tagline', type: 'text' },
-    { key: 'whatsapp', label: 'WhatsApp Number', type: 'text' },
-    { key: 'phone', label: 'Phone Number', type: 'text' },
-    { key: 'email', label: 'Email Address', type: 'email' },
-    { key: 'address', label: 'Company Address', type: 'textarea' },
+    { key: 'siteName', label: 'Site Name', type: 'text', help: 'Brand name displayed across the website.' },
+    { key: 'tagline', label: 'Tagline', type: 'text', help: 'Short slogan under site name.' },
+    { key: 'seasonAdvisory', label: 'Live Weather & Season Advisory (Top Live Bar)', type: 'textarea', help: 'This text shows in real-time at the very top of the website with the live green indicator (e.g. Ganga Rafting Season Open, Weather 24°C, Char Dham 2026 Active).' },
+    { key: 'whatsapp', label: 'WhatsApp Number (with Country Code)', type: 'text', help: 'Used for floating WhatsApp widget and customer inquiries (e.g. +916396919007).' },
+    { key: 'phone', label: 'Public Phone / Helpline', type: 'text', help: 'Displayed on top bar and footer for direct calling.' },
+    { key: 'email', label: 'Contact Email Address', type: 'email', help: 'Official inquiry email.' },
+    { key: 'address', label: 'Company Office Address', type: 'textarea', help: 'Physical address in Rishikesh/Uttarakhand.' },
     { key: 'facebook', label: 'Facebook URL', type: 'text' },
     { key: 'instagram', label: 'Instagram URL', type: 'text' },
     { key: 'youtube', label: 'YouTube URL', type: 'text' },
@@ -70,27 +73,31 @@ export function AdminSettings() {
 
   return (
     <div>
-      <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark mb-6">Site Settings</h2>
+      <div className="mb-6">
+        <h2 className="font-bold text-2xl sm:text-3xl text-brand-dark tracking-tight">Site & Live Updates Settings</h2>
+        <p className="text-sm text-gray-500 mt-1">Control website brand details, contact numbers, and top live advisory banner.</p>
+      </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-3xl">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Loading settings...</div>
         ) : (
           <div className="space-y-5">
-            {fields.map(({ key, label, type }) => (
-              <div key={key}>
-                <Label htmlFor={key}>{label}</Label>
+            {fields.map(({ key, label, type, help }) => (
+              <div key={key} className="space-y-1.5">
+                <Label htmlFor={key} className="font-semibold text-brand-dark text-sm">{label}</Label>
+                {help && <p className="text-[11px] text-gray-400 leading-normal">{help}</p>}
                 {type === 'textarea' ? (
-                  <Textarea id={key} value={settings[key] || ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} rows={3} />
+                  <Textarea id={key} value={settings[key] || ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} rows={2} className="rounded-xl" />
                 ) : (
-                  <Input id={key} type={type} value={settings[key] || ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />
+                  <Input id={key} type={type} value={settings[key] || ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} className="rounded-xl" />
                 )}
               </div>
             ))}
-            <div className="pt-4">
-              <Button onClick={handleSave} disabled={saving} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <Button onClick={handleSave} disabled={saving} className="bg-brand-orange hover:bg-brand-orange/90 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md">
                 <Save className="w-4 h-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Settings'}
+                {saving ? 'Saving...' : 'Save All Changes'}
               </Button>
             </div>
           </div>

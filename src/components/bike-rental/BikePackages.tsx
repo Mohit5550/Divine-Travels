@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { PackageWishlistOverlay } from '@/components/cart/PackageWishlistOverlay'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -19,6 +20,14 @@ import {
   Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
@@ -135,12 +144,33 @@ export function BikePackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://drive.google.com/thumbnail?id=13F3RMV-8fHzFO5h0Z6aMOucwzKJ6Faaj&sz=w1600"
+            src="/bike-rental-hero.jpg"
             alt="Bike Rental in Rishikesh"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
+
+        {/* Breadcrumb over hero image */}
+        <Breadcrumb className="absolute top-4 left-4 sm:top-6 sm:left-8 z-20">
+          <BreadcrumbList className="text-white/80">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <button
+                  type="button"
+                  onClick={() => navigate('landing')}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  Home
+                </button>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="text-white/50 [&>svg]:text-white/50" />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-white font-medium">Bike Rental in Rishikesh</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="absolute top-8 left-8 w-32 h-32 border border-white/10 rounded-full pointer-events-none" />
         <div className="absolute bottom-20 right-12 w-48 h-48 border border-white/5 rounded-full pointer-events-none" />
@@ -219,6 +249,13 @@ export function BikePackages() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+            {packages.length === 0 && (
+              <div className="text-center py-16">
+                <Bike className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">No bike rental options available yet.</p>
+                <p className="text-sm text-muted-foreground mt-1">Check back soon for updated bike options.</p>
+              </div>
+            )}
             {packages.map((pkg, index) => {
               const TargetIcon = getTargetIcon(pkg.subtitle)
               const isPopular = pkg.badge === 'Popular'
@@ -251,6 +288,7 @@ export function BikePackages() {
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <PackageWishlistOverlay packageId={pkg.id} />
 
                       {/* Badge */}
                       <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>

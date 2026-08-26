@@ -9,17 +9,19 @@ import {
   Clock,
   FileText,
   Loader2,
-  CheckCircle2,
-  XCircle,
   ChevronDown,
   ChevronUp,
   Eye,
   EyeOff,
   Users,
+  Check,
+  XCircle,
+  X,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Pagination } from '@/components/ui/Pagination'
+import { BookingCardActions } from '../booking/BookingCardActions'
+import { useAppStore } from '@/lib/store'
 
 interface TaxiBooking {
   id: string
@@ -33,20 +35,25 @@ interface TaxiBooking {
   status: string
   adminNotes: string | null
   createdAt: string
+  negotiatedPrice: number | null
+  priceLocked: boolean
 }
 
 export function AdminTaxiBookings() {
   const [bookings, setBookings] = useState<TaxiBooking[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const { user } = useAppStore()
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/taxi-bookings?page=${page}&limit=20`)
+      const res = await fetch(`/api/taxi-bookings?all=true&page=${page}&limit=20`)
       if (res.ok) {
         const data = await res.json()
         if (Array.isArray(data)) {
@@ -68,26 +75,61 @@ export function AdminTaxiBookings() {
     fetchBookings()
   }, [fetchBookings])
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdatingId(id)
+  const acceptUserAmount = useCallback(async (bookingId: string) => {
+    setAcceptingId(bookingId)
     try {
-      const res = await fetch(`/api/taxi-bookings/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+      const res = await fetch(`/api/booking-flow/tour/${bookingId}/accept-user-amount`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
       })
       if (res.ok) {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, status } : b))
-        )
-        toast.success(`Booking ${status}`)
+        toast.success('User amount accepted — booking confirmed')
+        fetchBookings()
       } else {
-        toast.error('Failed to update status')
+        const data = await res.json()
+        toast.error(data.error || 'Failed to accept amount')
       }
     } catch {
-      toast.error('Failed to update status')
+      toast.error('Connection error')
+    } finally {
+      setAcceptingId(null)
+    }
+  }, [user?.id, fetchBookings])
+
+  const updateStatus = useCallback(async (id: string, status: string) => {
+    setUpdatingId(id)
+    try {
+      const res = await fetch('/api/admin/bookings/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        body: JSON.stringify({ bookingId: id, type: 'taxi', status }),
+      })
+      if (res.ok) {
+        toast.success(`Taxi status updated to ${status.replace('_', ' ').toUpperCase()}`)
+        fetchBookings()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Failed to update')
+      }
+    } catch {
+      toast.error('Connection error')
     } finally {
       setUpdatingId(null)
+    }
+  }, [user?.id, fetchBookings])
+
+  const filteredBookings = statusFilter === 'all' ? bookings : bookings.filter((b) => b.status === statusFilter)
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full"><Clock className="w-3 h-3" />Pending</span>
+      case 'confirmed': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-green-100 text-green-700 px-2.5 py-1 rounded-full"><Check className="w-3 h-3" />Confirmed</span>
+      case 'ready': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full">Driver Assigned</span>
+      case 'in_progress': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-bold">Ride In-Progress</span>
+      case 'rejected':
+      case 'cancelled': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-red-100 text-red-700 px-2.5 py-1 rounded-full"><X className="w-3 h-3" />Cancelled</span>
+      case 'completed': return <span className="inline-flex items-center gap-1 text-xs font-semibold bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full"><Check className="w-3 h-3" />Completed</span>
+      default: return <span className="text-xs font-semibold bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">{status}</span>
     }
   }
 
@@ -111,9 +153,13 @@ export function AdminTaxiBookings() {
 
   const statusColors: Record<string, string> = {
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
+    confirmed: 'bg-green-100 text-green-700 border-green-200',
+    ready: 'bg-orange-100 text-orange-700 border-orange-200',
+    in_progress: 'bg-blue-100 text-blue-700 border-blue-200',
     approved: 'bg-green-100 text-green-700 border-green-200',
     rejected: 'bg-red-100 text-red-700 border-red-200',
-    completed: 'bg-blue-100 text-blue-700 border-blue-200',
+    cancelled: 'bg-red-100 text-red-700 border-red-200',
+    completed: 'bg-purple-100 text-purple-700 border-purple-200',
   }
 
   if (loading) {
@@ -130,19 +176,33 @@ export function AdminTaxiBookings() {
         <div>
           <h2 className="font-serif text-2xl font-bold text-brand-dark">Taxi Bookings</h2>
           <p className="text-sm text-gray-500 mt-1">
-            {bookings.length} total booking{bookings.length !== 1 ? 's' : ''}
+            {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''} {statusFilter !== 'all' ? `(${statusFilter})` : ''}
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filter:</span>
+          {['all', 'pending', 'confirmed', 'ready', 'in_progress', 'completed', 'cancelled'].map((s) => (
+            <button
+              key={s}
+              onClick={() => { setStatusFilter(s); setPage(1) }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                statusFilter === s ? 'bg-brand-orange text-white' : 'bg-white text-muted-foreground border border-border hover:bg-brand-cream'
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ')}
+            </button>
+          ))}
         </div>
       </div>
 
-      {bookings.length === 0 ? (
+      {filteredBookings.length === 0 ? (
         <div className="text-center py-20">
           <Car className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No taxi bookings yet</p>
+          <p className="text-gray-500">No taxi bookings {statusFilter !== 'all' ? `with status "${statusFilter}"` : 'yet'}</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {bookings.map((booking) => {
+          {filteredBookings.map((booking) => {
             const details = parseDetails(booking)
             const isExpanded = expandedId === booking.id
 
@@ -172,9 +232,26 @@ export function AdminTaxiBookings() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[booking.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {booking.status}
-                      </span>
+                      <select
+                        value={booking.status || 'pending'}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => updateStatus(booking.id, e.target.value)}
+                        className={`text-xs font-semibold rounded-lg px-2.5 py-1 border cursor-pointer transition-colors focus:ring-2 focus:ring-brand-orange/20 outline-none ${
+                          booking.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
+                          booking.status === 'ready' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                          booking.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold' :
+                          booking.status === 'completed' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                          booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        <option value="pending">🟡 Pending</option>
+                        <option value="confirmed">🟢 Confirmed</option>
+                        <option value="ready">🟠 Driver Assigned</option>
+                        <option value="in_progress">🔵 In-Progress</option>
+                        <option value="completed">🟣 Completed</option>
+                        <option value="cancelled">🔴 Cancelled</option>
+                      </select>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </div>
                   </div>
@@ -272,44 +349,62 @@ export function AdminTaxiBookings() {
                           Submitted: {new Date(booking.createdAt).toLocaleString('en-IN')}
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 pt-2 border-t border-gray-100">
-                          {booking.status !== 'approved' && (
-                            <Button
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); updateStatus(booking.id, 'approved') }}
-                              disabled={updatingId === booking.id}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                        {/* Accept User's Proposed Amount */}
+                        {details.bookingAmount && !booking.negotiatedPrice && !booking.priceLocked && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-green-800">User proposed amount</p>
+                              <p className="text-lg font-bold text-green-700">₹{Number(details.bookingAmount).toLocaleString('en-IN')}</p>
+                            </div>
+                            <button
+                              onClick={() => acceptUserAmount(booking.id)}
+                              disabled={acceptingId === booking.id}
+                              className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                              Approve
-                            </Button>
-                          )}
-                          {booking.status !== 'rejected' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => { e.stopPropagation(); updateStatus(booking.id, 'rejected') }}
-                              disabled={updatingId === booking.id}
-                              className="border-red-200 text-red-600 hover:bg-red-50"
-                            >
-                              <XCircle className="w-3.5 h-3.5 mr-1" />
-                              Reject
-                            </Button>
-                          )}
-                          {booking.status === 'approved' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => { e.stopPropagation(); updateStatus(booking.id, 'completed') }}
-                              disabled={updatingId === booking.id}
-                              className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                              Mark Completed
-                            </Button>
-                          )}
+                              {acceptingId === booking.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Check className="w-4 h-4" />
+                              )}
+                              Accept ₹{Number(details.bookingAmount).toLocaleString('en-IN')}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Show agreed price if already locked */}
+                        {booking.negotiatedPrice != null && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="text-sm font-medium text-blue-800">Agreed price</p>
+                            <p className="text-lg font-bold text-blue-700">₹{booking.negotiatedPrice.toLocaleString('en-IN')}</p>
+                          </div>
+                        )}
+
+                        {/* Negotiation & Payment (admin sends price → user accepts → advance pay) */}
+                        <div className="pt-3 border-t border-gray-100">
+                          <BookingCardActions type="tour" id={booking.id} isAdmin={true} userId={user?.id} />
                         </div>
+
+                        {/* Reject / Cancel */}
+                        {booking.status === 'pending' && (
+                          <div className="pt-3 border-t border-gray-100">
+                            <button
+                              onClick={() => {
+                                if (confirm('Reject this taxi booking? This cannot be undone.')) {
+                                  updateStatus(booking.id, 'rejected')
+                                }
+                              }}
+                              disabled={updatingId === booking.id}
+                              className="flex items-center gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                              {updatingId === booking.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <XCircle className="w-4 h-4" />
+                              )}
+                              Reject Booking
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}

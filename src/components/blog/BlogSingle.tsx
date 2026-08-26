@@ -31,7 +31,7 @@ interface BlogCategory {
 }
 
 export function BlogSingle() {
-  const { navigate, selectedPackageId: slug } = useAppStore()
+  const { navigate, goBack, selectedPackageId: slug } = useAppStore()
 
   const { data: post, isLoading } = useQuery({
     queryKey: ['blog', slug],
@@ -93,7 +93,7 @@ export function BlogSingle() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
             <h2 className="font-serif text-2xl text-brand-dark mb-3">Article not found</h2>
             <p className="text-muted-foreground mb-6">The article you're looking for doesn't exist or has been removed.</p>
-            <button onClick={() => navigate('blog-archive')} className="text-brand-orange hover:underline">← Back to Blog</button>
+            <button onClick={() => goBack('blog-archive')} className="text-brand-orange hover:underline">← Back to Blog</button>
           </div>
         </div>
         <Footer />
@@ -126,7 +126,7 @@ export function BlogSingle() {
           {/* Main Content */}
           <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 min-w-0">
             <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 lg:p-10">
-              <button onClick={() => navigate('blog-archive')} className="flex items-center gap-1 text-sm text-brand-orange hover:underline mb-6">
+              <button onClick={() => goBack('blog-archive')} className="flex items-center gap-1 text-sm text-brand-orange hover:underline mb-6">
                 <ArrowLeft className="w-4 h-4" /> Back to Blog
               </button>
 
@@ -151,8 +151,8 @@ export function BlogSingle() {
                 <div className="mt-8 pt-6 border-t border-gray-100">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Tag className="w-4 h-4 text-gray-400" />
-                    {tags.map(tag => (
-                      <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{tag}</span>
+                    {tags.map((tag, index) => (
+                      <span key={`${tag}-${index}`} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{tag}</span>
                     ))}
                   </div>
                 </div>

@@ -11,10 +11,15 @@ export async function GET(request: NextRequest) {
     const paginate = searchParams.has('page')
     const skip = (page - 1) * limit
 
+    const userId = request.headers.get('x-user-id')
     const where: any = {
       adminNotes: { contains: 'taxi-booking' },
     }
-    if (!all) {
+    if (userId) {
+      // Show the user's own inquiries plus any unowned inquiries (created before login)
+      // so they remain visible and can be claimed by accepting an offer.
+      where.OR = [{ userId }, { userId: null }]
+    } else if (!all) {
       where.status = 'pending'
     }
 
@@ -58,8 +63,11 @@ export async function POST(request: NextRequest) {
 
     const parsed = JSON.parse(selectedPrograms || '{}')
 
+    const userId = request.headers.get('x-user-id') || null
+
     const booking = await db.tourBooking.create({
       data: {
+        userId,
         destination,
         dayLabel: null,
         packageType,

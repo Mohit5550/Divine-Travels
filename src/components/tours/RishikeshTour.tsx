@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { DayBasedTour } from './DayBasedTour'
 
 const defaultPrograms = {
-  1: { id: 1, title: 'Kunjapuri Sunrise', img: 'https://sun-b2b.s3.us-east-2.amazonaws.com/tour/Sunrise-view-from-kunjapuri-temple.jpg', itinerary: ['Kunjapuri Viewpoint', 'Janki Jhula', 'Paramarth Niketan', 'Geetabhawan', 'Ram Jhula Market', 'Neer Waterfall', 'Triveni Ghat Aarti'] },
+  1: { id: 1, title: 'Kunjapuri Sunrise', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=800', itinerary: ['Kunjapuri Viewpoint', 'Janki Jhula', 'Paramarth Niketan', 'Geetabhawan', 'Ram Jhula Market', 'Neer Waterfall', 'Triveni Ghat Aarti'] },
   2: { id: 2, title: 'Neelkhanth & Waterfalls', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/d1/79/1a/caption.jpg?w=1200&h=-1&s=1', itinerary: ['Neelkhanth Mahadev Temple', 'Kali Kund Waterfall', 'Patna Waterfall', 'Vasisth Cave', 'Shivpuri Beach'] },
   3: { id: 3, title: 'Local Tour', img: 'https://www.chardhamtours.in/gallery/cityImage/1462337031_veer.jpg', itinerary: ['Bharat Mata Mandir', 'Triveni Ghat', 'Veer Bhadr Temple', 'Hanuman Temple', 'Laxman Jhula', 'Ram Jhula Aarti'] },
   4: { id: 4, title: 'Devprayag', img: 'https://t.eucdn.in/tourism/lg/devprayag-9286235.webp', itinerary: ['Sangam (Alaknanda & Bhagirathi)', 'Raghunathji Temple', 'Vasisth Cave'] },

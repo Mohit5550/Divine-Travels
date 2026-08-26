@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin, notifyUser } from '@/lib/notify'
+import { checkPaymentStatus } from '@/lib/kwikupi'
 
 // GET /api/package-bookings/[id] - Get booking details
 export async function GET(
@@ -49,8 +50,19 @@ export async function PUT(
 
     // If updating status, validate it
     if (status) {
-      if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
-        return NextResponse.json({ error: 'Valid status is required (pending, confirmed, cancelled, completed)' }, { status: 400 })
+      const VALID_STATUSES = [
+        'pending',
+        'confirmed',
+        'approved',
+        'ready',
+        'assigned',
+        'in_progress',
+        'completed',
+        'cancelled',
+        'rejected',
+      ]
+      if (!VALID_STATUSES.includes(status)) {
+        return NextResponse.json({ error: 'Valid status is required' }, { status: 400 })
       }
 
       // Only admin can confirm/cancel/complete bookings
@@ -62,6 +74,33 @@ export async function PUT(
         if (!existing || existing.userId !== userId) {
           return NextResponse.json({ error: 'You can only cancel your own bookings' }, { status: 403 })
         }
+      }
+    }
+
+    // Server-side payment verification: a non-admin marking a booking as paid
+    // must prove the payment actually succeeded at the gateway. This prevents a
+    // user from marking their own booking "completed" without ever paying.
+    if (paymentStatus === 'completed' && user?.role !== 'admin') {
+      if (!paymentId) {
+        return NextResponse.json(
+          { error: 'Payment reference is required to mark this booking as paid' },
+          { status: 400 }
+        )
+      }
+      try {
+        const gw = await checkPaymentStatus(String(paymentId))
+        const paidStatuses = ['TXN_SUCCESS', 'SUCCESS', 'COMPLETED', 'CAPTURED']
+        if (!paidStatuses.includes((gw.status || '').toUpperCase())) {
+          return NextResponse.json(
+            { error: 'Payment has not been completed at the gateway', paymentStatus: gw.status },
+            { status: 402 }
+          )
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'Could not verify payment with the gateway' },
+          { status: 502 }
+        )
       }
     }
 

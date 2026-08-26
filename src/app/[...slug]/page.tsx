@@ -1,0 +1,258 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useAppStore } from '@/lib/store'
+import { useCart } from '@/lib/cart'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Navbar } from '@/components/landing/Navbar'
+import { ActivityBar } from '@/components/landing/ActivityBar'
+import { HeroBanner } from '@/components/landing/HeroBanner'
+import { DestinationCarousel } from '@/components/landing/DestinationCarousel'
+import { TopDestinations } from '@/components/landing/TopDestinations'
+import { CompanySection } from '@/components/landing/CompanySection'
+import { StaySection } from '@/components/landing/StaySection'
+import { CTABanner } from '@/components/landing/CTABanner'
+import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
+import { PartnersSection } from '@/components/landing/PartnersSection'
+import { SocialCTASection } from '@/components/landing/SocialCTASection'
+import { Footer } from '@/components/landing/Footer'
+import { UserDashboard } from '@/components/user/UserDashboard'
+import { AdminDashboard } from '@/components/admin/AdminDashboard'
+import { DestinationDetail } from '@/components/destination/DestinationDetail'
+import { BookingSuccess } from '@/components/booking/BookingSuccess'
+import { RaftingPackages } from '@/components/rafting/RaftingPackages'
+import { BikePackages } from '@/components/bike-rental/BikePackages'
+import { TaxiPackages } from '@/components/taxi-booking/TaxiPackages'
+import { TaxiBookingForm } from '@/components/taxi-booking/TaxiBookingForm'
+import { TrekkingPackages } from '@/components/trekking/TrekkingPackages'
+import { AdventurePackages } from '@/components/adventure/AdventurePackages'
+import { DomesticPackages } from '@/components/domestic/DomesticPackages'
+import { SpiritualPackages } from '@/components/spiritual/SpiritualPackages'
+import { InternationalPackages } from '@/components/international/InternationalPackages'
+import { GalleryPage } from '@/components/gallery/GalleryPage'
+import { RishikeshTour } from '@/components/tours/RishikeshTour'
+import { HaridwarTour } from '@/components/tours/HaridwarTour'
+import { MussoorieTour } from '@/components/tours/MussoorieTour'
+import { NainitalTour } from '@/components/tours/NainitalTour'
+import { HillStationsTour } from '@/components/tours/HillStationsTour'
+import { CharDhamTour } from '@/components/tours/CharDhamTour'
+import { HotelPackages } from '@/components/stay/HotelPackages'
+import { CampingPackages } from '@/components/stay/CampingPackages'
+import { PackageDetail } from '@/components/package/PackageDetail'
+import { PackageBookingForm } from '@/components/package/PackageBookingForm'
+import { AboutUs } from '@/components/pages/AboutUs'
+import { Contact } from '@/components/pages/Contact'
+import { BlogSection } from '@/components/landing/BlogSection'
+import { CompanyDetail } from '@/components/company/CompanyDetail'
+import { PrivacyPolicy } from '@/components/pages/PrivacyPolicy'
+import { BlogArchive } from '@/components/blog/BlogArchive'
+import { BlogSingle } from '@/components/blog/BlogSingle'
+import { HotelDetail } from '@/components/hotel/HotelDetail'
+import { TermsOfService } from '@/components/pages/TermsOfService'
+import { RefundPolicy } from '@/components/pages/RefundPolicy'
+import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
+import { WhatsAppWidget } from '@/components/ui/WhatsAppWidget'
+import { HeroSearch } from '@/components/landing/HeroSearch'
+import { TrustGuarantee } from '@/components/landing/TrustGuarantee'
+import { FAQSection } from '@/components/landing/FAQSection'
+
+const selfContainedViews = [
+  'admin-dashboard',
+  'company-detail',
+  'rafting-packages',
+  'bike-rental',
+  'taxi-booking',
+  'taxi-booking-form',
+  'trekking',
+  'adventure',
+  'domestic-tours',
+  'spiritual-tours',
+  'international-tours',
+  'gallery',
+  'rishikesh-tour',
+  'haridwar-tour',
+  'mussoorie-tour',
+  'nainital-tour',
+  'hill-stations-tour',
+  'char-dham-tour',
+  'hotel-packages',
+  'camping-packages',
+  'package-detail',
+  'about-us',
+  'contact',
+  'privacy-policy',
+  'terms-of-service',
+  'refund-policy',
+  'cancellation-policy',
+  'blog-archive',
+  'blog-single',
+]
+
+export default function Home() {
+  const { currentView, navigate } = useAppStore()
+  const [renderError, setRenderError] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    useAppStore.persist.rehydrate()
+    useCart.persist.rehydrate()
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (renderError) {
+      localStorage.removeItem('divine-travel-store')
+      navigate('landing')
+      setRenderError(false)
+    }
+  }, [renderError, navigate])
+
+  useEffect(() => {
+    if (!hydrated) return
+    const redirect = localStorage.getItem('dt_redirect')
+    if (redirect) {
+      localStorage.removeItem('dt_redirect')
+      navigate(redirect)
+    }
+  }, [navigate, hydrated])
+
+  const renderView = useCallback(() => {
+    try {
+      switch (currentView) {
+        case 'user-dashboard':
+          return <UserDashboard />
+        case 'admin-dashboard':
+          return <AdminDashboard />
+        case 'destination-detail':
+          return <DestinationDetail />
+        case 'booking-success':
+          return <BookingSuccess />
+        case 'rafting-packages':
+          return <RaftingPackages />
+        case 'bike-rental':
+          return <BikePackages />
+        case 'taxi-booking':
+          return <TaxiPackages />
+        case 'taxi-booking-form':
+          return <TaxiBookingForm />
+        case 'trekking':
+          return <TrekkingPackages />
+        case 'adventure':
+          return <AdventurePackages />
+        case 'domestic-tours':
+          return <DomesticPackages />
+        case 'spiritual-tours':
+          return <SpiritualPackages />
+        case 'international-tours':
+          return <InternationalPackages />
+        case 'gallery':
+          return <GalleryPage />
+        case 'rishikesh-tour':
+          return <RishikeshTour />
+        case 'haridwar-tour':
+          return <HaridwarTour />
+        case 'mussoorie-tour':
+          return <MussoorieTour />
+        case 'nainital-tour':
+          return <NainitalTour />
+        case 'hill-stations-tour':
+          return <HillStationsTour />
+        case 'char-dham-tour':
+          return <CharDhamTour />
+        case 'hotel-packages':
+          return <HotelPackages />
+        case 'camping-packages':
+          return <CampingPackages />
+        case 'package-detail':
+          return <PackageDetail />
+        case 'package-booking':
+          return <PackageBookingForm />
+        case 'about-us':
+          return <AboutUs />
+        case 'contact':
+          return <Contact />
+        case 'company-detail':
+          return <CompanyDetail />
+        case 'privacy-policy':
+          return <PrivacyPolicy />
+        case 'terms-of-service':
+          return <TermsOfService />
+        case 'refund-policy':
+          return <RefundPolicy />
+        case 'cancellation-policy':
+          return <CancellationPolicy />
+        case 'blog-archive':
+          return <BlogArchive />
+        case 'blog-single':
+          return <BlogSingle />
+        case 'hotel-detail':
+          return <HotelDetail />
+        case 'landing':
+        default:
+          return (
+            <>
+              <Navbar />
+              <ActivityBar />
+              <HeroBanner />
+              <HeroSearch />
+              <TrustGuarantee />
+              <DestinationCarousel />
+              <CompanySection />
+              <TopDestinations />
+              <StaySection />
+              <BlogSection />
+              <TestimonialsSection />
+              <FAQSection />
+              <PartnersSection />
+              <SocialCTASection />
+              <CTABanner />
+              <Footer />
+            </>
+          )
+      }
+    } catch {
+      setRenderError(true)
+      return null
+    }
+  }, [currentView])
+
+  if (!hydrated) {
+    return (
+      <main className="min-h-screen flex flex-col">
+        <div className="h-16 bg-white border-b" />
+        <div className="flex-1 animate-pulse">
+          <div className="h-64 bg-gray-100" />
+          <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+            <div className="h-8 bg-gray-100 rounded w-1/3" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="h-48 bg-gray-100 rounded-lg" />
+              <div className="h-48 bg-gray-100 rounded-lg" />
+              <div className="h-48 bg-gray-100 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen flex flex-col">
+      {!selfContainedViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView}
+          initial={false}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex-1"
+        >
+          {renderView()}
+        </motion.div>
+      </AnimatePresence>
+
+      {currentView !== 'admin-dashboard' && <WhatsAppWidget />}
+    </main>
+  )
+}

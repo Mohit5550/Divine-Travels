@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserFromToken } from '@/lib/with-auth'
 
-export const serviceOptions: Record<string, string[]> = {
+const serviceOptions: Record<string, string[]> = {
   rafting: ['Brahmpuri 9km', 'Shivpuri 16km', 'Marine Drive 26km'],
   trekking: ['Valley of Flowers', 'Nag Tibba', 'Kedarkantha', 'Har Ki Dun', 'Brahmatal', 'Dayara Bugyal', 'Tungnath', 'Chandrashila', 'Kauri Pass', 'Rupin Pass'],
   adventure: ['Bungy Jumping', 'Giant Swing', 'Paragliding', 'Zipline', 'Foxtail Flying', 'Sky Cycle', 'Cliff Jump', 'Speed Boat', 'Jet Ski', 'Banana Boat', 'Bumper Boat', 'Parasailing', 'Flyboard'],
@@ -16,9 +17,7 @@ export const serviceOptions: Record<string, string[]> = {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    const user = await db.user.findUnique({ where: { id: userId } })
+    const user = await getUserFromToken(request)
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const { searchParams } = new URL(request.url)
@@ -28,96 +27,66 @@ export async function GET(request: NextRequest) {
     const paginate = searchParams.has('page')
     const skip = (page - 1) * limit
 
-    const where = service ? { service } : {}
-
     const [records, total] = await Promise.all([
       db.dateAvailability.findMany({
-        where,
-        orderBy: [{ date: 'asc' }, { service: 'asc' }],
+        where: service ? { service } : {},
         ...(paginate ? { take: limit, skip } : {}),
       }),
-      paginate ? db.dateAvailability.count({ where }) : Promise.resolve(0),
+      paginate ? db.dateAvailability.count({ where: service ? { service } : {} }) : Promise.resolve(0),
     ])
 
-    const parsed = records.map((r) => ({
-      ...r,
-      subOptions: JSON.parse(r.subOptions),
-    }))
-
     if (paginate) {
-      return NextResponse.json({ records: parsed, total, page, totalPages: Math.ceil(total / limit), serviceOptions })
+      return NextResponse.json({ data: records, total, page, totalPages: Math.ceil(total / limit) })
     }
-    return NextResponse.json({ records: parsed, serviceOptions })
-  } catch (error) {
-    console.error('Availability fetch error:', error)
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
+    return NextResponse.json(records)
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    const user = await db.user.findUnique({ where: { id: userId } })
+    const user = await getUserFromToken(request)
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const body = await request.json()
-    const { id, date, dateTo, service, subOptions, allDay, price, slots } = body
+    const { service, date, dateTo, subOptions, allDay, price, slots } = body
 
-    if (!date || !service) {
-      return NextResponse.json({ error: 'Date and service are required' }, { status: 400 })
-    }
+    const existing = await db.dateAvailability.findFirst({
+      where: { service, date },
+    })
 
     let record
-    if (id) {
+    if (existing) {
       record = await db.dateAvailability.update({
-        where: { id },
-        data: {
-          date,
-          dateTo: dateTo || null,
-          service,
-          subOptions: JSON.stringify(subOptions || []),
-          allDay: allDay || false,
-          price: price ? parseInt(price) : null,
-          slots: slots ? parseInt(slots) : null,
-        },
+        where: { id: existing.id },
+        data: { dateTo, subOptions: subOptions || '[]', allDay, price, slots },
       })
     } else {
       record = await db.dateAvailability.create({
-        data: {
-          date,
-          dateTo: dateTo || null,
-          service,
-          subOptions: JSON.stringify(subOptions || []),
-          allDay: allDay || false,
-          price: price ? parseInt(price) : null,
-          slots: slots ? parseInt(slots) : null,
-        },
+        data: { service, date, dateTo, subOptions: subOptions || '[]', allDay, price, slots },
       })
     }
 
-    return NextResponse.json({ ...record, subOptions: JSON.parse(record.subOptions) })
-  } catch (error) {
-    console.error('Availability save error:', error)
-    return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
+    return NextResponse.json(record, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: 'Failed to create availability' }, { status: 500 })
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    const user = await db.user.findUnique({ where: { id: userId } })
+    const user = await getUserFromToken(request)
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'Record ID required' }, { status: 400 })
+    if (id) {
+      await db.dateAvailability.delete({ where: { id } })
+    }
 
-    await db.dateAvailability.delete({ where: { id } })
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Availability delete error:', error)
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Failed to delete availability' }, { status: 500 })
   }
 }

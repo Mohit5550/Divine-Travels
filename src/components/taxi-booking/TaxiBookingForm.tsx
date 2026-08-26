@@ -17,15 +17,21 @@ import {
   ChevronLeft,
   Loader2,
   CheckCircle2,
+  ShieldCheck,
+  MessageCircle,
+  Sparkles,
+  Luggage,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
+import { LoginModal } from '@/components/landing/LoginModal'
 
 export function TaxiBookingForm() {
   const { navigate, user, isAuthenticated } = useAppStore()
+  const [loginOpen, setLoginOpen] = useState(false)
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('one-way')
   const [vehicleType, setVehicleType] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
@@ -53,6 +59,7 @@ export function TaxiBookingForm() {
     }
   }, [isAuthenticated, user, name, phone])
   const [pickupDate, setPickupDate] = useState('')
+  const [returnDate, setReturnDate] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [pickupLocation, setPickupLocation] = useState('')
   const [dropLocation, setDropLocation] = useState('')
@@ -61,6 +68,7 @@ export function TaxiBookingForm() {
   const [tourDescription, setTourDescription] = useState('')
   const [quoteBestPrice, setQuoteBestPrice] = useState(false)
   const [bookingAmount, setBookingAmount] = useState('')
+  const [whatsappUpdates, setWhatsappUpdates] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [bookingRef, setBookingRef] = useState('')
@@ -70,10 +78,16 @@ export function TaxiBookingForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!isAuthenticated) {
+      setLoginOpen(true)
+      return
+    }
+
     if (!vehicleType) return toast.error('Please select a vehicle type')
     if (!name) return toast.error('Please enter your name')
     if (!phone) return toast.error('Please enter your mobile number')
     if (!pickupDate) return toast.error('Please select a pick up date')
+    if (tripType === 'round-trip' && !returnDate) return toast.error('Please select a return date')
     if (!pickupTime) return toast.error('Please select a pick up time')
     if (!pickupLocation) return toast.error('Please enter a pick up location')
     if (!dropLocation) return toast.error('Please enter a drop location')
@@ -90,6 +104,7 @@ export function TaxiBookingForm() {
           tripType,
           vehicleType,
           pickupDate,
+          returnDate: tripType === 'round-trip' ? returnDate : undefined,
           pickupTime,
           pickupLocation,
           dropLocation,
@@ -97,6 +112,7 @@ export function TaxiBookingForm() {
           numberOfPassengers,
           tourDescription,
           quoteBestPrice,
+          whatsappUpdates,
           bookingAmount: quoteBestPrice ? null : Number(bookingAmount) || null,
         }),
         name,
@@ -107,7 +123,7 @@ export function TaxiBookingForm() {
 
       const res = await fetch('/api/taxi-bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
         body: JSON.stringify(payload),
       })
 
@@ -280,6 +296,32 @@ export function TaxiBookingForm() {
                 ))}
               </select>
             </div>
+            {vehicleType && (
+              <div className="mt-2.5 flex flex-wrap gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100 font-medium">
+                  <Users className="w-3 h-3" />
+                  {vehicleType.toLowerCase().includes('innova') || vehicleType.toLowerCase().includes('suv') || vehicleType.toLowerCase().includes('ertiga')
+                    ? '6+1 Guests'
+                    : vehicleType.toLowerCase().includes('tempo')
+                    ? '12-20 Guests'
+                    : vehicleType.toLowerCase().includes('bus')
+                    ? '25-50 Guests'
+                    : '4+1 Guests'}
+                </span>
+                <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 font-medium">
+                  <Luggage className="w-3 h-3" />
+                  {vehicleType.toLowerCase().includes('innova') || vehicleType.toLowerCase().includes('suv')
+                    ? '4-5 Large Bags'
+                    : vehicleType.toLowerCase().includes('tempo')
+                    ? 'High Luggage Carrier'
+                    : '2-3 Medium Bags'}
+                </span>
+                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-100 font-medium">
+                  <Sparkles className="w-3 h-3" />
+                  AC Clean Cab & Certified Driver
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Name & Phone */}
@@ -389,45 +431,67 @@ export function TaxiBookingForm() {
             </div>
           </div>
 
+          {/* Round Trip Return Date & Days */}
           {tripType === 'round-trip' && (
-            <> {/* Number of Days - Round Trip Only */}
-              <label className="block text-sm font-semibold text-brand-dark mb-3">
-                Enter Number of Days <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  min={1}
-                  max={30}
-                  value={numberOfDays}
-                  onChange={(e) => setNumberOfDays(Number(e.target.value))}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
-                  required
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-brand-dark mb-3">
+                  Return Date <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="date"
+                    min={pickupDate || today}
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+                    required
+                  />
+                </div>
               </div>
-            </>
+              <div>
+                <label className="block text-sm font-semibold text-brand-dark mb-3">
+                  Total Travel Days <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={numberOfDays}
+                    onChange={(e) => setNumberOfDays(Number(e.target.value))}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Total Number of Passengers */}
-          <label className="block text-sm font-semibold text-brand-dark mb-3 mt-4">
-            Total Number of Passengers <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={numberOfPassengers}
-              onChange={(e) => setNumberOfPassengers(Number(e.target.value))}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-semibold text-brand-dark mb-3">
-              Enter Tour Description
+              Total Number of Passengers <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={numberOfPassengers}
+                onChange={(e) => setNumberOfPassengers(Number(e.target.value))}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-brand-dark mb-3">
+              Special Route Stops / Instructions
             </label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -435,7 +499,7 @@ export function TaxiBookingForm() {
                 value={tourDescription}
                 onChange={(e) => setTourDescription(e.target.value)}
                 placeholder="Tell us about your travel plan, special requirements, or any stops you want to make..."
-                rows={4}
+                rows={3}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none resize-none"
               />
             </div>
@@ -444,7 +508,7 @@ export function TaxiBookingForm() {
           {/* Quote Best Price Toggle */}
           <div>
             <label className="block text-sm font-semibold text-brand-dark mb-3">
-              Booking Amount
+              Your Budget / Expected Quote
             </label>
             <div className="flex gap-2 bg-gray-100 rounded-xl p-1 mb-3">
               <button
@@ -456,7 +520,7 @@ export function TaxiBookingForm() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Enter Amount
+                Enter Budget
               </button>
               <button
                 type="button"
@@ -467,7 +531,7 @@ export function TaxiBookingForm() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Quote Best Price
+                Get Best Divine Quote
               </button>
             </div>
 
@@ -488,37 +552,70 @@ export function TaxiBookingForm() {
             {quoteBestPrice && (
               <div className="bg-brand-orange/5 border border-brand-orange/20 rounded-xl p-4">
                 <p className="text-sm text-brand-orange font-medium">
-                  Our team will calculate the best price based on your trip details and contact you shortly.
+                  Our team will calculate the lowest discounted rate based on your route and vehicle choice.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Total Booking Amount */}
-          {!quoteBestPrice && bookingAmount && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Total Booking Amount</span>
-                <span className="text-lg font-bold text-brand-dark">₹{Number(bookingAmount).toLocaleString('en-IN')}</span>
-              </div>
+          {/* Pricing Inclusions Clarity Banner */}
+          <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl p-3.5 text-xs text-amber-950 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-amber-900">
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              Transparent Pricing Guarantee
             </div>
-          )}
+            <p className="text-gray-600 leading-relaxed">
+              Included: Sanitized AC vehicle, commercial driver allowance & fuel. State border taxes, tolls & parking fees payable directly at toll booths as per government receipts.
+            </p>
+          </div>
 
-          {/* Submit */}
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white py-3.5 rounded-xl font-semibold text-base transition-all disabled:opacity-50"
-          >
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Submitting...
-              </span>
-            ) : (
-              'Post Booking'
-            )}
-          </Button>
+          {/* WhatsApp Updates Opt-in */}
+          <label className="flex items-center gap-2.5 text-xs text-gray-700 font-medium cursor-pointer bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+            <input
+              type="checkbox"
+              checked={whatsappUpdates}
+              onChange={(e) => setWhatsappUpdates(e.target.checked)}
+              className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Receive driver details, cab number & instant updates on WhatsApp</span>
+          </label>
+
+          {/* Action Buttons: Submit & WhatsApp Direct */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white py-3.5 rounded-xl font-semibold text-base transition-all disabled:opacity-50"
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Submitting...
+                </span>
+              ) : (
+                'Post Booking Request'
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const msg = encodeURIComponent(`Hi Divine Travels, I need a taxi quote:
+Trip: ${tripType.toUpperCase()}
+Vehicle: ${vehicleType || 'Any'}
+Route: ${pickupLocation || 'Pickup'} to ${dropLocation || 'Drop'}
+Date: ${pickupDate || 'Soon'}
+Passengers: ${numberOfPassengers}`)
+                window.open(`https://wa.me/916396919007?text=${msg}`, '_blank')
+              }}
+              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-3.5 rounded-xl font-semibold text-sm gap-2"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-600" />
+              Instant Quote on WhatsApp
+            </Button>
+          </div>
 
           <p className="text-center text-xs text-gray-400">
             By posting this booking, you agree to be contacted by our team for trip planning.
@@ -527,6 +624,7 @@ export function TaxiBookingForm() {
       </section>
 
       <Footer />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

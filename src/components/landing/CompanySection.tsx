@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { Loader2, Building2 } from 'lucide-react'
+import { Loader2, Building2, Sparkles, ShieldCheck, ArrowRight, Compass, Flame } from 'lucide-react'
 import { toDirectImageUrl } from '@/lib/utils'
 
 interface Company {
@@ -12,6 +12,7 @@ interface Company {
   slug: string
   logo: string | null
   photo: string | null
+  description?: string | null
   _count?: { plans: number }
 }
 
@@ -35,9 +36,9 @@ export function CompanySection() {
 
   if (isLoading) {
     return (
-      <section className="py-12 sm:py-16 bg-brand-teal/90">
+      <section className="py-16 bg-gradient-to-b from-brand-dark via-slate-900 to-brand-dark">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <Loader2 className="w-8 h-8 text-white animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-brand-orange animate-spin mx-auto" />
         </div>
       </section>
     )
@@ -46,68 +47,119 @@ export function CompanySection() {
   if (companies.length === 0) return null
 
   return (
-    <section className="py-12 sm:py-16 bg-brand-teal/90 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-0 w-full h-full" style={{
-          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-          backgroundSize: '30px 30px'
-        }} />
-      </div>
+    <section className="py-16 sm:py-24 bg-gradient-to-b from-slate-950 via-brand-dark to-slate-950 text-white relative overflow-hidden">
+      {/* Background ambient lighting effects */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-teal/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-8 sm:mb-10"
+          className="text-center mb-12 sm:mb-16"
         >
-          <span className="text-white/80 text-sm font-semibold tracking-wider uppercase">Thrill & Fun</span>
-          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white mt-1">
-            Choose Your Adventure
+          <div className="inline-flex items-center gap-2 bg-brand-orange/15 border border-brand-orange/30 rounded-full px-4 py-1.5 mb-3.5 backdrop-blur-md">
+            <Flame className="w-4 h-4 text-brand-orange animate-pulse" />
+            <span className="text-brand-orange text-xs font-bold tracking-wider uppercase">
+              Top Adventure Companies & Hubs
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Explore Certified{' '}
+            <span className="bg-gradient-to-r from-brand-orange via-amber-400 to-brand-gold bg-clip-text text-transparent">
+              Adventure Operators
+            </span>
           </h2>
-          <p className="text-white/60 mt-2 max-w-xl mx-auto">From bungee jumping to water sports — pick your thrill</p>
+
+          <p className="text-gray-400 mt-3 max-w-2xl mx-auto text-xs sm:text-base leading-relaxed">
+            Directly book Bungy Jumping, River Expeditions, Giant Swing & Luxury Riverside Camps from licensed Uttarakhand organizers.
+          </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
-          {companies.map((company, index) => (
-            <motion.div
-              key={company.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ y: -4 }}
-              className="cursor-pointer group"
-              onClick={() => handleClick(company.slug)}
-            >
-              <div className="relative aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
-                {company.photo ? (
-                  <img
-                    src={toDirectImageUrl(company.photo)}
-                    alt={company.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-brand-dark to-brand-dark/80 flex items-center justify-center">
-                    <Building2 className="w-12 h-12 text-white/30" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-white font-bold text-base sm:text-lg leading-tight">{company.name}</h3>
-                  {company._count?.plans != null && (
-                    <p className="text-white/60 text-xs mt-0.5">{company._count.plans} {company._count.plans === 1 ? 'activity' : 'activities'}</p>
+        {/* Companies Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+          {companies.map((company, index) => {
+            const planCount = company._count?.plans || 0
+            return (
+              <motion.div
+                key={company.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08, duration: 0.4 }}
+                whileHover={{ y: -6 }}
+                className="cursor-pointer group relative"
+                onClick={() => handleClick(company.slug)}
+              >
+                <div className="relative aspect-[4/5] sm:aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-orange/60 shadow-xl group-hover:shadow-2xl group-hover:shadow-brand-orange/20 transition-all duration-500">
+                  {/* Company Photo */}
+                  {company.photo ? (
+                    <img
+                      src={toDirectImageUrl(company.photo)}
+                      alt={company.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-brand-dark flex items-center justify-center">
+                      <Building2 className="w-16 h-16 text-white/20" />
+                    </div>
                   )}
+
+                  {/* Gradient Overlay for Readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 transition-opacity duration-300" />
+
+                  {/* Top Floating Badges */}
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10">
+                    <span className="inline-flex items-center gap-1 bg-black/60 backdrop-blur-md text-emerald-400 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/30">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Verified</span>
+                    </span>
+
+                    {planCount > 0 && (
+                      <span className="bg-brand-orange/90 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md">
+                        {planCount} {planCount === 1 ? 'Activity' : 'Activities'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Bottom Content Card */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-5 z-10">
+                    {company.logo && (
+                      <div className="w-10 h-10 rounded-xl bg-white/90 p-1 mb-2.5 backdrop-blur-sm shadow-md overflow-hidden flex items-center justify-center">
+                        <img
+                          src={toDirectImageUrl(company.logo)}
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
+
+                    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg leading-tight group-hover:text-amber-300 transition-colors">
+                      {company.name}
+                    </h3>
+
+                    {company.description && (
+                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 leading-relaxed opacity-90">
+                        {company.description}
+                      </p>
+                    )}
+
+                    {/* Action Bar on Hover */}
+                    <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-semibold text-brand-orange group-hover:text-white transition-colors">
+                      <span>View All Packages</span>
+                      <div className="w-6 h-6 rounded-full bg-white/10 group-hover:bg-brand-orange flex items-center justify-center transition-all group-hover:translate-x-1">
+                        <ArrowRight className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="bg-white/90 text-brand-dark rounded-full px-5 py-2 text-xs sm:text-sm font-semibold shadow-lg">
-                    Explore Plans
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -439,8 +439,8 @@ function Input({ label, value, onChange, textarea, type, placeholder }: { label:
             if (e.key === 'Enter' && e.shiftKey) {
               e.preventDefault()
               const target = e.target as HTMLInputElement
-              const start = target.selectionStart
-              const end = target.selectionEnd
+              const start = target.selectionStart ?? 0
+              const end = target.selectionEnd ?? 0
               const newValue = value.substring(0, start) + '\n' + value.substring(end)
               onChange(newValue)
               setTimeout(() => {

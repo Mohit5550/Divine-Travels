@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { hashPassword, verifyPassword } from '@/lib/password'
 
 export async function PUT(request: NextRequest) {
   try {
@@ -19,13 +20,13 @@ export async function PUT(request: NextRequest) {
 
     const user = await db.user.findUnique({ where: { id: userId } })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    if (user.password !== currentPassword) {
+    if (!(await verifyPassword(currentPassword, user.password))) {
       return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 })
     }
 
     await db.user.update({
       where: { id: userId },
-      data: { password: newPassword },
+      data: { password: await hashPassword(newPassword) },
     })
     return NextResponse.json({ success: true, message: 'Password updated successfully' })
   } catch {

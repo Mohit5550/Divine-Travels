@@ -2,13 +2,19 @@ import { db } from '@/lib/db'
 
 export async function notifyAdmin(title: string, message: string, type = 'info', link?: string) {
   try {
-    const admin = await db.user.findFirst({ where: { role: 'admin' } })
-    if (!admin) return
-    await db.notification.create({
-      data: { userId: admin.id, title, message, type, link: link || null },
+    const admins = await db.user.findMany({ where: { role: 'admin' }, select: { id: true } })
+    if (!admins || admins.length === 0) return
+    await db.notification.createMany({
+      data: admins.map((a) => ({
+        userId: a.id,
+        title,
+        message,
+        type,
+        link: link || null,
+      })),
     })
-  } catch {
-    // silently fail - notification is non-critical
+  } catch (error) {
+    console.error('Error notifying admins:', error)
   }
 }
 

@@ -7,7 +7,7 @@ export function CampingPackages() {
   return (
     <StayPackageView
       category="stay-camping"
-      heroImage="https://drive.google.com/thumbnail?id=1sWB7FLPZRrwHE_Nq6oeonm5DMzpW6s7X&sz=w1600"
+      heroImage="https://images.unsplash.com/photo-1510312305653-8ed496efae75?q=80&w=1600"
       heroTitle="Riverside <span class='text-brand-orange'>Camping</span>"
       heroSubtitle="Bonfire, river views, starry nights — an unforgettable outdoor experience"
       badge="Camping"

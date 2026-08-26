@@ -63,23 +63,23 @@ export function PartnersSection() {
           viewport={{ once: true }}
           className="text-center mb-8 sm:mb-12"
         >
-          <div className="inline-flex items-center gap-2 bg-brand-orange/10 rounded-full px-4 py-1.5 mb-3">
+          <div className="inline-flex items-center gap-2 bg-brand-orange/10 border border-brand-orange/20 rounded-full px-4 py-1.5 mb-3">
             <Handshake className="w-4 h-4 text-brand-orange" />
-            <span className="text-brand-orange text-sm font-semibold tracking-wider uppercase">
-              Trusted By
+            <span className="text-brand-orange text-xs font-bold tracking-wider uppercase">
+              Trusted Network
             </span>
           </div>
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-dark">
-            Our Awesome{' '}
+          <h2 className="font-bold text-3xl sm:text-4xl md:text-5xl text-brand-dark tracking-tight">
+            Our Official{' '}
             <span
               className="bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(90deg, #E8740C 0%, #0D9488 100%)' }}
             >
-              Partners
+              Tourism & Adventure Partners
             </span>
           </h2>
-          <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-sm sm:text-base">
-            Collaborating with leading brands to bring you the best travel experiences
+          <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-xs sm:text-base leading-relaxed">
+            Partnered with leading government tourism boards, certified operators, and luxury resorts across Uttarakhand.
           </p>
         </motion.div>
       </div>
@@ -88,19 +88,20 @@ export function PartnersSection() {
         <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
-        <div className="partners-marquee">
+        <div className="partners-marquee py-2">
           <div className="partners-marquee-track">
             {[...partners, ...partners].map((partner, idx) => (
               <div
                 key={`${partner.id}-${idx}`}
-                className="shrink-0 w-44 sm:w-56 md:w-64 h-28 sm:h-32 md:h-36 bg-white border border-gray-200 rounded-2xl flex items-center justify-center p-4 sm:p-5 mx-3 sm:mx-4 lg:mx-5 hover:border-brand-orange/40 transition-all duration-300"
+                className="shrink-0 w-44 sm:w-56 md:w-60 h-24 sm:h-28 md:h-32 bg-white border border-gray-100 rounded-2xl flex items-center justify-center p-4 sm:p-5 mx-2.5 sm:mx-3.5 shadow-2xs hover:shadow-md hover:border-brand-orange/30 transition-all duration-300"
               >
                 <img
                   src={imgErrors[partner.id] ? fallbackImage(partner.name) : partner.image}
                   alt={partner.name}
                   title={partner.name}
                   onError={handleImgErrorOnce(partner.id)}
-                  className="max-w-full max-h-full object-contain pointer-events-none"
+                  referrerPolicy="no-referrer"
+                  className="max-w-full max-h-full object-contain pointer-events-none transition-transform duration-300 hover:scale-105"
                   draggable={false}
                   loading="lazy"
                 />

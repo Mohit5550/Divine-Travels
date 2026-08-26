@@ -86,13 +86,25 @@ interface FixedDeparture {
   notes: string
 }
 
+interface PricingTier {
+  minPax: number
+  maxPax: number
+  pricePerPerson: number
+}
+
 interface RoomType {
   name: string
   price: number
   plan: string
   guests: number
+  maxAdults: number
+  maxChildren: number
+  baseOccupancy: number
+  extraAdultPrice: number
+  extraChildPrice: number
   bed: string
   size: string
+  pricingTiers?: PricingTier[]
 }
 
 interface MealPlan {
@@ -972,7 +984,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                     <div className="border-t border-border pt-4">
                       <div className="flex items-center justify-between mb-2">
                         <Label>Room Types</Label>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setRoomTypeItems([...roomTypeItems, { name: '', price: 0, plan: 'room only', guests: 2, bed: '', size: '' }])}>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setRoomTypeItems([...roomTypeItems, { name: '', price: 0, plan: 'room only', guests: 2, baseOccupancy: 2, maxAdults: 2, maxChildren: 1, extraAdultPrice: 0, extraChildPrice: 0, bed: '', size: '', pricingTiers: [] }])}>
                           <PlusIcon className="w-3 h-3 mr-1" /> Add Room
                         </Button>
                       </div>
@@ -999,10 +1011,47 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                                 <option value="full board">Full Board (B+L+D)</option>
                                 <option value="all inclusive">All Inclusive</option>
                               </select>
-                              <Input type="number" value={item.guests || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, guests: Number(e.target.value) } : r))} placeholder="Max guests" />
+                              <Input type="number" value={item.guests || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, guests: Number(e.target.value) } : r))} placeholder="Max guests (capacity)" />
+                              <Input type="number" value={item.maxAdults || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, maxAdults: Number(e.target.value) } : r))} placeholder="Max adults / room" />
+                              <Input type="number" value={item.maxChildren || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, maxChildren: Number(e.target.value) } : r))} placeholder="Max children / room" />
+                              <Input type="number" value={item.baseOccupancy || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, baseOccupancy: Number(e.target.value) } : r))} placeholder="Base occupancy (incl. pax, e.g. 2)" />
+                              <Input type="number" value={item.extraAdultPrice || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, extraAdultPrice: Number(e.target.value) } : r))} placeholder="Extra adult / night (₹)" />
+                              <Input type="number" value={item.extraChildPrice || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, extraChildPrice: Number(e.target.value) } : r))} placeholder="Extra child / night (₹)" />
                               <Input value={item.bed} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, bed: e.target.value } : r))} placeholder="Bed type (e.g. 1 King Bed)" />
                               <Input value={item.size} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, size: e.target.value } : r))} placeholder="Room size (e.g. 280 sq ft)" />
                             </div>
+                            {form.category === 'stay-camping' && (
+                              <div className="border-t border-border pt-2 mt-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <Label className="text-xs font-semibold text-brand-orange">Group-size Pricing Tiers (per person / night)</Label>
+                                  <Button type="button" size="sm" variant="outline" onClick={() => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, pricingTiers: [...(r.pricingTiers || []), { minPax: 2, maxPax: 2, pricePerPerson: 0 }] } : r))}>
+                                    <PlusIcon className="w-3 h-3 mr-1" /> Add Tier
+                                  </Button>
+                                </div>
+                                <div className="space-y-2">
+                                  {(item.pricingTiers || []).map((tier: any, tIdx: number) => (
+                                    <div key={tIdx} className="flex items-end gap-2">
+                                      <div className="flex-1">
+                                        <Label className="text-[10px] text-muted-foreground">Min Pax</Label>
+                                        <Input type="number" value={tier.minPax || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, pricingTiers: (r.pricingTiers || []).map((t: any, j: number) => j === tIdx ? { ...t, minPax: Number(e.target.value) } : t) } : r))} />
+                                      </div>
+                                      <div className="flex-1">
+                                        <Label className="text-[10px] text-muted-foreground">Max Pax</Label>
+                                        <Input type="number" value={tier.maxPax || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, pricingTiers: (r.pricingTiers || []).map((t: any, j: number) => j === tIdx ? { ...t, maxPax: Number(e.target.value) } : t) } : r))} />
+                                      </div>
+                                      <div className="flex-1">
+                                        <Label className="text-[10px] text-muted-foreground">₹ / pax / night</Label>
+                                        <Input type="number" value={tier.pricePerPerson || ''} onChange={(e) => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, pricingTiers: (r.pricingTiers || []).map((t: any, j: number) => j === tIdx ? { ...t, pricePerPerson: Number(e.target.value) } : t) } : r))} />
+                                      </div>
+                                      <Button type="button" size="sm" variant="ghost" onClick={() => setRoomTypeItems(roomTypeItems.map((r, i) => i === idx ? { ...r, pricingTiers: (r.pricingTiers || []).filter((_: any, j: number) => j !== tIdx) } : r))}>
+                                        <TrashIcon className="w-4 h-4 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  {(item.pricingTiers || []).length === 0 && <p className="text-[11px] text-muted-foreground">No tiers — a flat ₹{item.price}/night per person will apply.</p>}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                         {roomTypeItems.length === 0 && <p className="text-xs text-muted-foreground">No room types. Click Add Room to create.</p>}

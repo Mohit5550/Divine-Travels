@@ -42,7 +42,7 @@ interface TourDestinationData {
     heroSubtitle: string
     heroTag: string
     sectionTitle: string
-    sectionSubtitle?: string
+    sectionSubtitle: string
   }
   programs: Program[]
   dayConfigs: DayConfig[]

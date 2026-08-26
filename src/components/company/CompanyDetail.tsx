@@ -10,6 +10,8 @@ import {
   Clock,
   Tag,
   MapPin,
+  Eye,
+  ChevronRight,
 } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
@@ -83,6 +85,13 @@ export function CompanyDetail() {
     }
   }
 
+  const handleBookNow = (e: React.MouseEvent, plan: Plan) => {
+    e.stopPropagation()
+    if (plan.package?.id) {
+      navigate('package-booking', null, plan.package.id)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-brand-cream">
@@ -136,13 +145,13 @@ export function CompanyDetail() {
                 <img src={company.logo} alt="" className="w-12 h-12 rounded-xl bg-white/10 object-contain p-1" />
               )}
               <div>
-                <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-white">{company.name}</h1>
+                <h1 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white tracking-tight">{company.name}</h1>
                 {company.description && (
-                  <p className="text-white/50 text-sm mt-1 max-w-xl">{company.description}</p>
+                  <p className="text-white/70 text-sm mt-1 max-w-xl">{company.description}</p>
                 )}
               </div>
             </div>
-            <div className="inline-flex items-center gap-2 mt-3 text-white/40 text-sm">
+            <div className="inline-flex items-center gap-2 mt-3 text-white/60 text-sm">
               <Tag className="w-4 h-4" />
               {company.plans.length} {company.plans.length === 1 ? 'Activity' : 'Activities'} Available
             </div>
@@ -153,7 +162,7 @@ export function CompanyDetail() {
       <section className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
         {Object.entries(grouped).map(([category, plans]) => (
           <div key={category} className="mb-10">
-            <h2 className="font-serif text-xl sm:text-2xl text-brand-dark mb-5 flex items-center gap-2">
+            <h2 className="font-bold text-xl sm:text-2xl text-brand-dark mb-5 flex items-center gap-2 tracking-tight">
               {categoryIcons[category] || '🎯'} {category}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -205,8 +214,8 @@ export function CompanyDetail() {
                       </div>
                     )}
 
-                    <div className="p-3 sm:p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-2 mb-2">
                         {plan.duration && (
                           <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                             <Clock className="w-3 h-3" /> {plan.duration}
@@ -214,9 +223,34 @@ export function CompanyDetail() {
                         )}
                       </div>
                       {pkg && (
-                        <span className="text-brand-orange text-xs font-semibold group-hover:underline">
-                          View Details →
-                        </span>
+                        <>
+                          <div className="flex items-baseline gap-2 mb-1">
+                            {pkg.originalPrice && pkg.originalPrice > (pkg.price ?? 0) && (
+                              <span className="text-gray-400 line-through text-sm">₹{pkg.originalPrice}</span>
+                            )}
+                            <span className="text-lg font-bold text-brand-dark">₹{pkg.price ?? 0}</span>
+                          </div>
+                          {pkg.originalPrice && pkg.originalPrice > (pkg.price ?? 0) && (
+                            <p className="text-green-600 text-xs font-medium mb-0.5">Save ₹{pkg.originalPrice - (pkg.price ?? 0)}</p>
+                          )}
+                          <p className="text-gray-400 text-xs mb-3">/ Person</p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handlePlanClick(plan) }}
+                              className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-brand-orange border border-brand-orange/30 rounded-xl py-2 hover:bg-brand-orange/5 transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Details
+                            </button>
+                            <button
+                              onClick={(e) => handleBookNow(e, plan)}
+                              className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-brand-teal rounded-xl py-2 hover:bg-brand-teal/90 transition-colors"
+                            >
+                              Book
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
 

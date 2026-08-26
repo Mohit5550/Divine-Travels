@@ -7,7 +7,7 @@ export function HotelPackages() {
   return (
     <StayPackageView
       category="stay-hotel"
-      heroImage="https://drive.google.com/thumbnail?id=1WfJVW2z0lW0P4_m9cvpS31fQ4cHqlTo0&sz=w1600"
+      heroImage="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1600"
       heroTitle="Hotels & <span class='text-brand-orange'>Resorts</span>"
       heroSubtitle="Comfortable riverside stays with premium amenities and breathtaking views"
       badge="Stay Hotels"

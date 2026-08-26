@@ -13,7 +13,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json()
     const { status, adminNotes } = body
 
-    if (!['pending', 'approved', 'rejected'].includes(status)) {
+    const VALID_STATUSES = [
+      'pending',
+      'confirmed',
+      'approved',
+      'ready',
+      'assigned',
+      'in_progress',
+      'completed',
+      'cancelled',
+      'rejected',
+    ]
+
+    if (!VALID_STATUSES.includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 

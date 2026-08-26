@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { PackageWishlistOverlay } from '@/components/cart/PackageWishlistOverlay'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -237,6 +238,15 @@ export function TrekkingPackages() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+            {packages.length === 0 && (
+              <div className="text-center py-16">
+                <div className="w-12 h-12 text-muted-foreground mx-auto mb-4">
+                  <Star className="w-6 h-6 fill-misted-amber" />
+                </div>
+                <p className="text-muted-foreground text-lg">No trekking packages available yet.</p>
+                <p className="text-sm text-muted-foreground mt-1">Check back soon for new trekking adventures.</p>
+              </div>
+            )}
             {packages.map((pkg, index) => {
               const DiffIcon = getDifficultyIcon(pkg.subtitle)
               const isModerate = pkg.badge === 'Moderate'
@@ -269,6 +279,7 @@ export function TrekkingPackages() {
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <PackageWishlistOverlay packageId={pkg.id} />
 
                       {/* Badge */}
                       <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1`}>

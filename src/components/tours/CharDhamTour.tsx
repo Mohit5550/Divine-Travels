@@ -15,7 +15,7 @@ const defaultTourData = [
       { icon: '🍽️', label: 'Daily Breakfast & Dinner' },
       { icon: '👥', label: 'Group Size: 12-15' }
     ],
-    img: 'https://cdn.s3waas.gov.in/s33416a75f4cea9109507cacd8e2f2aefc/uploads/bfi_thumb/2018032771-olzs8a06n0m3qfz8i53k7y3e45k6w4a1s0d55n3a09.jpg',
+    img: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=800',
     itinerary: [
       'Day 1: Dehradun to Guptkashi (Drive 7-8 hrs). Overnight stay.',
       'Day 2: Guptkashi to Kedarnath (Helicopter). Darshan & return. Overnight stay.',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { PackageWishlistOverlay } from '@/components/cart/PackageWishlistOverlay'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -210,7 +211,7 @@ export function DomesticPackages() {
               const count = packages.filter((p) => p.badge === region.value).length
               return (
                 <motion.button
-                  key={region.name}
+                  key={region.value || `region-${idx}`}
                   type="button"
                   onClick={() => setActiveRegion(region.value)}
                   initial={{ opacity: 0, y: 10 }}
@@ -279,6 +280,7 @@ export function DomesticPackages() {
                     <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <PackageWishlistOverlay packageId={pkg.id} />
                     <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 ${pkg.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
                       <Map className="w-3 h-3" />
                       {pkg.badge}

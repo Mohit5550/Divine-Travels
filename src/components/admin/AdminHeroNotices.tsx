@@ -71,12 +71,14 @@ export function AdminHeroNotices() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-serif text-xl text-brand-dark">Hero Notice Slides</h2>
-        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white" onClick={() => { setForm(emptyForm); setEditing(null); setShowForm(true) }}>
+        <div>
+          <h2 className="font-bold text-2xl text-brand-dark tracking-tight">Hero Notice & Special Deals Slides</h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Up to 3 slides. These appear as an interactive deals card on the homepage Hero section.</p>
+        </div>
+        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl shadow-sm px-4" onClick={() => { setForm(emptyForm); setEditing(null); setShowForm(true) }}>
           <Plus className="w-4 h-4 mr-1" /> Add Slide
         </Button>
       </div>
-      <p className="text-sm text-gray-500">3 slides max. These appear as a floating bar on the right side of the hero section.</p>
 
       {notices.length === 0 ? (
         <div className="text-center py-12 text-gray-400 text-sm">No slides yet. Add one to get started.</div>
@@ -126,7 +128,7 @@ export function AdminHeroNotices() {
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Image URL</label>
                   <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange"
-                    placeholder="https://example.com/image.jpg" />
+                    placeholder="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Heading *</label>

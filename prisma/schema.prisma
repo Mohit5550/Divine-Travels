@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./custom.db"
 }
 
 model User {
@@ -29,6 +29,7 @@ model User {
   packageWishlist  PackageWishlist[]
   notifications    Notification[]
   payments         Payment[]
+  paymentReceipts  PaymentReceipt[]
   tourBookings     TourBooking[]
 }
 
@@ -45,9 +46,9 @@ model Destination {
   image       String
   badge       String?
   badgeColor  String?
-  tags        String
   featured    Boolean  @default(false)
   active      Boolean  @default(true)
+  tags        String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   bookings    Booking[]
@@ -59,16 +60,18 @@ model Booking {
   id            String      @id @default(cuid())
   userId        String
   destinationId String
-  user          User        @relation(fields: [userId], references: [id])
-  destination   Destination @relation(fields: [destinationId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   checkIn       DateTime
   checkOut      DateTime
   guests        Int         @default(1)
   totalPrice    Int
-  status        String      @default("pending")
+  status            String      @default("pending")
   paymentStatus String      @default("pending")
   phone         String?
   specialReqs   String?
+  negotiatedPrice Int?
+  priceLocked   Boolean      @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -77,8 +80,8 @@ model Review {
   id            String      @id @default(cuid())
   userId        String
   destinationId String
-  user          User        @relation(fields: [userId], references: [id])
-  destination   Destination @relation(fields: [destinationId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   rating        Int
   comment       String
   approved      Boolean     @default(true)
@@ -89,8 +92,8 @@ model Wishlist {
   id            String      @id @default(cuid())
   userId        String
   destinationId String
-  user          User        @relation(fields: [userId], references: [id])
-  destination   Destination @relation(fields: [destinationId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
 }
 
@@ -159,8 +162,8 @@ model PackageReview {
   id        String   @id @default(cuid())
   userId    String
   packageId String
-  user      User     @relation(fields: [userId], references: [id])
-  package   Package  @relation(fields: [packageId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package   Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
   rating    Int
   comment   String
   approved  Boolean  @default(true)
@@ -171,8 +174,8 @@ model PackageBooking {
   id                String     @id @default(cuid())
   userId            String
   packageId         String
-  user              User       @relation(fields: [userId], references: [id])
-  package           Package    @relation(fields: [packageId], references: [id])
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package           Package    @relation(fields: [packageId], references: [id], onDelete: Cascade)
   fullName          String
   mobile            String
   numberOfPeople    Int        @default(1)
@@ -180,6 +183,9 @@ model PackageBooking {
   preferredTime     String?
   additionalNotes   String?
   totalPrice        Int
+  originalPrice     Int?      // admin's original/list price snapshot per person at booking time
+  basePrice         Int?      // our standard discounted selling price snapshot per person
+  unitPrice         Int?      // actual per-person price charged (availability override or basePrice)
   couponId          String?
   discountAmount    Int        @default(0)
   status            String     @default("pending")
@@ -188,6 +194,8 @@ model PackageBooking {
   paymentStatus     String     @default("pending")
   paymentAmount     Int?
   paymentCompletedAt DateTime?
+  negotiatedPrice   Int?
+  priceLocked       Boolean    @default(false)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   coupon            Coupon?    @relation(fields: [couponId], references: [id])
@@ -197,8 +205,8 @@ model PackageWishlist {
   id        String   @id @default(cuid())
   userId    String
   packageId String
-  user      User     @relation(fields: [userId], references: [id])
-  package   Package  @relation(fields: [packageId], references: [id])
+   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   package   Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   @@unique([userId, packageId])
 }
@@ -206,26 +214,57 @@ model PackageWishlist {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
   type      String   @default("info")
   read      Boolean  @default(false)
-  link      String?
+   link      String?
   createdAt DateTime @default(now())
 }
 
 model Payment {
   id           String          @id @default(cuid())
   userId       String
+   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookingId    String?
   pkgBookingId String?
-  user         User            @relation(fields: [userId], references: [id])
   amount       Int
   method       String          @default("online")
   transactionId String?
   status       String          @default("completed")
   createdAt    DateTime        @default(now())
+}
+
+// A price offer exchanged during negotiation on a booking (admin <-> user)
+model BookingOffer {
+  id          String   @id @default(cuid())
+  bookingType String   // "tour" | "package" | "destination"
+  bookingId   String
+   offeredBy   String   // "admin" | "user"
+  amount      Int
+  note        String?
+  status      String   @default("pending") // pending | accepted | rejected | countered
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A receipt for any payment made against a booking (advance, balance, or full).
+// Covers online gateway payments, admin-recorded cash payments, and manual entries.
+model PaymentReceipt {
+  id          String   @id @default(cuid())
+  userId      String
+   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingType String   // "tour" | "package" | "destination"
+  bookingId   String
+  amount      Int
+   method      String   @default("online") // online | cash | manual | gateway
+  type        String   @default("balance") // advance | balance | full
+  txnId       String?
+  addedBy     String   @default("user") // user | admin
+  note        String?
+   status      String   @default("completed")
+  createdAt   DateTime @default(now())
 }
 
 model SiteSetting {
@@ -247,18 +286,23 @@ model ContactInquiry {
 }
 
 model Coupon {
-  id          String           @id @default(cuid())
-  code        String           @unique
-  description String?
-  discountPct Int
-  maxDiscount Int?
-  minAmount   Int?
-  maxUses     Int?
-  usedCount   Int              @default(0)
-  expiresAt   DateTime?
-  active      Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  bookings    PackageBooking[]
+  id                 String           @id @default(cuid())
+  code               String           @unique
+  description        String?
+  discountPct        Int
+  maxDiscount        Int?
+  minAmount          Int?
+  maxUses            Int?              @default(0)
+  usedCount          Int              @default(0)
+  expiresAt          DateTime?
+  active             Boolean          @default(true)
+  type               String           @default("public") // "public" | "influencer" | "referral"
+  isPrivate          Boolean          @default(false)    // true if hidden from user dashboard
+  applicableCategory String?                             // e.g. "all", "rafting", "stay-camping", "trekking"
+  userEligibility    String           @default("all")    // "all" | "new_users_only" | "existing_users"
+  creatorName        String?                             // creator name if influencer code
+  createdAt          DateTime         @default(now())
+  bookings           PackageBooking[]
 }
 
 model Media {
@@ -354,6 +398,8 @@ model DateAvailability {
   slots      Int?     // available slots/quantity
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@unique([service, date], name: "service_date")
 }
 
 model TourBooking {
@@ -363,18 +409,24 @@ model TourBooking {
   dayLabel         String?  // "Day 1", "Day 2", "Day 3", "Master", or null for single-select
   packageType      String   // "Rishikesh Day 1", "Hill Station Tour", etc.
   selectedPrograms String   // JSON array of selected program names
+  itinerary        String?  // JSON: [{ day: number, programId: number, title: string }]
+  days             Int?      // total number of days chosen by the user
+  note             String?  // customer note added at inquiry time
   name             String
   phone            String
   travelDate       String
   travelers        Int      @default(1)
-  status           String   @default("pending") // "pending", "approved", "rejected"
+  status           String   @default("pending") // "pending", "confirmed", "rejected", "cancelled"
   adminNotes       String?
+  paymentStatus    String   @default("pending")
   paymentId        String?
   paymentOrderId   String?
-  paymentStatus    String   @default("pending")
   paymentAmount    Int?
   paymentCompletedAt DateTime?
-  user             User?    @relation(fields: [userId], references: [id])
+  negotiatedPrice  Int?
+  priceLocked      Boolean  @default(false)
+   totalPrice       Int?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -398,7 +450,7 @@ model Blog {
   featuredImage   String?
   tags            String        @default("[]") // JSON array of tag strings
   categoryId      String?
-  category        BlogCategory? @relation(fields: [categoryId], references: [id])
+   category     BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   author          String        @default("Divine Travels")
   published       Boolean       @default(false)
   publishedAt     DateTime?
@@ -413,10 +465,31 @@ model GalleryImage {
   url       String
   title     String?
   alt       String?
-  category  String?  // e.g. "Adventure", "Trekking", "Camping", "Sightseeing"
+   category  String?  // e.g. "Adventure", "Trekking", "Camping", "Sightseeing"
   featured  Boolean  @default(false) // show on homepage
   order     Int      @default(0)     // for sorting
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CreatorCollaboration {
+  id                String   @id @default(cuid())
+  name              String
+  email             String
+  phone             String
+  instagram         String?
+  youtube           String?
+  followersCount    String   // e.g. "10K - 50K", "50K - 100K", "100K+"
+  niche             String   // e.g. "Adventure & Rafting", "Trekking", "Luxury Stays", "Travel Vlogging", "Spiritual Tours"
+  collaborationType String   // "barter", "affiliate", "paid"
+  deliverables      String?  // e.g. "2 Reels + 1 YouTube Vlog"
+  travelDates       String?  // e.g. "Next Month", "September 2026"
+  message           String?  // Pitch / notes
+  status            String   @default("pending") // "pending", "approved", "rejected", "completed"
+  assignedCoupon    String?  // Custom creator promo code
+  commissionPct     Int?     @default(10)
+  adminNotes        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

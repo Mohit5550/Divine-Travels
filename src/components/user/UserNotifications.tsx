@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, CheckCheck, X, CalendarCheck, CreditCard, Gift, AlertCircle, Info } from 'lucide-react'
+import { Bell, CheckCheck, X, CalendarCheck, CreditCard, Gift, AlertCircle, Info, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
@@ -64,6 +64,16 @@ export function UserNotifications() {
     queryClient.invalidateQueries({ queryKey: ['notifications'] })
   }
 
+  const clearAll = async () => {
+    if (!window.confirm('Clear all notifications? This cannot be undone.')) return
+    await fetch('/api/notifications', {
+      method: 'DELETE',
+      headers: { 'x-user-id': user?.id || '' },
+    })
+    toast.success('All notifications cleared')
+    queryClient.invalidateQueries({ queryKey: ['notifications'] })
+  }
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'booking': return <CalendarCheck className="w-4 h-4 text-brand-orange" />
@@ -95,10 +105,17 @@ export function UserNotifications() {
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="font-semibold text-brand-dark">Notifications</h3>
-              {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-xs text-brand-orange hover:underline flex items-center gap-1">
-                  <CheckCheck className="w-3 h-3" /> Mark all read
-                </button>
+              {notifications.length > 0 && (
+                <div className="flex items-center gap-3">
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-xs text-brand-orange hover:underline flex items-center gap-1">
+                      <CheckCheck className="w-3 h-3" /> Mark all read
+                    </button>
+                  )}
+                  <button onClick={clearAll} className="text-xs text-red-500 hover:underline flex items-center gap-1">
+                    <Trash2 className="w-3 h-3" /> Clear all
+                  </button>
+                </div>
               )}
             </div>
 

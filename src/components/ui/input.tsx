@@ -17,8 +17,8 @@ function Input({ className, type, onKeyDown: externalOnKeyDown, ...props }: Reac
         if (e.key === 'Enter' && e.shiftKey) {
           e.preventDefault()
           const target = e.target as HTMLInputElement
-          const start = target.selectionStart
-          const end = target.selectionEnd
+          const start = target.selectionStart ?? 0
+          const end = target.selectionEnd ?? 0
           const currentValue = target.value
           const newValue = currentValue.substring(0, start) + '\n' + currentValue.substring(end)
           const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set

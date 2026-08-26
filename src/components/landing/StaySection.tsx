@@ -11,8 +11,8 @@ const fadeIn = {
   viewport: { once: true, margin: '-50px' },
 }
 
-const HOTEL_IMG = 'https://drive.google.com/thumbnail?id=1WfJVW2z0lW0P4_m9cvpS31fQ4cHqlTo0&sz=w1600'
-const CAMP_IMG = 'https://drive.google.com/thumbnail?id=1sWB7FLPZRrwHE_Nq6oeonm5DMzpW6s7X&sz=w1600'
+const HOTEL_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1600'
+const CAMP_IMG = 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?q=80&w=1600'
 
 export function StaySection() {
   const { navigate } = useAppStore()

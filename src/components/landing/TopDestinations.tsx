@@ -10,7 +10,7 @@ const defaultDestinations = [
     name: 'Rishikesh',
     state: 'Uttarakhand',
     tagline: 'Devbhoomi of Nature & Adventure',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=80',
     type: 'destination' as const,
     slug: 'rishikesh',
   },
@@ -18,7 +18,7 @@ const defaultDestinations = [
     name: 'Haridwar',
     state: 'Uttarakhand',
     tagline: 'Devbhoomi of Nature & Ganga Ghats',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800&q=80',
     type: 'destination' as const,
     slug: 'haridwar',
   },
@@ -26,15 +26,15 @@ const defaultDestinations = [
     name: 'Mussoorie',
     state: 'Uttarakhand',
     tagline: 'Temple, Waterfalls & Hill Station',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=80',
     type: 'destination' as const,
     slug: 'mussoorie',
   },
   {
     name: 'Nainital',
     state: 'Uttarakhand',
-    tagline: 'Beautiful Lake\'s & Hill Station',
-    image: '',
+    tagline: "Beautiful Lake's & Hill Station",
+    image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=800&q=80',
     type: 'destination' as const,
     slug: 'nainital',
   },
@@ -42,7 +42,7 @@ const defaultDestinations = [
     name: 'Hill Stations',
     state: 'Uttarakhand',
     tagline: 'Explore the majestic peaks',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
     type: 'category' as const,
     slug: 'hill-stations',
   },
@@ -50,7 +50,7 @@ const defaultDestinations = [
     name: 'Char Dham',
     state: 'Uttarakhand',
     tagline: 'चारधाम यात्रा — Sacred pilgrimage',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800&q=80',
     type: 'destination' as const,
     slug: 'char-dham',
   },
@@ -88,7 +88,7 @@ export function TopDestinations() {
     return () => { cancelled = true }
   }, [])
 
-  const handleClick = (dest: typeof defaultDestinations[0]) => {
+  const handleClick = (dest: typeof defaultDestinations[0] & { id?: string }) => {
     const viewMap: Record<string, string> = {
       rishikesh: 'rishikesh-tour',
       haridwar: 'haridwar-tour',
@@ -151,7 +151,7 @@ export function TopDestinations() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
           {destinations.map((dest, idx) => (
             <motion.div
-              key={dest.name}
+              key={`dest-${idx}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

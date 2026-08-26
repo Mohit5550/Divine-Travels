@@ -73,6 +73,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
   return (
     <AnimatePresence>
       <ForgotPasswordModal
+        key="forgot-password-modal"
         open={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
         onBackToLogin={() => { setShowForgotPassword(false); setMode('login') }}
@@ -80,6 +81,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
 
       {open && (
         <motion.div
+          key="login-modal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

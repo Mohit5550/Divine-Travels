@@ -23,6 +23,7 @@ import {
   UsersRound,
   Timer,
   Phone,
+  MessageCircle,
   Calendar,
   Info,
   Map,
@@ -37,6 +38,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useSettings } from '@/lib/useSettings'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { PackageWishlistButton } from '@/components/cart/PackageWishlistButton'
 
 interface PackageImage {
   url: string
@@ -129,7 +132,7 @@ interface PackageData {
 type DetailSection = 'about' | 'highlights' | 'inclusions' | 'exclusions' | 'eligibility' | 'location' | 'cancellation' | 'reviews' | 'faqs' | 'itinerary' | 'howToReach' | 'thingsToCarry' | 'importantInfo'
 
 export function PackageDetail() {
-  const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
+  const { selectedPackageId, navigate, goBack, isAuthenticated, user } = useAppStore()
   const settings = useSettings()
   const queryClient = useQueryClient()
   const [activeSection, setActiveSection] = useState<DetailSection>('about')
@@ -204,17 +207,26 @@ export function PackageDetail() {
 
   const displayPrice = effectivePrice ?? pkg?.price ?? 0
 
-  const parsedData = pkg ? {
-    images: JSON.parse(pkg.images || '[]') as string[],
-    highlights: JSON.parse(pkg.highlights || '[]') as string[],
-    inclusions: JSON.parse(pkg.inclusions || '[]') as string[],
-    exclusions: JSON.parse(pkg.exclusions || '[]') as string[],
-    faqs: JSON.parse(pkg.faqs || '[]') as FAQ[],
-    itinerary: JSON.parse(pkg.itinerary || '[]') as ItineraryDay[],
-    thingsToCarry: JSON.parse(pkg.thingsToCarry || '[]') as string[],
-    howToReach: JSON.parse(pkg.howToReach || '[]') as string[],
-    fixedDepartures: JSON.parse(pkg.fixedDepartures || '[]') as FixedDeparture[],
-  } : null
+  const parsedData = pkg ? (() => {
+    try {
+      return {
+        images: JSON.parse(pkg.images || '[]') as string[],
+        highlights: JSON.parse(pkg.highlights || '[]') as string[],
+        inclusions: JSON.parse(pkg.inclusions || '[]') as string[],
+        exclusions: JSON.parse(pkg.exclusions || '[]') as string[],
+        faqs: JSON.parse(pkg.faqs || '[]') as FAQ[],
+        itinerary: JSON.parse(pkg.itinerary || '[]') as ItineraryDay[],
+        thingsToCarry: JSON.parse(pkg.thingsToCarry || '[]') as string[],
+        howToReach: JSON.parse(pkg.howToReach || '[]') as string[],
+        fixedDepartures: JSON.parse(pkg.fixedDepartures || '[]') as FixedDeparture[],
+      }
+    } catch {
+      return {
+        images: [], highlights: [], inclusions: [], exclusions: [],
+        faqs: [], itinerary: [], thingsToCarry: [], howToReach: [], fixedDepartures: [],
+      }
+    }
+  })() : null
 
   const handleBookNow = () => {
     if (!isAuthenticated) {
@@ -372,7 +384,7 @@ export function PackageDetail() {
               'international-tours': 'international', 'spiritual-tours': 'spiritual',
               stay: 'stay',
             }
-            navigate(viewMap[pkg.category] || 'rafting-packages')
+            goBack(viewMap[pkg.category] || 'rafting-packages')
           }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -602,10 +614,18 @@ export function PackageDetail() {
                 )}
               </div>
               <div className="p-5">
-                <Button onClick={handleBookNow} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
-                  Book This Activity
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <PackageWishlistButton packageId={selectedPackageId} />
+                  <AddToCartButton
+                    item={{ key: `package:${selectedPackageId}`, type: 'package', refId: selectedPackageId, title: pkg?.name, image: pkg?.image, price: pkg?.price }}
+                    className="flex-1"
+                    variant="outline"
+                  />
+                  <Button onClick={handleBookNow} className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
+                    Book
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
               </div>
               <div className="p-5 bg-brand-cream/50 space-y-3">
                 <h4 className="font-semibold text-sm text-brand-dark">Why Divine Travel?</h4>
@@ -1225,10 +1245,18 @@ export function PackageDetail() {
                 )}
               </div>
               <div className="p-5">
-                <Button onClick={handleBookNow} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
-                  Book This Activity
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <PackageWishlistButton packageId={selectedPackageId} />
+                  <AddToCartButton
+                    item={{ key: `package:${selectedPackageId}`, type: 'package', refId: selectedPackageId, title: pkg?.name, image: pkg?.image, price: pkg?.price }}
+                    className="flex-1"
+                    variant="outline"
+                  />
+                  <Button onClick={handleBookNow} className="flex-1 bg-brand-orange hover:bg-brand-orange/90 text-white h-12 text-base font-semibold rounded-xl">
+                    Book
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
               </div>
               <div className="p-5 bg-brand-cream/50 space-y-3">
                 <h4 className="font-semibold text-sm text-brand-dark">Why Divine Travel?</h4>
@@ -1246,14 +1274,18 @@ export function PackageDetail() {
                   </div>
                 ))}
               </div>
-              <div className="p-5 border-t border-border/50">
-                <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
-                <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
+              <div className="p-5 border-t border-border/50 space-y-2">
+                <p className="text-xs text-muted-foreground">Still have questions?</p>
+                <Button
+                  variant="outline"
+                  className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-xl h-10 font-medium"
                   onClick={() => {
-                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')
-                  }}>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Connect with Team
+                    const text = encodeURIComponent(`Hi Divine Travels, I am inquiring about "${pkg?.name}" (₹${displayPrice}/person). Please share availability & full details.`)
+                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${text}`, '_blank')
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" />
+                  Inquire on WhatsApp
                 </Button>
               </div>
             </motion.div>

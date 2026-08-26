@@ -30,6 +30,7 @@ export function AdminInquiries() {
       if (Array.isArray(data)) return { data, totalPages: 1 }
       return { data: [], totalPages: 1 }
     },
+    refetchInterval: 5000,
   })
 
   const inquiries = response?.data ?? []

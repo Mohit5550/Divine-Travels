@@ -5,7 +5,7 @@ import { DayBasedTour } from './DayBasedTour'
 
 const defaultPrograms = {
   1: { id: 1, title: 'The Classic Nainital City Tour', img: 'https://i0.wp.com/oneday.tours/wp-content/uploads/one-day-nainital-local-sightseeing-tour-package-thandi-sadak-3.jpg?resize=750%2C400&ssl=1', itinerary: ['Naini Lake', 'Naina Devi Temple', 'Snow View Point', 'Eco Cave Gardens', 'Tiffin Top', 'Tibetan Market', 'Chitai Golu Devta Temple', 'Tiffin Top (Dorothy\'s Seat)'] },
-  2: { id: 2, title: 'Lake District & Spiritual Trail', img: 'https://nainitaltaxi.in/wp-content/uploads/2015/10/sariya-tal-Nainital.jpg', itinerary: ['Kainchi Dham', 'Bhimtal Lake', 'Naukuchiatal', 'Sattal (Seven Lakes)', 'Hanuman Garhi', 'Nainital Mall Road'] },
+  2: { id: 2, title: 'Lake District & Spiritual Trail', img: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=800', itinerary: ['Kainchi Dham', 'Bhimtal Lake', 'Naukuchiatal', 'Sattal (Seven Lakes)', 'Hanuman Garhi', 'Nainital Mall Road'] },
   3: { id: 3, title: 'Kainchi Dham & Almora', img: 'https://www.epicyatra.com/wp-content/uploads/2025/01/1680354261299-1024x683.webp', itinerary: ['Kainchi Dham', 'Almora', 'Kasar Devi Temple', 'Katarmal Sun Temple'] },
   4: { id: 4, title: 'Nainital City Sights', img: 'https://www.bontravelindia.com/wp-content/uploads/2022/08/Best-Places-to-Visit-in-Nainital.jpg', itinerary: ['Naini Lake', 'Naina Devi Temple', 'Hanuman Garhi temple', 'Snow View Point'] },
   5: { id: 5, title: 'Ashram & Lake District', img: 'https://media-cdn.tripadvisor.com/media/photo-m/1280/14/3f/82/5d/bhimtal-island-aquarium.jpg', itinerary: ['Kainchi Dham (Neem Karoli Baba Ashram)', 'Chitai Golu Devta Temple', 'Bhimtal (Island Aquarium)', 'Forest lakes of Sattal'] },

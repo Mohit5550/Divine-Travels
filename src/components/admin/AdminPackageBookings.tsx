@@ -8,6 +8,8 @@ import { toast } from 'sonner'
 import { useState } from 'react'
 import { Pagination } from '@/components/ui/Pagination'
 import { motion, AnimatePresence } from 'framer-motion'
+import { BookingCardActions } from '../booking/BookingCardActions'
+import { parseHotelNotes } from '@/lib/hotelBooking'
 
 interface PackageBookingData {
   id: string
@@ -65,7 +67,7 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-package-bookings', user?.id, statusFilter, categoryFilter, page],
     queryFn: async () => {
-      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      const params = new URLSearchParams({ page: String(page), limit: '20', all: 'true' })
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (categoryFilter) params.set('category', categoryFilter)
       const res = await fetch(`/api/package-bookings?${params}`, {
@@ -84,13 +86,13 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`/api/package-bookings/${id}`, {
-        method: 'PUT',
+      const res = await fetch('/api/admin/bookings/update-status', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': user?.id || '',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ bookingId: id, type: 'package', status }),
       })
 
       if (!res.ok) {
@@ -99,8 +101,14 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
         return
       }
 
-      toast.success(`Booking ${status} successfully`)
+      toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
       queryClient.invalidateQueries({ queryKey: ['admin-package-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })
+      if (selectedBooking && selectedBooking.id === id) {
+        setSelectedBooking((prev) => prev ? { ...prev, status } : null)
+      }
     } catch {
       toast.error('Failed to update booking')
     }
@@ -110,13 +118,16 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-700'
       case 'pending': return 'bg-amber-100 text-amber-700'
-      case 'cancelled': return 'bg-red-100 text-red-700'
-      case 'completed': return 'bg-blue-100 text-blue-700'
+      case 'ready': return 'bg-orange-100 text-orange-700'
+      case 'in_progress': return 'bg-blue-100 text-blue-700 font-bold'
+      case 'cancelled':
+      case 'rejected': return 'bg-red-100 text-red-700'
+      case 'completed': return 'bg-purple-100 text-purple-700'
       default: return 'bg-gray-100 text-gray-700'
     }
   }
 
-  const statuses = ['all', 'pending', 'confirmed', 'cancelled', 'completed']
+  const statuses = ['all', 'pending', 'confirmed', 'ready', 'in_progress', 'completed', 'cancelled']
   const label = categoryFilter ? serviceLabels[categoryFilter] || categoryFilter : 'Package'
 
   return (
@@ -240,14 +251,18 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                     </div>
                   </div>
 
-                  {selectedBooking.additionalNotes && (
-                    <div className="bg-muted/30 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" /> Additional Notes
-                      </p>
-                      <p className="font-medium text-brand-dark text-sm mt-1">{selectedBooking.additionalNotes}</p>
-                    </div>
-                  )}
+                  {selectedBooking.additionalNotes && (() => {
+                    const hotel = parseHotelNotes(selectedBooking.additionalNotes)
+                    const notes = hotel ? (hotel.specialRequests || null) : selectedBooking.additionalNotes
+                    return notes ? (
+                      <div className="bg-muted/30 rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" /> Additional Notes
+                        </p>
+                        <p className="font-medium text-brand-dark text-sm mt-1">{notes}</p>
+                      </div>
+                    ) : null
+                  })()}
                 </div>
 
                 {/* Status */}
@@ -268,12 +283,12 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {selectedBooking.status === 'pending' && (
+{selectedBooking.status === 'pending' && (
                       <>
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => { updateStatus(selectedBooking.id, 'confirmed'); setSelectedBooking(null) }}
+                          onClick={() => confirm('Confirm this booking?') && updateStatus(selectedBooking.id, 'confirmed')}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
                           Confirm
@@ -282,25 +297,27 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                           size="sm"
                           variant="outline"
                           className="text-red-600 border-red-200 hover:bg-red-50"
-                          onClick={() => { updateStatus(selectedBooking.id, 'cancelled'); setSelectedBooking(null) }}
+                          onClick={() => confirm('Cancel this booking?') && updateStatus(selectedBooking.id, 'cancelled')}
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           Reject
                         </Button>
                       </>
                     )}
-                    {selectedBooking.status === 'confirmed' && (
+{selectedBooking.status === 'confirmed' && (
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => { updateStatus(selectedBooking.id, 'completed'); setSelectedBooking(null) }}
+                        onClick={() => confirm('Mark this booking as completed?') && updateStatus(selectedBooking.id, 'completed') }
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
-                        Mark Completed
+                        Completed
                       </Button>
                     )}
                   </div>
                 </div>
+                {/* Negotiation & Payments */}
+                <BookingCardActions type="package" id={selectedBooking.id} isAdmin={true} userId={user?.id} />
               </div>
             </motion.div>
           </motion.div>
@@ -359,12 +376,29 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(booking.status)}`}>
-                          {booking.status}
-                        </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <select
+                          value={booking.status || 'pending'}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => updateStatus(booking.id, e.target.value)}
+                          className={`text-xs font-semibold rounded-lg px-2 py-1 border cursor-pointer transition-colors focus:ring-2 focus:ring-brand-orange/20 outline-none ${
+                            booking.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
+                            booking.status === 'ready' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                            booking.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold' :
+                            booking.status === 'completed' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                            booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
+                          <option value="pending">🟡 Pending</option>
+                          <option value="confirmed">🟢 Confirmed</option>
+                          <option value="ready">🟠 Guide/Camp Ready</option>
+                          <option value="in_progress">🔵 In-Progress</option>
+                          <option value="completed">🟣 Completed</option>
+                          <option value="cancelled">🔴 Cancelled</option>
+                        </select>
                         {booking.paymentStatus === 'completed' && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">Paid</span>
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">Paid</span>
                         )}
                       </div>
                     </td>

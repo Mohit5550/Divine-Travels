@@ -17,12 +17,17 @@ import {
   MessageSquare,
   ChevronRight,
   Shield,
+  MapPin,
+  ShieldCheck,
+  CheckCircle2,
+  MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { computeHotelBreakdown, computeCampingBreakdown, nightsBetween } from '@/lib/hotelBooking'
 
 interface PackageData {
   id: string
@@ -36,6 +41,8 @@ interface PackageData {
   image: string
   timings: string
   rapidsLevel: string
+  roomTypes?: string
+  mealPlans?: string
 }
 
 const SUBOPTION_MAP: Record<string, string> = {
@@ -72,20 +79,43 @@ function getSubOptionFromName(name: string): string | undefined {
 }
 
 export function PackageBookingForm() {
-  const { selectedPackageId, navigate, isAuthenticated, user } = useAppStore()
+  const { selectedPackageId, navigate, goBack, isAuthenticated, user } = useAppStore()
   const queryClient = useQueryClient()
   const [form, setForm] = useState({
     fullName: user?.name || '',
     mobile: user?.phone || '',
+    emergencyContact: '',
+    pickupLocation: '',
     numberOfPeople: 1,
     preferredDate: '',
     preferredTime: 'No preference',
     additionalNotes: '',
+    safetyDeclared: false,
+    whatsappConsent: true,
   })
+
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.name || '',
+        mobile: prev.mobile || user.phone || '',
+      }))
+    }
+  }, [user])
   const [submitting, setSubmitting] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPct: number; discountAmount: number } | null>(null)
   const [validatingCoupon, setValidatingCoupon] = useState(false)
+
+  // Hotel / Camping specific fields
+  const [checkIn, setCheckIn] = useState('')
+  const [checkOut, setCheckOut] = useState('')
+  const [rooms, setRooms] = useState(1)
+  const [adults, setAdults] = useState(2)
+  const [childrenCount, setChildrenCount] = useState(0)
+  const [roomTypeName, setRoomTypeName] = useState('')
+  const [mealPlanName, setMealPlanName] = useState('')
 
   const { data: pkg, isLoading } = useQuery({
     queryKey: ['package-booking', selectedPackageId],
@@ -97,12 +127,81 @@ export function PackageBookingForm() {
     enabled: !!selectedPackageId,
   })
 
+  const isStay = pkg?.category === 'stay-hotel' || pkg?.category === 'stay-camping'
+  const isCamping = pkg?.category === 'stay-camping'
+  const roomTypes = pkg ? (() => { try { return JSON.parse(pkg.roomTypes || '[]') } catch { return [] } })() : []
+  const mealPlans = pkg ? (() => { try { return JSON.parse(pkg.mealPlans || '[]') } catch { return [] } })() : []
+
+  const selRoom = roomTypes.find((r: any) => r.name === roomTypeName) || roomTypes[0] || null
+  const selMeal = mealPlanName ? (mealPlans.find((m: any) => m.name === mealPlanName) || null) : null
+  const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0
+
+  // Per-room capacity (max persons per room). Falls back to base + 2 if not set.
+  const roomCapacity = selRoom?.guests ? Number(selRoom.guests) : ((selRoom?.baseOccupancy || 2) + 2)
+  const maxPersons = roomCapacity * rooms
+
+  // Admin-defined per-room adult/child limits (set per room type).
+  const roomMaxAdults = selRoom?.maxAdults ? Number(selRoom.maxAdults) : null
+  const roomMaxChildren = selRoom?.maxChildren ? Number(selRoom.maxChildren) : null
+  const hasAdultCap = roomMaxAdults != null
+  const hasChildCap = roomMaxChildren != null
+  const adultHardCap = hasAdultCap ? Math.min(roomMaxAdults * rooms, maxPersons) : maxPersons
+  const childHardCap = hasChildCap ? roomMaxChildren * rooms : maxPersons
+
+  // Auto-select the first room type once loaded, and clamp guests when capacity shrinks.
+  useEffect(() => {
+    if (!isStay) return
+    if (roomTypes.length > 0 && !roomTypeName) {
+      setRoomTypeName(roomTypes[0].name)
+    }
+    let newAdults = adults
+    let newChildren = childrenCount
+    if (newAdults > adultHardCap) newAdults = adultHardCap
+    if (newAdults < 1) newAdults = 1
+    const childMax = Math.min(childHardCap, Math.max(0, maxPersons - newAdults))
+    if (newChildren > childMax) newChildren = childMax
+    if (newChildren < 0) newChildren = 0
+    if (newAdults !== adults) setAdults(newAdults)
+    if (newChildren !== childrenCount) setChildrenCount(newChildren)
+  }, [isStay, roomTypes, roomTypeName, rooms, roomCapacity, adults, childrenCount, maxPersons, adultHardCap, childHardCap])
+
+  const hotelBreakdown = isStay && !isCamping && selRoom && nights > 0
+    ? computeHotelBreakdown(selRoom, selMeal, {
+        checkIn,
+        checkOut,
+        nights,
+        rooms,
+        adults,
+        children: childrenCount,
+        discount: appliedCoupon?.discountAmount || 0,
+      })
+    : null
+  const hotelTotal = hotelBreakdown?.total || 0
+
+  // Camping uses group-size tiered pricing (per-person rate drops as the
+  // per-camp headcount rises). The rate is resolved from the selected camp
+  // type's `pricingTiers` for the actual headcount — never from a flat price.
+  const campingBreakdown = isCamping && selRoom && nights > 0
+    ? computeCampingBreakdown(selRoom, selMeal, {
+        checkIn,
+        checkOut,
+        nights,
+        camps: rooms,
+        adults,
+        children: childrenCount,
+        discount: appliedCoupon?.discountAmount || 0,
+      })
+    : null
+  const campingTotal = campingBreakdown?.total || 0
+
+  const selectedDate = form.preferredDate || new Date().toISOString().split('T')[0]
+
   const { data: effectivePrice } = useQuery({
-    queryKey: ['effective-price', selectedPackageId, pkg?.category],
+    queryKey: ['effective-price', selectedPackageId, pkg?.category, selectedDate],
     queryFn: async () => {
       if (!pkg) return null
       const service = pkg.category || ''
-      const res = await fetch(`/api/public/availability?service=${service}`)
+      const res = await fetch(`/api/public/availability?service=${service}&date=${selectedDate}`)
       const data = await res.json()
       const records = data.records || []
       const subOption = getSubOptionFromName(pkg.name)
@@ -132,25 +231,25 @@ export function PackageBookingForm() {
             <User className="w-8 h-8 text-brand-orange" />
           </div>
           <h2 className="font-serif text-2xl text-brand-dark mb-2">Login Required</h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            You need to login or create an account before booking a rafting package.
-          </p>
-          <div className="space-y-3">
-            <Button
-              onClick={() => navigate('landing')}
-              className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-11"
-            >
-              Go to Login
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('rafting-packages')}
-              className="w-full h-11"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Packages
-            </Button>
-          </div>
+            <p className="text-muted-foreground text-sm mb-6">
+              You need to login or create an account before booking this package.
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={() => navigate('landing')}
+                className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-11"
+              >
+                Go to Login
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => goBack()}
+                className="w-full h-11"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Details
+              </Button>
+            </div>
         </motion.div>
       </div>
     )
@@ -167,23 +266,23 @@ export function PackageBookingForm() {
 
     setValidatingCoupon(true)
     try {
-      const res = await fetch('/api/coupons/active')
-      const coupons = await res.json()
-      const match = coupons.find((c: any) => c.code === couponCode.trim().toUpperCase())
+      const res = await fetch(`/api/coupons/validate?code=${couponCode.trim().toUpperCase()}`)
+      const result = await res.json()
 
-      if (!match) {
-        toast.error('Invalid coupon code')
+      if (!result.valid) {
+        toast.error(result.error || 'Invalid coupon code')
         setAppliedCoupon(null)
         return
       }
 
+      if (!pkg) return
       const baseTotal = (effectivePrice ?? pkg.price) * form.numberOfPeople
-      let discount = Math.round(baseTotal * (match.discountPct / 100))
-      if (match.maxDiscount && discount > match.maxDiscount) {
-        discount = match.maxDiscount
+      let discount = Math.round(baseTotal * (result.discountPct / 100))
+      if (result.maxDiscount && discount > result.maxDiscount) {
+        discount = result.maxDiscount
       }
 
-      setAppliedCoupon({ code: match.code, discountPct: match.discountPct, discountAmount: discount })
+      setAppliedCoupon({ code: result.code, discountPct: result.discountPct, discountAmount: discount })
       toast.success(`Coupon applied! You save ₹${discount}`)
     } catch {
       toast.error('Failed to validate coupon')
@@ -266,15 +365,37 @@ export function PackageBookingForm() {
       toast.error('Please enter a valid mobile number')
       return
     }
-    if (!form.preferredDate) {
+
+    if (isStay) {
+      if (!checkIn || !checkOut) {
+        toast.error('Please select check-in and check-out dates')
+        return
+      }
+      if (!roomTypeName || !selRoom) {
+        toast.error('Please select a room type')
+        return
+      }
+    } else if (!form.preferredDate) {
       toast.error('Please select a preferred date')
       return
     }
 
-    if (isAdventure) {
-      handleProceedToPay()
+    const isAdv = pkg?.category === 'rafting' || pkg?.category === 'trekking' || pkg?.category === 'adventure'
+    if (isAdv && !form.safetyDeclared) {
+      toast.error('Please confirm the safety & fitness declaration')
       return
     }
+
+    const additionalNotesPayload = isCamping && campingBreakdown
+      ? JSON.stringify({ ...campingBreakdown, pickupLocation: form.pickupLocation || undefined, emergencyContact: form.emergencyContact || undefined, whatsappConsent: form.whatsappConsent, specialRequests: form.additionalNotes || undefined })
+      : isStay && hotelBreakdown
+      ? JSON.stringify({ ...hotelBreakdown, pickupLocation: form.pickupLocation || undefined, emergencyContact: form.emergencyContact || undefined, whatsappConsent: form.whatsappConsent, specialRequests: form.additionalNotes || undefined })
+      : JSON.stringify({
+          pickupLocation: form.pickupLocation || undefined,
+          emergencyContact: form.emergencyContact || undefined,
+          whatsappConsent: form.whatsappConsent,
+          notes: form.additionalNotes || undefined,
+        })
 
     setSubmitting(true)
     try {
@@ -288,12 +409,13 @@ export function PackageBookingForm() {
           packageId: selectedPackageId,
           fullName: form.fullName,
           mobile: form.mobile,
-          numberOfPeople: form.numberOfPeople,
-          preferredDate: form.preferredDate,
-          preferredTime: form.preferredTime,
-          additionalNotes: form.additionalNotes,
+          numberOfPeople: isStay ? adults + childrenCount : form.numberOfPeople,
+          preferredDate: isStay ? checkIn : form.preferredDate,
+          preferredTime: isStay ? null : form.preferredTime,
+          additionalNotes: additionalNotesPayload,
           couponCode: appliedCoupon?.code || '',
-          pricePerPerson: displayPrice,
+          pricePerPerson: isCamping ? (campingBreakdown?.pricePerPerson || 0) : isStay ? hotelTotal : displayPrice,
+          totalPrice: isStay ? (isCamping ? campingTotal : hotelTotal) : undefined,
         }),
       })
 
@@ -304,9 +426,9 @@ export function PackageBookingForm() {
       }
 
       const booking = await res.json()
-      toast.success('Booking enquiry sent successfully! Our team will confirm your trip shortly.')
+      toast.success(isStay ? 'Booking enquiry sent! Redirecting to your dashboard…' : 'Booking enquiry sent successfully! Redirecting to your dashboard…')
       queryClient.invalidateQueries({ queryKey: ['user-package-bookings'] })
-      navigate('booking-success', null, selectedPackageId)
+      navigate('user-dashboard')
     } catch {
       toast.error('Failed to submit booking. Please try again.')
     } finally {
@@ -341,7 +463,7 @@ export function PackageBookingForm() {
         <Button
           variant="ghost"
           className="text-brand-dark hover:text-brand-orange mb-4"
-          onClick={() => navigate('package-detail', null, selectedPackageId)}
+          onClick={() => goBack()}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Package Details
@@ -408,81 +530,294 @@ export function PackageBookingForm() {
               </div>
             </div>
 
-            {/* Number of People */}
-            <div>
-              <label className="text-sm font-medium text-brand-dark mb-1.5 block">No. of People</label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handlePeopleChange(-1)}
-                  className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20 transition-colors"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <div className="flex-1 text-center">
-                  <span className="text-lg font-semibold text-brand-dark">{form.numberOfPeople}</span>
-                  <span className="text-sm text-muted-foreground ml-1">
-                    {form.numberOfPeople === 1 ? 'person' : 'people'}
-                  </span>
+            {isStay ? (
+              <>
+                {/* Check-in / Check-out */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">Check-in Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                        className="pl-10 h-11 rounded-xl"
+                        min={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">Check-out Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={checkOut}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        className="pl-10 h-11 rounded-xl"
+                        min={checkIn || new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handlePeopleChange(1)}
-                  className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
 
-            {/* Preferred Date */}
-            <div>
-              <label className="text-sm font-medium text-brand-dark mb-1.5 block">Preferred Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="date"
-                  value={form.preferredDate}
-                  onChange={(e) => setForm({ ...form, preferredDate: e.target.value })}
-                  className="pl-10 h-11 rounded-xl"
-                  min={new Date().toISOString().split('T')[0]}
-                  required
-                />
-              </div>
-            </div>
+                {nights > 0 && (
+                  <p className="text-xs text-muted-foreground -mt-2">{nights} night{nights > 1 ? 's' : ''} stay</p>
+                )}
 
-            {/* Preferred Time */}
-            <div>
-              <label className="text-sm font-medium text-brand-dark mb-1.5 block">
-                Preferred Time <span className="text-muted-foreground font-normal">(optional)</span>
-              </label>
-              <select
-                value={form.preferredTime}
-                onChange={(e) => setForm({ ...form, preferredTime: e.target.value })}
-                className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {timeSlots.map((slot) => (
-                  <option key={slot} value={slot}>{slot}</option>
-                ))}
-              </select>
-            </div>
+                {/* Rooms / Adults / Children */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">{isCamping ? 'Camps' : 'Rooms'}</label>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => setRooms(Math.max(1, rooms - 1))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 text-center"><span className="text-lg font-semibold text-brand-dark">{rooms}</span></div>
+                      <button type="button" onClick={() => setRooms(Math.min(10, rooms + 1))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">Adults</label>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 text-center"><span className="text-lg font-semibold text-brand-dark">{adults}</span></div>
+                      <button type="button" onClick={() => setAdults(Math.min(adults + 1, adultHardCap))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">Children</label>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 text-center"><span className="text-lg font-semibold text-brand-dark">{childrenCount}</span></div>
+                      <button type="button" onClick={() => setChildrenCount(Math.min(childrenCount + 1, Math.min(childHardCap, maxPersons - adults)))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Additional Notes */}
-            <div>
-              <label className="text-sm font-medium text-brand-dark mb-1.5 block">
-                Additional Notes <span className="text-muted-foreground font-normal">(optional)</span>
-              </label>
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Textarea
-                  placeholder="Any special requests..."
-                  value={form.additionalNotes}
-                  onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
-                  className="pl-10 rounded-xl min-h-[80px] resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
+                {selRoom && (
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    {isCamping
+                      ? `Max ${roomCapacity} guests per camp. Per-person rate drops as your group grows — see the live price summary below.`
+                      : hasAdultCap || hasChildCap
+                      ? `Limit per room: ${hasAdultCap ? `${roomMaxAdults} adults` : 'any adults'}${hasChildCap ? ` / ${roomMaxChildren} children` : ' / any children'}. Up to ${adultHardCap} adults / ${childHardCap} children for ${rooms} room${rooms > 1 ? 's' : ''}.`
+                      : `Max ${roomCapacity} guests per room (${selRoom.baseOccupancy || 2} included · ₹${selRoom.extraAdultPrice || 0}/extra adult/night). Up to ${maxPersons} total for ${rooms} room${rooms > 1 ? 's' : ''}.`}
+                  </p>
+                )}
+
+                {/* Room / Camp Type */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">{isCamping ? 'Camp Type' : 'Room Type'}</label>
+                  <select
+                    value={roomTypeName}
+                    onChange={(e) => setRoomTypeName(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select room type</option>
+                    {roomTypes.map((r: any, i: number) => (
+                      <option key={i} value={r.name}>
+                        {r.name} — {isCamping ? 'Group-size tiered pricing' : `₹${(r.price || 0).toLocaleString()}/night (base ${r.baseOccupancy || 2} pax)`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Meal Plan */}
+                {mealPlans.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                      Meal Plan <span className="text-muted-foreground font-normal">(optional)</span>
+                    </label>
+                    <select
+                      value={mealPlanName}
+                      onChange={(e) => setMealPlanName(e.target.value)}
+                      className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">No meal plan</option>
+                      {mealPlans.map((m: any, i: number) => (
+                        <option key={i} value={m.name}>
+                          {m.name} {m.description ? `(${m.description})` : ''} — ₹{(m.price || 0).toLocaleString()}/person
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Special Requests */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                    Special Requests <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
+                      placeholder="Any special requests..."
+                      value={form.additionalNotes}
+                      onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
+                      className="pl-10 rounded-xl min-h-[80px] resize-none"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Number of People */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">No. of People</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handlePeopleChange(-1)}
+                      className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20 transition-colors"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <div className="flex-1 text-center">
+                      <span className="text-lg font-semibold text-brand-dark">{form.numberOfPeople}</span>
+                      <span className="text-sm text-muted-foreground ml-1">
+                        {form.numberOfPeople === 1 ? 'person' : 'people'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handlePeopleChange(1)}
+                      className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Preferred Date */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">Preferred Date</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={form.preferredDate}
+                      onChange={(e) => setForm({ ...form, preferredDate: e.target.value })}
+                      className="pl-10 h-11 rounded-xl"
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Preferred Time */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                    Preferred Time <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <select
+                    value={form.preferredTime}
+                    onChange={(e) => setForm({ ...form, preferredTime: e.target.value })}
+                    className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Pickup / Reporting Location */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                    Pickup / Reporting Location <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="e.g. Tapovan / Ram Jhula / Hotel in Rishikesh"
+                      value={form.pickupLocation}
+                      onChange={(e) => setForm({ ...form, pickupLocation: e.target.value })}
+                      className="pl-10 h-11 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                {/* Emergency Contact */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                    Emergency Contact <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="tel"
+                      placeholder="Alternate contact number"
+                      value={form.emergencyContact}
+                      onChange={(e) => setForm({ ...form, emergencyContact: e.target.value.replace(/[^\d+]/g, '') })}
+                      className="pl-10 h-11 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
+                <div>
+                  <label className="text-sm font-medium text-brand-dark mb-1.5 block">
+                    Additional Notes <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
+                      placeholder="Any special requests or instructions..."
+                      value={form.additionalNotes}
+                      onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
+                      className="pl-10 rounded-xl min-h-[80px] resize-none"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Safety Declaration for Adventure / Rafting / Trekking */}
+                {(pkg.category === 'rafting' || pkg.category === 'trekking' || pkg.category === 'adventure') && (
+                  <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200/80 space-y-2">
+                    <div className="flex items-start gap-2.5">
+                      <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-900 leading-relaxed font-semibold">
+                        Safety & Fitness Requirement
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2 text-xs text-brand-dark cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.safetyDeclared}
+                        onChange={(e) => setForm({ ...form, safetyDeclared: e.target.checked })}
+                        className="mt-0.5 rounded border-gray-300 text-brand-orange focus:ring-brand-orange"
+                      />
+                      <span>I confirm all participants meet age/fitness criteria and do not suffer from severe medical or heart conditions.</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* WhatsApp Updates Opt-in */}
+                <label className="flex items-center gap-2.5 text-xs text-gray-700 font-medium cursor-pointer bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                  <input
+                    type="checkbox"
+                    checked={form.whatsappConsent}
+                    onChange={(e) => setForm({ ...form, whatsappConsent: e.target.checked })}
+                    className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Receive booking voucher, pickup timing & driver details on WhatsApp</span>
+                </label>
+              </>
+            )}
 
             {/* Coupon Code */}
             <div>
@@ -526,15 +861,71 @@ export function PackageBookingForm() {
 
             {/* Price Summary */}
             <div className="bg-brand-cream/70 rounded-xl p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">₹{displayPrice} × {form.numberOfPeople} {form.numberOfPeople === 1 ? 'person' : 'people'}</span>
-                <span className="text-brand-dark font-medium">₹{(displayPrice * form.numberOfPeople).toLocaleString()}</span>
-              </div>
-              {appliedCoupon && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Discount ({appliedCoupon.code})</span>
-                  <span className="text-green-600 font-medium">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
-                </div>
+              {isCamping && campingBreakdown ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {campingBreakdown.campTypeName} — Group of {campingBreakdown.tierPerCamp}/camp @ ₹{campingBreakdown.pricePerPerson.toLocaleString()}/pax/night
+                    </span>
+                    <span className="text-brand-dark font-medium">₹{campingBreakdown.roomCost.toLocaleString()}</span>
+                  </div>
+                  {campingBreakdown.mealCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{campingBreakdown.mealPlanName} (₹{campingBreakdown.mealPlanPrice}/pax/night)</span>
+                      <span className="text-brand-dark font-medium">₹{campingBreakdown.mealCost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Discount ({appliedCoupon.code})</span>
+                      <span className="text-green-600 font-medium">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
+              ) : isStay && hotelBreakdown ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">₹{hotelBreakdown.roomTypePrice.toLocaleString()} × {nights} night{nights > 1 ? 's' : ''} × {rooms} room{rooms > 1 ? 's' : ''}</span>
+                    <span className="text-brand-dark font-medium">₹{hotelBreakdown.roomCost.toLocaleString()}</span>
+                  </div>
+                  {hotelBreakdown.extraAdultCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Extra adults (₹{hotelBreakdown.extraAdultPrice}/pax/night)</span>
+                      <span className="text-brand-dark font-medium">₹{hotelBreakdown.extraAdultCost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {hotelBreakdown.extraChildCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Extra children (₹{hotelBreakdown.extraChildPrice}/child/night)</span>
+                      <span className="text-brand-dark font-medium">₹{hotelBreakdown.extraChildCost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {hotelBreakdown.mealCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{hotelBreakdown.mealPlanName} (₹{hotelBreakdown.mealPlanPrice}/pax/night)</span>
+                      <span className="text-brand-dark font-medium">₹{hotelBreakdown.mealCost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Discount ({appliedCoupon.code})</span>
+                      <span className="text-green-600 font-medium">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">₹{displayPrice} × {form.numberOfPeople} {form.numberOfPeople === 1 ? 'person' : 'people'}</span>
+                    <span className="text-brand-dark font-medium">₹{(displayPrice * form.numberOfPeople).toLocaleString()}</span>
+                  </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Discount ({appliedCoupon.code})</span>
+                      <span className="text-green-600 font-medium">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Shield className="w-3 h-3" />
@@ -542,7 +933,23 @@ export function PackageBookingForm() {
               </div>
               <div className="flex justify-between font-bold text-lg pt-2 border-t border-border/50">
                 <span>Total</span>
-                <span className="text-brand-orange">₹{(totalPrice - (appliedCoupon?.discountAmount || 0)).toLocaleString()}</span>
+                <span className="text-brand-orange">₹{(((isCamping ? campingTotal : isStay ? hotelTotal : totalPrice)) - (appliedCoupon?.discountAmount || 0)).toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Trust Badges Strip */}
+            <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-gray-500 py-3 border-y border-border/40 bg-gray-50/50 rounded-xl px-2">
+              <div className="flex flex-col items-center gap-1">
+                <Shield className="w-4 h-4 text-emerald-600" />
+                <span>100% Verified</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <CheckCircle2 className="w-4 h-4 text-brand-orange" />
+                <span>Instant Confirmation</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Phone className="w-4 h-4 text-brand-teal" />
+                <span>24/7 Helpline</span>
               </div>
             </div>
 
@@ -551,7 +958,7 @@ export function PackageBookingForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('package-detail', null, selectedPackageId)}
+                onClick={() => goBack()}
                 className="flex-1 h-11 rounded-xl"
               >
                 Cancel

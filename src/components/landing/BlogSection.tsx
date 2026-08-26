@@ -61,7 +61,7 @@ export function BlogSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {blogs.map((post, index) => (
             <motion.article
               key={post.id}
@@ -72,7 +72,7 @@ export function BlogSection() {
               onClick={() => navigate('blog-single', null, post.slug)}
               className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-100"
             >
-              <div className="h-40 overflow-hidden">
+               <div className="h-32 sm:h-40 overflow-hidden">
                 {post.featuredImage ? (
                   <img
                     src={toDirectImageUrl(post.featuredImage)}
@@ -85,7 +85,7 @@ export function BlogSection() {
                   </div>
                 )}
               </div>
-              <div className="p-4">
+               <div className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-2">
                   {post.category && (
                     <span className="text-[10px] font-semibold bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full uppercase tracking-wider">

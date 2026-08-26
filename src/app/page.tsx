@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/lib/store'
+import { useCart } from '@/lib/cart'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
@@ -50,10 +51,57 @@ import { HotelDetail } from '@/components/hotel/HotelDetail'
 import { TermsOfService } from '@/components/pages/TermsOfService'
 import { RefundPolicy } from '@/components/pages/RefundPolicy'
 import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
+import { WhatsAppWidget } from '@/components/ui/WhatsAppWidget'
+import { HeroSearch } from '@/components/landing/HeroSearch'
+import { TrustGuarantee } from '@/components/landing/TrustGuarantee'
+import { FAQSection } from '@/components/landing/FAQSection'
+import { CreatorCollaborationPage } from '@/components/landing/CreatorCollaborationPage'
+import { VendorPartnerPage } from '@/components/landing/VendorPartnerPage'
+
+const selfContainedViews = [
+  'admin-dashboard',
+  'company-detail',
+  'collaborate',
+  'partner',
+  'rafting-packages',
+  'bike-rental',
+  'taxi-booking',
+  'taxi-booking-form',
+  'trekking',
+  'adventure',
+  'domestic-tours',
+  'spiritual-tours',
+  'international-tours',
+  'gallery',
+  'rishikesh-tour',
+  'haridwar-tour',
+  'mussoorie-tour',
+  'nainital-tour',
+  'hill-stations-tour',
+  'char-dham-tour',
+  'hotel-packages',
+  'camping-packages',
+  'package-detail',
+  'about-us',
+  'contact',
+  'privacy-policy',
+  'terms-of-service',
+  'refund-policy',
+  'cancellation-policy',
+  'blog-archive',
+  'blog-single',
+]
 
 export default function Home() {
   const { currentView, navigate } = useAppStore()
   const [renderError, setRenderError] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    useAppStore.persist.rehydrate()
+    useCart.persist.rehydrate()
+    setHydrated(true)
+  }, [])
 
   useEffect(() => {
     if (renderError) {
@@ -64,12 +112,13 @@ export default function Home() {
   }, [renderError, navigate])
 
   useEffect(() => {
+    if (!hydrated) return
     const redirect = localStorage.getItem('dt_redirect')
     if (redirect) {
       localStorage.removeItem('dt_redirect')
       navigate(redirect)
     }
-  }, [navigate])
+  }, [navigate, hydrated])
 
   const renderView = useCallback(() => {
     try {
@@ -142,6 +191,10 @@ export default function Home() {
           return <BlogSingle />
         case 'hotel-detail':
           return <HotelDetail />
+        case 'collaborate':
+          return <CreatorCollaborationPage />
+        case 'partner':
+          return <VendorPartnerPage />
         case 'landing':
         default:
           return (
@@ -149,12 +202,15 @@ export default function Home() {
               <Navbar />
               <ActivityBar />
               <HeroBanner />
+              <HeroSearch />
+              <TrustGuarantee />
               <DestinationCarousel />
               <CompanySection />
               <TopDestinations />
               <StaySection />
               <BlogSection />
               <TestimonialsSection />
+              <FAQSection />
               <PartnersSection />
               <SocialCTASection />
               <CTABanner />
@@ -168,16 +224,33 @@ export default function Home() {
     }
   }, [currentView])
 
-  const hideNavbarViews = ['admin-dashboard', 'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form', 'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours', 'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages', 'company-detail', 'package-detail', 'package-booking', 'blog-archive', 'blog-single', 'hotel-detail']
+  if (!hydrated) {
+    return (
+      <main className="min-h-screen flex flex-col">
+        <div className="h-16 bg-white border-b" />
+        <div className="flex-1 animate-pulse">
+          <div className="h-64 bg-gray-100" />
+          <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+            <div className="h-8 bg-gray-100 rounded w-1/3" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="h-48 bg-gray-100 rounded-lg" />
+              <div className="h-48 bg-gray-100 rounded-lg" />
+              <div className="h-48 bg-gray-100 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen flex flex-col">
-      {!hideNavbarViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
+      {!selfContainedViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
 
       <AnimatePresence mode="wait">
         <motion.div
           key={currentView}
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
@@ -186,6 +259,8 @@ export default function Home() {
           {renderView()}
         </motion.div>
       </AnimatePresence>
+
+      {currentView !== 'admin-dashboard' && <WhatsAppWidget />}
     </main>
   )
 }

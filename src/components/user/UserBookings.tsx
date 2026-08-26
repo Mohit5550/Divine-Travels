@@ -5,6 +5,7 @@ import { useAppStore } from '@/lib/store'
 import { MapPin, Calendar, Users, X, ArrowRight, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { BookingCardActions } from '../booking/BookingCardActions'
 
 export function UserBookings() {
   const { user, navigate } = useAppStore()
@@ -17,6 +18,7 @@ export function UserBookings() {
       if (!res.ok) return []
       return res.json()
     },
+    refetchInterval: 12000,
   })
 
   const cancelBooking = async (id: string) => {
@@ -114,6 +116,9 @@ export function UserBookings() {
                       )}
                     </div>
                   </div>
+                </div>
+                <div className="border-t border-border/50 pt-3 mt-3">
+                  <BookingCardActions type="destination" id={booking.id} isAdmin={false} userId={user?.id} />
                 </div>
               </div>
             </div>

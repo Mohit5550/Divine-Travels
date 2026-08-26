@@ -18,7 +18,6 @@ export function UserProfile() {
     email: user?.email || '',
   })
   const [saving, setSaving] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '')
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [savingPassword, setSavingPassword] = useState(false)
@@ -43,7 +42,7 @@ export function UserProfile() {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
-        body: JSON.stringify({ name: form.name, phone: form.phone, avatar: avatarUrl || null }),
+        body: JSON.stringify({ name: form.name, phone: form.phone }),
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to save profile'); return }
       const updatedUser = await res.json()
@@ -110,8 +109,8 @@ export function UserProfile() {
         <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
           <div className="relative group">
             <div className="w-24 h-24 rounded-full bg-brand-orange/10 flex items-center justify-center overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-brand-orange" />
               )}
@@ -127,20 +126,6 @@ export function UserProfile() {
             <span className="inline-flex items-center gap-1 mt-1 text-xs bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full">
               {user?.role === 'admin' ? 'Admin' : 'Member'}
             </span>
-          </div>
-        </div>
-
-        {/* Avatar URL Input */}
-        <div className="mb-6">
-          <label className="text-sm font-medium text-brand-dark mb-1.5 block">Profile Picture URL</label>
-          <div className="relative">
-            <Camera className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="pl-10 h-11"
-              placeholder="Paste image URL or leave empty"
-            />
           </div>
         </div>
 
