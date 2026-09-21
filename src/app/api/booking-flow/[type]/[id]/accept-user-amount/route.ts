@@ -39,7 +39,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ type: s
       return NextResponse.json({ error: 'Price already agreed on this booking' }, { status: 400 })
     }
 
-    // Create an accepted offer record and update the booking in a transaction
+    // Create an accepted offer record and update the booking in a transaction.
+    // Cast: delegate update returns Promise<any>, not PrismaPromise (runtime is identical).
     await db.$transaction([
       db.bookingOffer.create({
         data: {
@@ -64,7 +65,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ type: s
           status: 'confirmed',
         },
       }),
-    ])
+    ] as any)
 
     const ownerId = await bookingOwnerId(type as any, id)
     if (ownerId) {

@@ -44,6 +44,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ type: s
 
     const booking = await fetchBooking(type as any, id)
 
+    // Cast: delegate update returns Promise<any>, not PrismaPromise (runtime is identical).
     await db.$transaction([
       db.bookingOffer.update({ where: { id: offerId }, data: { status: 'accepted' } }),
       db.bookingOffer.updateMany({
@@ -59,7 +60,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ type: s
           ...(isUnowned ? { userId: user.id } : {}),
         },
       }),
-    ])
+    ] as any)
 
     if (offer.offeredBy === 'admin') {
       if (ownerId) await notifyUser(ownerId, 'Offer Accepted', `Your booking is confirmed at ₹${offer.amount}. Pay 10% advance to lock it.`, 'booking', '/?view=user-dashboard')
