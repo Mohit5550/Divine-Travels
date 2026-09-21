@@ -6,13 +6,52 @@ const nextConfig: NextConfig = {
     // fix type errors instead of ignoring them
   },
   reactStrictMode: true,
+  // SPA deep-link support: serve the Home shell for client-side routes.
+  // NOTE: no negative-lookahead regex here — Vercel's Rust router does not
+  // support lookahead, which caused /api/*, /robots.txt and /sitemap.xml
+  // to be rewritten to `/`. Explicit paths only.
   async rewrites() {
+    const spaStatic = [
+      '/rishikesh',
+      '/haridwar',
+      '/mussoorie',
+      '/nainital',
+      '/hill-stations',
+      '/char-dham',
+      '/rafting',
+      '/bike-rental',
+      '/taxi',
+      '/taxi/book',
+      '/trekking',
+      '/adventure',
+      '/domestic',
+      '/spiritual',
+      '/international',
+      '/hotels',
+      '/camping',
+      '/gallery',
+      '/collaborate',
+      '/about',
+      '/contact',
+      '/dashboard',
+      '/admin',
+      '/privacy',
+      '/terms',
+      '/refund',
+      '/cancellation',
+      '/cookie-policy',
+      '/blog',
+      '/booking-success',
+    ]
     return [
-      {
-        source: '/:path((?!api|_next|assets|images|favicon.ico|robots.txt|sitemap.xml|payment|reset-password).*)',
-        destination: '/',
-      },
-    ];
+      ...spaStatic.map((source) => ({ source, destination: '/' })),
+      { source: '/package/:id/book', destination: '/' },
+      { source: '/package/:id', destination: '/' },
+      { source: '/hotel/:id', destination: '/' },
+      { source: '/company/:id', destination: '/' },
+      { source: '/blog/:id', destination: '/' },
+      { source: '/destination/:slug', destination: '/' },
+    ]
   },
   // Enable compression
   compress: true,
