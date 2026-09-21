@@ -19,19 +19,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     packages = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
-      `SELECT "slug", "updatedAt" FROM "Package" WHERE "status" = 'active' AND "slug" IS NOT NULL`
+      `SELECT "slug", "updatedAt" FROM "Package" WHERE "active" = 1 AND "slug" IS NOT NULL`
     )
   } catch { /* ignore */ }
 
   try {
     destinations = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
-      `SELECT "slug", "updatedAt" FROM "Destination" WHERE "slug" IS NOT NULL`
+      `SELECT "id" AS "slug", "updatedAt" FROM "Destination" WHERE "active" = 1`
     )
   } catch { /* ignore */ }
 
   try {
     blogPosts = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
-      `SELECT "slug", "updatedAt" FROM "BlogPost" WHERE "status" = 'published' AND "slug" IS NOT NULL`
+      `SELECT "slug", "updatedAt" FROM "Blog" WHERE "published" = 1 AND "slug" IS NOT NULL`
     )
   } catch { /* ignore */ }
 
