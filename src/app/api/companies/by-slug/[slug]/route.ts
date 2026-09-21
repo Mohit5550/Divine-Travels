@@ -19,7 +19,15 @@ export async function GET(
 
     const plansWithPackages = await Promise.all(
       company.plans.map(async (plan) => {
-        let pkg = null
+        let pkg: {
+          id: string
+          name: string
+          image: string
+          price: number
+          originalPrice: number | null
+          slug: string
+          location: string
+        } | null = null
         if (plan.packageSlug) {
           pkg = await db.package.findUnique({
             where: { slug: plan.packageSlug },
