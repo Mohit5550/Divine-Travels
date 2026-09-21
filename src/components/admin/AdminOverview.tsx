@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store'
 import { toast } from 'sonner'
 import { CalendarCheck, DollarSign, MapPin, Users, TrendingUp, ArrowUpRight, Loader2, CalendarDays, MessageCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminOverview({
   setActiveTab,
@@ -20,7 +21,7 @@ export function AdminOverview({
     queryKey: ['admin-stats', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/admin/stats', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -31,7 +32,7 @@ export function AdminOverview({
     queryKey: ['admin-overview-inquiries', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/admin/inquiries?limit=5', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return []
       const data = await res.json()
@@ -309,7 +310,7 @@ function UpcomingBookingsBox({
     queryKey: ['upcoming-bookings', user?.id, range],
     queryFn: async () => {
       const res = await fetch(`/api/admin/upcoming-bookings?range=${range}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -442,7 +443,7 @@ function UpcomingBookingsBox({
                           try {
                             const res = await fetch('/api/admin/bookings/update-status', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+                              headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
                               body: JSON.stringify({
                                 bookingId: booking.id,
                                 type: booking.type || 'package',
@@ -450,7 +451,13 @@ function UpcomingBookingsBox({
                               }),
                             })
                             if (!res.ok) throw new Error()
-                            toast.success(`Operational status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                            const data = await res.json()
+                            if (newStatus === 'confirmed' && data.whatsappUrl) {
+                              window.open(data.whatsappUrl, '_blank')
+                              toast.success('Booking Confirmed! WhatsApp opened to send 10% advance payment link.')
+                            } else {
+                              toast.success(`Operational status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                            }
                             queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
                             queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
                             queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })

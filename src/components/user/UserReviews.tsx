@@ -8,6 +8,7 @@ import { Star, MessageSquare, Trash2, Edit3, Send, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function UserReviews() {
   const { user } = useAppStore()
@@ -19,7 +20,7 @@ export function UserReviews() {
   const { data, isLoading } = useQuery({
     queryKey: ['user-reviews', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/user/reviews', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/user/reviews', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { destinationReviews: [], packageReviews: [] }
       return res.json()
     },
@@ -28,7 +29,7 @@ export function UserReviews() {
   const { data: completedBookings = [] } = useQuery({
     queryKey: ['user-package-bookings-completed', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/package-bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       const all = await res.json()
       return all.filter((b: any) => b.status === 'completed')
@@ -53,7 +54,7 @@ export function UserReviews() {
         : { rating: reviewForm.rating, comment: reviewForm.comment }
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(body),
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to submit review'); return }

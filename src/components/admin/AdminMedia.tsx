@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminMedia() {
   const { user } = useAppStore()
@@ -25,7 +26,7 @@ export function AdminMedia() {
   const { data: mediaResponse, isLoading } = useQuery({
     queryKey: ['admin-media', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/media?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/media?page=${page}&limit=20`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { data: [], totalPages: 1 }
       return res.json()
     },
@@ -40,7 +41,7 @@ export function AdminMedia() {
     try {
       const res = await fetch('/api/admin/media', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ url, label, alt, category }),
       })
       if (!res.ok) { toast.error('Failed to add'); return }
@@ -55,7 +56,7 @@ export function AdminMedia() {
   const handleDelete = async (id: string) => {
     if (!confirm('Remove this media?')) return
     try {
-      const res = await fetch(`/api/admin/media?id=${id}`, { method: 'DELETE', headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/media?id=${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } })
       if (!res.ok) { toast.error('Failed to delete'); return }
       toast.success('Media removed')
       queryClient.invalidateQueries({ queryKey: ['admin-media'] })

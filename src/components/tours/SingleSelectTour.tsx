@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Mountain, Star, X } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
@@ -11,6 +12,8 @@ import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
 import { useAppStore } from '@/lib/store'
 import { LoginModal } from '@/components/landing/LoginModal'
+import { BookingInquirySuccess } from '@/components/booking/BookingInquirySuccess'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface TourHighlight {
   icon: string
@@ -81,8 +84,16 @@ export function SingleSelectTour({
   }
 
   const selectedTour = selectedIdx != null ? tourData[selectedIdx] : null
-  const { user, isAuthenticated } = useAppStore()
+  const { user, isAuthenticated, navigate } = useAppStore()
   const [loginOpen, setLoginOpen] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [confirmed, setConfirmed] = useState<{
+    bookingId: string
+    title: string
+    typeLabel: string
+    date?: string
+    travelers?: number
+  } | null>(null)
 
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -106,7 +117,7 @@ export function SingleSelectTour({
         packageType: formData.get('Package_Type') || packageTypeLabel,
         selectedPrograms: [formData.get('Selected_Tour') || ''],
         name: formData.get('Name'),
-        phone: (formData.get('Phone') as string)?.replace(/[^0-9]/g, '').slice(-10) || '',
+        phone: phone.replace(/[^0-9]/g, '').slice(-10) || '',
         travelDate: formData.get('Date'),
         travelers: parseInt(formData.get('Travelers') as string) || 1,
       }
@@ -120,14 +131,19 @@ export function SingleSelectTour({
 
       const res = await fetch('/api/tour-bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(payload),
       })
 
       if (res.ok) {
-        form.style.display = 'none'
-        const msg = form.parentElement?.querySelector('.success-msg') as HTMLElement
-        if (msg) msg.style.display = 'block'
+        const data = await res.json()
+        setConfirmed({
+          bookingId: data.id,
+          title: selectedTour?.title || String(payload.packageType),
+          typeLabel: String(payload.packageType),
+          date: payload.travelDate ? String(payload.travelDate) : undefined,
+          travelers: payload.travelers,
+        })
         toast.success('Booking request sent! Admin will review shortly.')
       } else {
         toast.error('Submission failed. Please try again.')
@@ -139,6 +155,19 @@ export function SingleSelectTour({
       btn.disabled = false
       btn.textContent = 'Send Booking Request'
     }
+  }
+
+  if (confirmed) {
+    return (
+      <BookingInquirySuccess
+        bookingId={confirmed.bookingId}
+        title={confirmed.title}
+        typeLabel={confirmed.typeLabel}
+        date={confirmed.date}
+        travelers={confirmed.travelers}
+        onGoDashboard={() => navigate('user-dashboard')}
+      />
+    )
   }
 
   return (
@@ -404,16 +433,12 @@ export function SingleSelectTour({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone (10 digits)</label>
-                        <input
-                          type="tel"
-                          name="Phone"
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                        <PhoneInput
+                          value={phone}
+                          onChange={setPhone}
+                          placeholder="Enter phone number"
                           required
-                          maxLength={10}
-                          pattern="[0-9]{10}"
-                          placeholder="9876543210"
-                          title="Please enter a valid 10-digit phone number"
-                          className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange bg-white"
                         />
                       </div>
                       <div>
@@ -444,9 +469,6 @@ export function SingleSelectTour({
                       Send Booking Request
                     </button>
                   </form>
-                  <div className="success-msg hidden bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 mt-3 text-center text-sm">
-                    Thank you! Your request has been sent to Divine Travels. We will contact you soon.
-                  </div>
                 </div>
               </div>
             </motion.div>

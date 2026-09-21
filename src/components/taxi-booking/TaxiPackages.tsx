@@ -26,6 +26,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
   id: string
@@ -73,13 +74,6 @@ const SUBOPTION_MAP: Record<string, string> = {
   innova: 'INNOVA',
 }
 
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
-}
 
 export function TaxiPackages() {
   const { navigate, isAuthenticated, user } = useAppStore()
@@ -104,7 +98,7 @@ export function TaxiPackages() {
   })
 
   const getEffectivePrice = (pkg: PackageData) => {
-    const subOption = getSubOptionFromName(pkg.name)
+    const subOption = getSubOptionFromName(pkg.name, SUBOPTION_MAP)
     const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
     if (allDayMatch) return allDayMatch.price ?? pkg.price
     if (!subOption) return pkg.price
@@ -134,7 +128,7 @@ export function TaxiPackages() {
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://www.rajasthantourpackages.in/_next/image?url=https%3A%2F%2Fik.imagekit.io%2Fx7ulapdbp%2F8361a72a-edcb-4f94-9512-fe8bb70ab914-rajasthan-cab-rental.jpg&w=3840&q=75"
+            src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80"
             alt="Taxi Booking in Rishikesh"
             className="w-full h-full object-cover"
           />

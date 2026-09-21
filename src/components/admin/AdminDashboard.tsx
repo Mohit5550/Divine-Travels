@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -39,6 +39,8 @@ import {
   Megaphone,
   Sparkles,
   HelpCircle,
+  DollarSign,
+  Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminOverview } from './AdminOverview'
@@ -66,21 +68,22 @@ import { AdminBookingsPanel } from './AdminBookingsPanel'
 import { AdminBlogs } from './AdminBlogs'
 import { AdminFAQs } from './AdminFAQs'
 import { AdminCollaborations } from './AdminCollaborations'
-import { AdminVendors } from './AdminVendors'
+import { AdminRefunds } from './AdminRefunds'
+import { AdminPaymentRequests } from './AdminPaymentRequests'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export type AdminTab = 'overview' | 'destinations' | 'bookings' | 'users' | 'packages'
   | 'svc-rafting' | 'svc-trekking' | 'svc-adventure' | 'svc-bike-rental' | 'svc-taxi-booking'
   | 'svc-domestic-tours' | 'svc-spiritual-tours' | 'svc-international-tours'
   | 'svc-hotel-packages' | 'svc-camping-packages'
   | 'reviews' | 'settings' | 'inquiries' | 'coupons' | 'media' | 'gallery' | 'reports'
-  | 'tour-bookings' | 'tour-destinations' | 'availability'   | 'company-plans' | 'hero-notices' | 'blogs' | 'faqs' | 'collaborations' | 'vendors'
+  | 'tour-bookings' | 'tour-destinations' | 'availability' | 'company-plans' | 'hero-notices' | 'blogs' | 'faqs' | 'collaborations' | 'refunds'
   | 'bkg-rafting' | 'bkg-trekking' | 'bkg-adventure' | 'bkg-bike-rental' | 'bkg-taxi'
   | 'bkg-domestic-tours' | 'bkg-spiritual-tours' | 'bkg-international-tours'
-  | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour' | 'all-bookings'
+  | 'bkg-stay-hotel' | 'bkg-stay-camping' | 'bkg-tour' | 'all-bookings' | 'payment-requests'
 
 const mainTabs = [
   { id: 'overview' as AdminTab, label: 'Overview', icon: LayoutDashboard },
-  { id: 'vendors' as AdminTab, label: 'Partners & Vendors', icon: Building2 },
   { id: 'collaborations' as AdminTab, label: 'Creator Collabs', icon: Sparkles },
   { id: 'destinations' as AdminTab, label: 'Destinations', icon: MapPin },
   { id: 'users' as AdminTab, label: 'Users', icon: Users },
@@ -98,6 +101,8 @@ const mainTabs = [
   { id: 'faqs' as AdminTab, label: 'Home FAQs', icon: HelpCircle },
   { id: 'blogs' as AdminTab, label: 'Blog', icon: FileText },
   { id: 'all-bookings' as AdminTab, label: 'All Bookings', icon: CalendarCheck },
+  { id: 'refunds' as AdminTab, label: 'Refunds', icon: DollarSign },
+  { id: 'payment-requests' as AdminTab, label: 'Payment Requests', icon: Clock },
 ]
 
 const bookingSubTabs = [
@@ -166,9 +171,10 @@ interface SidebarContentProps {
   setBookingsExpanded: (v: boolean) => void
   bookingCounts: Record<string, number>
   searchParams?: string
+  highlightedTab: string | null
 }
 
-function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMobileMenuOpen, navigate, logout, bookingsExpanded, setBookingsExpanded, bookingCounts }: SidebarContentProps) {
+function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMobileMenuOpen, navigate, logout, bookingsExpanded, setBookingsExpanded, bookingCounts, highlightedTab }: SidebarContentProps) {
   const totalPending = Object.values(bookingCounts).reduce((a, b) => a + b, 0)
 
   return (
@@ -233,10 +239,14 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false) }}
-                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
                         activeTab === tab.id
-                          ? 'bg-brand-orange/20 text-brand-orange'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white'
+                          ? highlightedTab === tab.id
+                            ? 'bg-brand-orange/30 text-brand-orange shadow-[0_0_12px_rgba(249,115,22,0.4)] ring-2 ring-brand-orange/50 animate-pulse'
+                            : 'bg-brand-orange/20 text-brand-orange'
+                          : highlightedTab === tab.id
+                            ? 'bg-white/15 text-white ring-2 ring-white/30 animate-pulse'
+                            : 'text-white/60 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <div className={`w-3.5 h-3.5 rounded ${tab.color || 'bg-gray-500'} flex items-center justify-center flex-shrink-0`}>
@@ -263,10 +273,14 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false) }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                 activeTab === tab.id
-                  ? 'bg-brand-orange text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? highlightedTab === tab.id
+                    ? 'bg-brand-orange text-white shadow-[0_0_12px_rgba(249,115,22,0.5)] ring-2 ring-brand-orange/50 animate-pulse'
+                    : 'bg-brand-orange text-white'
+                  : highlightedTab === tab.id
+                    ? 'bg-white/15 text-white ring-2 ring-white/30 animate-pulse'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -287,10 +301,14 @@ function SidebarContent({ user, sidebarCollapsed, activeTab, setActiveTab, setMo
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false) }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                 activeTab === tab.id
-                  ? 'bg-brand-orange text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? highlightedTab === tab.id
+                    ? 'bg-brand-orange text-white shadow-[0_0_12px_rgba(249,115,22,0.5)] ring-2 ring-brand-orange/50 animate-pulse'
+                    : 'bg-brand-orange text-white'
+                  : highlightedTab === tab.id
+                    ? 'bg-white/15 text-white ring-2 ring-white/30 animate-pulse'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
               <div className={`w-4 h-4 rounded ${tab.color} flex items-center justify-center flex-shrink-0`}>
@@ -330,6 +348,29 @@ export function AdminDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [bookingsExpanded, setBookingsExpanded] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [highlightedTab, setHighlightedTab] = useState<string | null>(null)
+
+  const handleSetTab = (tab: AdminTab) => {
+    setActiveTab(tab)
+    setHighlightedTab(tab)
+    if (tab.startsWith('bkg-')) setBookingsExpanded(true)
+    setTimeout(() => setHighlightedTab(null), 3000)
+  }
+
+  useEffect(() => {
+    if (!user?.id) return
+    fetch('/api/admin/cancel-expired-advance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+    }).then(res => res.json()).then(data => {
+      if (data.cancelledCount > 0) {
+        toast.info(`${data.cancelledCount} booking(s) cancelled due to unpaid advance`)
+        queryClient.invalidateQueries({ queryKey: ['admin-booking-counts'] })
+        queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
+        queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })
+      }
+    }).catch(() => {})
+  }, [user?.id])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -344,7 +385,7 @@ export function AdminDashboard() {
     queryKey: ['admin-booking-counts', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/admin/booking-counts', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return { counts: {} }
       const data = await res.json()
@@ -399,8 +440,10 @@ export function AdminDashboard() {
         return <AdminBlogs />
       case 'collaborations':
         return <AdminCollaborations />
-      case 'vendors':
-        return <AdminVendors />
+       case 'refunds':
+         return <AdminRefunds />
+       case 'payment-requests':
+         return <AdminPaymentRequests />
 
       // Booking sub-tabs
       case 'bkg-rafting':
@@ -475,6 +518,7 @@ export function AdminDashboard() {
           bookingsExpanded={bookingsExpanded}
           setBookingsExpanded={setBookingsExpanded}
           bookingCounts={bookingCounts}
+          highlightedTab={highlightedTab}
         />
       </div>
 
@@ -524,6 +568,7 @@ export function AdminDashboard() {
                 bookingsExpanded={bookingsExpanded}
                 setBookingsExpanded={setBookingsExpanded}
                 bookingCounts={bookingCounts}
+                highlightedTab={highlightedTab}
               />
             </motion.div>
           </motion.div>
@@ -551,7 +596,7 @@ export function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <AdminNotificationBell onSelectTab={(t: string) => setActiveTab(t as AdminTab)} />
+            <AdminNotificationBell onSelectTab={(t: string) => handleSetTab(t as AdminTab)} />
             <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
               <div className="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white text-sm font-bold">
                 {user?.name?.charAt(0).toUpperCase() || 'A'}

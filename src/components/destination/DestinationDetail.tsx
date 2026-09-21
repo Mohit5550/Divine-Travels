@@ -19,9 +19,11 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function DestinationDetail() {
   const { selectedDestinationId, navigate, goBack, isAuthenticated, user } = useAppStore()
@@ -53,7 +55,7 @@ export function DestinationDetail() {
     queryKey: ['wishlist-check', user?.id, selectedDestinationId],
     queryFn: async () => {
       const res = await fetch('/api/wishlist', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return []
       const data = await res.json()
@@ -72,7 +74,7 @@ export function DestinationDetail() {
       if (isWishlisted) {
         await fetch('/api/wishlist', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ destinationId: selectedDestinationId }),
         })
         setIsWishlisted(false)
@@ -81,7 +83,7 @@ export function DestinationDetail() {
       } else {
         await fetch('/api/wishlist', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ destinationId: selectedDestinationId }),
         })
         setIsWishlisted(true)
@@ -116,8 +118,7 @@ export function DestinationDetail() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           destinationId: selectedDestinationId,
           checkIn: bookingForm.checkIn,
@@ -160,8 +161,7 @@ export function DestinationDetail() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           destinationId: selectedDestinationId,
           rating: reviewForm.rating,
@@ -438,16 +438,11 @@ export function DestinationDetail() {
 
                 <div>
                   <label className="text-xs font-medium text-brand-dark mb-1 block">Phone</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="tel"
-                      value={bookingForm.phone}
-                      onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
-                      className="h-10 text-sm pl-10"
-                      placeholder="+91 9876543210"
-                    />
-                  </div>
+                  <PhoneInput
+                    value={bookingForm.phone}
+                    onChange={(val) => setBookingForm({ ...bookingForm, phone: val })}
+                    placeholder="Enter phone number"
+                  />
                 </div>
 
                 <div>

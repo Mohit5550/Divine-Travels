@@ -36,7 +36,7 @@ export function Footer() {
               Your trusted partner for exploring the divine beauty of India. From spiritual pilgrimages to adventure getaways — we craft experiences that stay with you forever.
             </p>
             <a
-              href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`}
+              href={`https://wa.me/${(s.whatsapp || '').replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-4 text-sm text-green-400 hover:text-green-300 transition-colors"
@@ -55,8 +55,6 @@ export function Footer() {
                   {[
                     { label: 'Home', action: () => navigate('landing') },
                     { label: 'Destinations', action: handleDestClick },
-                    { label: '🧭 Local Experiences', href: '/experiences' },
-                    { label: '🤝 Partner / List Property', action: () => navigate('partner') },
                     { label: '✨ Creator Program', action: () => navigate('collaborate') },
                     { label: 'About Us', action: () => navigate('about-us') },
                     { label: 'Blog', action: () => navigate('blog-archive') },
@@ -65,27 +63,18 @@ export function Footer() {
                     { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
                     { label: 'Refund Policy', action: () => navigate('refund-policy') },
                     { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
+                    { label: 'Cookie Policy', action: () => navigate('cookie-policy') },
                   ].map((link) => (
-                    link.href ? (
-                      <a
-                        key={link.label}
-                        href={link.href}
-                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                      >
-                        {link.label}
-                      </a>
-                    ) : (
-                      <button
-                        key={link.label}
-                        onClick={link.action}
-                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                      >
-                        {link.label}
-                        {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
-                          <ArrowUpRight className="w-3 h-3" />
-                        )}
-                      </button>
-                    )
+                    <button
+                      key={link.label}
+                      onClick={link.action}
+                      className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                    >
+                      {link.label}
+                      {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
+                        <ArrowUpRight className="w-3 h-3" />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -121,8 +110,6 @@ export function Footer() {
               {[
                 { label: 'Home', action: () => navigate('landing') },
                 { label: 'Destinations', action: handleDestClick },
-                { label: '🧭 Local Experiences', href: '/experiences' },
-                { label: '🤝 Partner / List Property', action: () => navigate('partner') },
                 { label: '✨ Creator Program', action: () => navigate('collaborate') },
                 { label: 'About Us', action: () => navigate('about-us') },
                 { label: 'Contact Us', action: () => navigate('contact') },
@@ -130,27 +117,18 @@ export function Footer() {
                 { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
                 { label: 'Refund Policy', action: () => navigate('refund-policy') },
                 { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
+                { label: 'Cookie Policy', action: () => navigate('cookie-policy') },
               ].map((link) => (
-                link.href ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <button
-                    key={link.label}
-                    onClick={link.action}
-                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                  >
-                    {link.label}
-                    {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy'].includes(link.label) && (
-                      <ArrowUpRight className="w-3 h-3" />
-                    )}
-                  </button>
-                )
+                <button
+                  key={link.label}
+                  onClick={link.action}
+                  className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                >
+                  {link.label}
+                  {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
+                    <ArrowUpRight className="w-3 h-3" />
+                  )}
+                </button>
               ))}
             </div>
           </div>
@@ -185,7 +163,7 @@ export function Footer() {
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 sm:gap-6 lg:gap-3">
               <div className="flex items-center gap-2 text-white/60 text-sm">
                 <Phone className="w-4 h-4 text-brand-orange shrink-0" />
-                <a href={`tel:${s.phone}`} className="hover:text-brand-orange transition-colors">{s.phone}</a>
+                <a href={`tel:${s.phone || ''}`} className="hover:text-brand-orange transition-colors">{s.phone || ''}</a>
               </div>
               <div className="flex items-center gap-2 text-white/60 text-sm">
                 <Mail className="w-4 h-4 text-brand-orange shrink-0" />
@@ -204,7 +182,7 @@ export function Footer() {
             </div>
             <div className="mt-4 pt-4 border-t border-white/10">
               <a
-                href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`}
+                href={`https://wa.me/${(s.whatsapp || '').replace(/[^0-9]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-white/60 hover:text-green-400 transition-colors"

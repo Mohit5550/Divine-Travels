@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookingCardActions } from '../booking/BookingCardActions'
 import { parseHotelNotes } from '@/lib/hotelBooking'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface PackageBookingData {
   id: string
@@ -71,7 +72,7 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (categoryFilter) params.set('category', categoryFilter)
       const res = await fetch(`/api/package-bookings?${params}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -90,18 +91,23 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({ bookingId: id, type: 'package', status }),
       })
 
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         toast.error(data.error || 'Failed to update booking')
         return
       }
 
-      toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
+      if (status === 'confirmed' && data.whatsappUrl) {
+        window.open(data.whatsappUrl, '_blank')
+        toast.success('Booking Confirmed! WhatsApp opened to send 10% advance payment link.')
+      } else {
+        toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
+      }
+
       queryClient.invalidateQueries({ queryKey: ['admin-package-bookings'] })
       queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })

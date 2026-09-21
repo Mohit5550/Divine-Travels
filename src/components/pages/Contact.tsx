@@ -4,12 +4,14 @@ import { useAppStore } from '@/lib/store'
 import { useSettings } from '@/lib/useSettings'
 import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
-import { Phone, Mail, MapPin, Clock, Send, ArrowLeft, MessageCircle } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Send, ArrowLeft, MessageCircle, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import { BookingInquirySuccess } from '@/components/booking/BookingInquirySuccess'
 
 export function Contact() {
   const { navigate } = useAppStore()
@@ -20,6 +22,7 @@ export function Contact() {
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [confirmed, setConfirmed] = useState<{ name: string; email: string; subject: string } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,10 +35,21 @@ export function Contact() {
         body: JSON.stringify({ name, email, phone, subject, message, source: 'contact-page' }),
       })
       if (!res.ok) { toast.error('Failed to send. Try again.'); return }
-      toast.success('Message sent! We will get back to you soon.')
-      setName(''); setEmail(''); setPhone(''); setSubject(''); setMessage('')
+      setConfirmed({ name, email, subject: subject || 'General Enquiry' })
     } catch { toast.error('Failed to send message') }
     finally { setSending(false) }
+  }
+
+  if (confirmed) {
+    return (
+      <BookingInquirySuccess
+        typeLabel="Inquiry"
+        title={confirmed.subject}
+        isBooking={false}
+        details={{ Name: confirmed.name, Email: confirmed.email }}
+        onGoDashboard={() => navigate('user-dashboard')}
+      />
+    )
   }
 
   return (
@@ -72,8 +86,8 @@ export function Contact() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" />
+                    <Label>Phone</Label>
+                    <PhoneInput value={phone} onChange={setPhone} placeholder="Enter phone number" />
                   </div>
                   <div>
                     <Label htmlFor="subject">Subject</Label>
@@ -99,7 +113,7 @@ export function Contact() {
                   <Phone className="w-5 h-5 text-brand-orange mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-brand-dark">Phone / WhatsApp</p>
-                    <a href={`tel:${s.phone}`} className="text-sm text-muted-foreground hover:text-brand-orange">{s.phone}</a>
+                    <a href={`tel:${s.phone || ''}`} className="text-sm text-muted-foreground hover:text-brand-orange">{s.phone || ''}</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -127,7 +141,7 @@ export function Contact() {
               </div>
             </div>
 
-            <a href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
+            <a href={`https://wa.me/${(s.whatsapp || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl p-4 transition-colors">
               <MessageCircle className="w-5 h-5" />
               <span className="font-medium">Chat on WhatsApp</span>

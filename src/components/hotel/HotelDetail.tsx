@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
+import { LoginModal } from '@/components/landing/LoginModal'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -30,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/landing/Footer'
 import { useState } from 'react'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface RoomType {
   name: string
@@ -103,18 +105,12 @@ const SUBOPTION_MAP: Record<string, string> = {
   'swiss tent': 'Swiss Tent',
 }
 
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
-}
 
 export function HotelDetail() {
-  const { selectedPackageId, navigate, goBack } = useAppStore()
+  const { selectedPackageId, navigate, goBack, isAuthenticated } = useAppStore()
   const [selectedImage, setSelectedImage] = useState(0)
   const [showAllImages, setShowAllImages] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
 
   const { data: pkg, isLoading } = useQuery({
     queryKey: ['package-detail', selectedPackageId],
@@ -138,7 +134,7 @@ export function HotelDetail() {
   })
 
   const getEffectivePrice = (roomName: string, originalPrice: number) => {
-    const subOption = getSubOptionFromName(roomName)
+    const subOption = getSubOptionFromName(roomName, SUBOPTION_MAP)
     const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
     if (allDayMatch) return allDayMatch.price ?? originalPrice
     if (!subOption) return originalPrice
@@ -426,7 +422,10 @@ export function HotelDetail() {
                   </div>
                 )}
 
-                <Button onClick={() => navigate('package-booking', null, pkg.id)} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl h-12 text-base font-semibold mb-3">
+                <Button onClick={() => {
+                  if (!isAuthenticated) { setLoginOpen(true); return }
+                  navigate('package-booking', null, pkg.id)
+                }} className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl h-12 text-base font-semibold mb-3">
                   Book Now
                 </Button>
 
@@ -476,6 +475,7 @@ export function HotelDetail() {
       )}
 
       <Footer />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

@@ -23,11 +23,13 @@ import {
   Luggage,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 import { LoginModal } from '@/components/landing/LoginModal'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function TaxiBookingForm() {
   const { navigate, user, isAuthenticated } = useAppStore()
@@ -123,7 +125,7 @@ export function TaxiBookingForm() {
 
       const res = await fetch('/api/taxi-bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(payload),
       })
 
@@ -346,17 +348,12 @@ export function TaxiBookingForm() {
               <label className="block text-sm font-semibold text-brand-dark mb-3">
                 Mobile Number <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your mobile number"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none"
-                  required
-                />
-              </div>
+              <PhoneInput
+                value={phone}
+                onChange={setPhone}
+                placeholder="Enter your mobile number"
+                required
+              />
             </div>
           </div>
 

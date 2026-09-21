@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Calendar, CheckCircle, Clock, XCircle, ArrowRight, MapPin, Package } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function UserTimeline() {
   const { user, navigate } = useAppStore()
@@ -11,7 +12,7 @@ export function UserTimeline() {
   const { data: destBookings = [], isLoading: destLoading } = useQuery({
     queryKey: ['user-bookings-timeline', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -20,7 +21,7 @@ export function UserTimeline() {
   const { data: pkgBookings = [], isLoading: pkgLoading } = useQuery({
     queryKey: ['user-package-bookings-timeline', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/package-bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },

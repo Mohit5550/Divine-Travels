@@ -1,0 +1,60 @@
+import { MetadataRoute } from 'next'
+import { db } from '@/lib/db'
+
+const BASE_URL = 'https://divinetravels.in'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date().toISOString()
+
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: BASE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${BASE_URL}/#packages`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/#destinations`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/#blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+  ]
+
+  let packages: { slug: string; updatedAt: Date }[] = []
+  let destinations: { slug: string; updatedAt: Date }[] = []
+  let blogPosts: { slug: string; updatedAt: Date }[] = []
+
+  try {
+    packages = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
+      `SELECT "slug", "updatedAt" FROM "Package" WHERE "status" = 'active' AND "slug" IS NOT NULL`
+    )
+  } catch { /* ignore */ }
+
+  try {
+    destinations = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
+      `SELECT "slug", "updatedAt" FROM "Destination" WHERE "slug" IS NOT NULL`
+    )
+  } catch { /* ignore */ }
+
+  try {
+    blogPosts = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
+      `SELECT "slug", "updatedAt" FROM "BlogPost" WHERE "status" = 'published' AND "slug" IS NOT NULL`
+    )
+  } catch { /* ignore */ }
+
+  const packagePages: MetadataRoute.Sitemap = packages.map((p) => ({
+    url: `${BASE_URL}/package/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  const destinationPages: MetadataRoute.Sitemap = destinations.map((d) => ({
+    url: `${BASE_URL}/destination/${d.slug}`,
+    lastModified: d.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((b) => ({
+    url: `${BASE_URL}/blog/${b.slug}`,
+    lastModified: b.updatedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }))
+
+  return [...staticPages, ...packagePages, ...destinationPages, ...blogPages]
+}

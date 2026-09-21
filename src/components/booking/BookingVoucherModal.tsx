@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X,
@@ -14,8 +14,11 @@ import {
   ShieldCheck,
   QrCode,
   Download,
+  CreditCard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export interface BookingVoucherData {
   bookingId: string
@@ -28,7 +31,11 @@ export interface BookingVoucherData {
   guestEmail?: string | null
   travelDate: string
   travelers: number
+  preferredTime?: string | null
+  checkOut?: string | null
   pickupLocation?: string | null
+  emergencyContact?: string | null
+  whatsappConsent?: boolean | null
   totalPrice: number
   // Price breakdown snapshot (per-person for regular packages; null = derive from total)
   originalPrice?: number | null // admin's original/list price per person
@@ -55,6 +62,7 @@ interface BookingVoucherModalProps {
 
 export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucherModalProps) {
   const printRef = useRef<HTMLDivElement>(null)
+  const [isPaying, setIsPaying] = useState(false)
 
   if (!isOpen || !booking) return null
 
@@ -71,6 +79,36 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handlePayDueBalance = async () => {
+    if (!booking.bookingId) return
+    setIsPaying(true)
+    try {
+      const bType = booking.bookingType || 'package'
+      const uid = typeof window !== 'undefined' ? localStorage.getItem('dt_user_id') || '' : ''
+      const res = await fetch(`/api/booking-flow/${bType}/${booking.bookingId}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ method: 'online', payType: 'balance' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to initiate payment')
+      }
+      const data = await res.json()
+      localStorage.setItem('dt_payment_id', data.payment_id)
+      localStorage.setItem('dt_booking_id', booking.bookingId)
+      localStorage.setItem('dt_user_id', uid)
+      localStorage.setItem('dt_service', 'unified')
+      localStorage.setItem('dt_booking_type', bType)
+      localStorage.setItem('dt_pay_type', 'balance')
+      window.location.href = data.payment_page
+    } catch (e: any) {
+      toast.error(e.message || 'Payment initiation failed')
+    } finally {
+      setIsPaying(false)
+    }
   }
 
   const isConfirmed = booking.status === 'confirmed' || booking.status === 'completed'
@@ -166,24 +204,40 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
             </div>
 
             {/* Status Banner */}
-            <div className="my-5 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 flex items-center justify-between">
+            <div className={`my-5 p-4 rounded-xl border flex items-center justify-between ${
+              isPaid
+                ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200/80'
+                : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/80'
+            }`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                  isPaid ? 'bg-emerald-500 text-white' : 'bg-brand-orange text-white'
+                }`}>
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-emerald-950">
-                    {isConfirmed ? 'Booking Confirmed' : 'Booking Received (Pending Confirmation)'}
+                  <h4 className="font-bold text-sm text-gray-900">
+                    {isConfirmed ? 'Booking Confirmed' : 'Booking Received'}
                   </h4>
-                  <p className="text-xs text-emerald-800">
-                    {isPaid ? 'Full Payment Completed' : '10% Advance Paid — Balance Due at Location'}
+                  <p className="text-xs font-medium text-gray-600">
+                    {isPaid ? (
+                      <span className="text-emerald-700 font-bold">✓ Full Payment Completed (₹0 Due)</span>
+                    ) : booking.amountPaid && booking.amountPaid > 0 ? (
+                      <span className="text-amber-800 font-semibold">
+                        10% Advance Paid ({fmt(booking.amountPaid)}) • Balance Due: <span className="text-brand-orange font-bold">{fmt(booking.balanceDue || 0)}</span>
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-medium">10% Advance Payment Pending ({fmt(Math.ceil((booking.totalPrice || 0) * 0.1))})</span>
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="text-right hidden sm:block">
-                <span className="inline-block px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
-                  {booking.status}
+                <span className={`inline-block px-3 py-1 text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm ${
+                  isPaid ? 'bg-emerald-600 text-white' : 'bg-brand-orange text-white'
+                }`}>
+                  {isPaid ? 'Fully Paid' : 'Advance Paid'}
                 </span>
               </div>
             </div>
@@ -206,8 +260,26 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
                 <div className="space-y-1.5 text-xs text-gray-600">
                   <p className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-brand-orange" />
-                    <strong>Travel Date:</strong> {formattedDate}
+                    <strong>{booking.checkOut ? 'Check-in:' : 'Travel Date:'}</strong> {formattedDate}
                   </p>
+                  {booking.checkOut && (
+                    <p className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-brand-orange" />
+                      <strong>Check-out:</strong>{' '}
+                      {new Date(booking.checkOut).toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  )}
+                  {!booking.checkOut && booking.preferredTime && (
+                    <p className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-brand-orange" />
+                      <strong>Preferred Time:</strong> {booking.preferredTime}
+                    </p>
+                  )}
                   <p className="flex items-center gap-2">
                     <Users className="w-3.5 h-3.5 text-brand-orange" />
                     <strong>Travelers:</strong> {booking.travelers} Guest(s)
@@ -237,6 +309,12 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
                     <p className="flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-brand-teal" />
                       <strong>Email:</strong> {booking.guestEmail}
+                    </p>
+                  )}
+                  {booking.emergencyContact && (
+                    <p className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-brand-teal" />
+                      <strong>Emergency Contact:</strong> {booking.emergencyContact}
                     </p>
                   )}
                   <p className="flex items-center gap-2">
@@ -370,15 +448,35 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
                   <span className="font-bold">{fmt(booking.amountPaid)}</span>
                 </div>
               ) : null}
-              {booking.balanceDue && booking.balanceDue > 0 ? (
-                <div className="flex justify-between items-center text-sm pt-1 text-brand-orange font-bold">
-                  <span>Balance Payable at Location</span>
-                  <span className="text-base">{fmt(booking.balanceDue)}</span>
-                </div>
-              ) : null}
-            </div>
+               {booking.balanceDue && booking.balanceDue > 0 ? (
+                 <div className="flex justify-between items-center text-sm pt-1 text-brand-orange font-bold">
+                   <span>Balance Payable at Location</span>
+                   <span className="text-base">{fmt(booking.balanceDue)}</span>
+                 </div>
+               ) : null}
+             </div>
 
-            {/* Guidelines & Support Footer */}
+             {/* Guest-submitted enquiry details */}
+             {(booking.specialReqs || booking.whatsappConsent) && (
+               <div className="my-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                 <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                   Your Enquiry Details
+                 </p>
+                 {booking.specialReqs && (
+                   <p className="text-xs text-gray-600 whitespace-pre-wrap">
+                     <strong>Special Requests / Notes:</strong> {booking.specialReqs}
+                   </p>
+                 )}
+                 {booking.whatsappConsent && (
+                   <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1.5">
+                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                     WhatsApp updates &amp; coordination opted-in.
+                   </p>
+                 )}
+               </div>
+             )}
+
+             {/* Guidelines & Support Footer */}
             <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-gray-500">
               <div>
                 <p className="font-semibold text-gray-700 mb-1">Important Instructions:</p>
@@ -397,17 +495,32 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
           </div>
 
           {/* Modal Footer Actions */}
-          <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 print:hidden">
-            <Button variant="outline" onClick={onClose} className="rounded-xl">
-              Close
-            </Button>
-            <Button
-              onClick={handlePrint}
-              className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl gap-2 font-semibold shadow-md"
-            >
-              <Download className="w-4 h-4" />
-              Download Voucher
-            </Button>
+          <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 print:hidden">
+            <div className="flex items-center gap-2">
+              {booking.balanceDue && booking.balanceDue > 0 ? (
+                <Button
+                  onClick={handlePayDueBalance}
+                  disabled={isPaying}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2 font-semibold shadow-md text-xs sm:text-sm"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  {isPaying ? 'Connecting Payment...' : `Pay Due Balance (${fmt(booking.balanceDue)})`}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={onClose} className="rounded-xl">
+                Close
+              </Button>
+              <Button
+                onClick={handlePrint}
+                className="bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl gap-2 font-semibold shadow-md"
+              >
+                <Download className="w-4 h-4" />
+                Download Voucher
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>

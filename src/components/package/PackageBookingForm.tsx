@@ -24,10 +24,15 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useState, useCallback, useEffect } from 'react'
+import { LoginModal } from '@/components/landing/LoginModal'
+import { BookingInquirySuccess } from '@/components/booking/BookingInquirySuccess'
 import { computeHotelBreakdown, computeCampingBreakdown, nightsBetween } from '@/lib/hotelBooking'
+import { getAuthHeaders } from '@/lib/auth-client'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
   id: string
@@ -70,13 +75,6 @@ const SUBOPTION_MAP: Record<string, string> = {
   'char dham': 'Char Dham',
 }
 
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
-}
 
 export function PackageBookingForm() {
   const { selectedPackageId, navigate, goBack, isAuthenticated, user } = useAppStore()
@@ -104,6 +102,14 @@ export function PackageBookingForm() {
     }
   }, [user])
   const [submitting, setSubmitting] = useState(false)
+  const [confirmed, setConfirmed] = useState<{
+    bookingId: string
+    title: string
+    typeLabel: string
+    date?: string
+    travelers?: number
+    total?: number
+  } | null>(null)
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPct: number; discountAmount: number } | null>(null)
   const [validatingCoupon, setValidatingCoupon] = useState(false)
@@ -116,6 +122,11 @@ export function PackageBookingForm() {
   const [childrenCount, setChildrenCount] = useState(0)
   const [roomTypeName, setRoomTypeName] = useState('')
   const [mealPlanName, setMealPlanName] = useState('')
+  const [loginOpen, setLoginOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated) setLoginOpen(true)
+  }, [isAuthenticated])
 
   const { data: pkg, isLoading } = useQuery({
     queryKey: ['package-booking', selectedPackageId],
@@ -204,7 +215,7 @@ export function PackageBookingForm() {
       const res = await fetch(`/api/public/availability?service=${service}&date=${selectedDate}`)
       const data = await res.json()
       const records = data.records || []
-      const subOption = getSubOptionFromName(pkg.name)
+      const subOption = getSubOptionFromName(pkg.name, SUBOPTION_MAP)
       const allDayMatch = records.find((r: any) => r.allDay)
       if (allDayMatch) return allDayMatch.price ?? pkg.price
       if (!subOption) return pkg.price
@@ -218,7 +229,7 @@ export function PackageBookingForm() {
 
   const displayPrice = effectivePrice ?? pkg?.price ?? 0
 
-  // If not authenticated, show login prompt
+  // If not authenticated, show login modal
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
@@ -236,10 +247,10 @@ export function PackageBookingForm() {
             </p>
             <div className="space-y-3">
               <Button
-                onClick={() => navigate('landing')}
+                onClick={() => setLoginOpen(true)}
                 className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white h-11"
               >
-                Go to Login
+                Login / Sign Up
               </Button>
               <Button
                 variant="outline"
@@ -251,6 +262,7 @@ export function PackageBookingForm() {
               </Button>
             </div>
         </motion.div>
+        <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
       </div>
     )
   }
@@ -324,8 +336,7 @@ export function PackageBookingForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           customer_name: form.fullName,
           customer_email: user?.email,
@@ -403,8 +414,7 @@ export function PackageBookingForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           packageId: selectedPackageId,
           fullName: form.fullName,
@@ -426,14 +436,38 @@ export function PackageBookingForm() {
       }
 
       const booking = await res.json()
-      toast.success(isStay ? 'Booking enquiry sent! Redirecting to your dashboard…' : 'Booking enquiry sent successfully! Redirecting to your dashboard…')
+      const total = isStay
+        ? (booking.totalPrice || (isCamping ? campingTotal : hotelTotal))
+        : ((effectivePrice || displayPrice) * (form.numberOfPeople || 1) - (appliedCoupon?.discountAmount || 0))
+      setConfirmed({
+        bookingId: booking.id,
+        title: pkg?.name || 'Booking',
+        typeLabel: isStay ? (isCamping ? 'Camping Booking' : 'Hotel Stay Booking') : 'Package Booking',
+        date: isStay ? checkIn : form.preferredDate,
+        travelers: isStay ? adults + childrenCount : form.numberOfPeople,
+        total,
+      })
       queryClient.invalidateQueries({ queryKey: ['user-package-bookings'] })
-      navigate('user-dashboard')
     } catch {
       toast.error('Failed to submit booking. Please try again.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (confirmed) {
+    return (
+      <BookingInquirySuccess
+        bookingId={confirmed.bookingId}
+        title={confirmed.title}
+        typeLabel={confirmed.typeLabel}
+        date={confirmed.date}
+        travelers={confirmed.travelers}
+        total={confirmed.total}
+        advanceAmount={confirmed.total ? Math.ceil(confirmed.total * 0.1) : undefined}
+        onGoDashboard={() => navigate('user-dashboard')}
+      />
+    )
   }
 
   if (isLoading || !pkg) {
@@ -517,17 +551,12 @@ export function PackageBookingForm() {
             {/* Mobile Number */}
             <div>
               <label className="text-sm font-medium text-brand-dark mb-1.5 block">Mobile Number</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={form.mobile}
-                  onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/[^\d+]/g, '') })}
-                  className="pl-10 h-11 rounded-xl"
-                  required
-                />
-              </div>
+              <PhoneInput
+                value={form.mobile}
+                onChange={(val) => setForm({ ...form, mobile: val })}
+                placeholder="Enter phone number"
+                required
+              />
             </div>
 
             {isStay ? (
@@ -755,16 +784,12 @@ export function PackageBookingForm() {
                   <label className="text-sm font-medium text-brand-dark mb-1.5 block">
                     Emergency Contact <span className="text-muted-foreground font-normal">(optional)</span>
                   </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="tel"
-                      placeholder="Alternate contact number"
-                      value={form.emergencyContact}
-                      onChange={(e) => setForm({ ...form, emergencyContact: e.target.value.replace(/[^\d+]/g, '') })}
-                      className="pl-10 h-11 rounded-xl"
-                    />
-                  </div>
+                  <PhoneInput
+                    value={form.emergencyContact || ''}
+                    onChange={(val) => setForm({ ...form, emergencyContact: val })}
+                    placeholder="Alternate contact number"
+                    className="rounded-xl"
+                  />
                 </div>
 
                 {/* Additional Notes */}

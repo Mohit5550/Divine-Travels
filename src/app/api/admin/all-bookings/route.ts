@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
     const user = await db.user.findUnique({ where: { id: userId } })
@@ -25,10 +26,14 @@ export async function GET(request: NextRequest) {
           status: true,
           createdAt: true,
           checkIn: true,
+          paymentStatus: true,
+          paymentAmount: true,
+          guests: true,
+          specialReqs: true,
           destination: { select: { name: true } },
-          user: { select: { name: true, email: true } },
+          user: { select: { name: true, email: true, phone: true } },
         },
-        orderBy: { checkIn: 'desc' },
+        orderBy: { createdAt: 'desc' },
       }),
       db.packageBooking.findMany({
         select: {
@@ -38,10 +43,15 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           preferredDate: true,
           fullName: true,
+          mobile: true,
+          numberOfPeople: true,
+          paymentStatus: true,
+          paymentAmount: true,
+          additionalNotes: true,
           package: { select: { name: true, category: true } },
-          user: { select: { name: true, email: true } },
+          user: { select: { name: true, email: true, phone: true } },
         },
-        orderBy: { preferredDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
       }),
       db.tourBooking.findMany({
         select: {
@@ -52,10 +62,13 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           travelDate: true,
           name: true,
+          phone: true,
           adminNotes: true,
-          user: { select: { name: true, email: true } },
+          paymentStatus: true,
+          paymentAmount: true,
+          user: { select: { name: true, email: true, phone: true } },
         },
-        orderBy: { travelDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
       }),
     ])
 
@@ -66,9 +79,14 @@ export async function GET(request: NextRequest) {
       displayType: string
       guest: string
       email: string
+      phone: string
+      guests: number
       title: string
       date: string | null
       amount: number
+      paid: number
+      balance: number
+      paymentStatus: string
       status: string
       createdAt: Date
     }
@@ -80,33 +98,57 @@ export async function GET(request: NextRequest) {
       return 'Package'
     }
 
+    const computePayment = (total: number, paymentStatus?: string | null, paymentAmount?: number | null) => {
+      const paid = paymentAmount || 0
+      const balance = Math.max(0, total - paid)
+      return { paid, balance, paymentStatus: paymentStatus || 'pending' }
+    }
+
     const merged: Row[] = [
-      ...dest.map((b: any) => ({
-        id: b.id,
-        type: 'destination' as const,
-        category: null,
-        displayType: 'Destination',
-        guest: b.user?.name || 'Guest',
-        email: b.user?.email || '',
-        title: b.destination?.name || 'Destination',
-        date: b.checkIn ? b.checkIn.toISOString() : null,
-        amount: b.totalPrice || 0,
-        status: b.status,
-        createdAt: b.createdAt,
-      })),
-      ...pkg.map((b: any) => ({
-        id: b.id,
-        type: 'package' as const,
-        category: b.package?.category || null,
-        displayType: packageDisplayType(b.package?.category),
-        guest: b.user?.name || b.fullName || 'Guest',
-        email: b.user?.email || '',
-        title: b.package?.name || 'Package',
-        date: b.preferredDate ? b.preferredDate.toISOString() : null,
-        amount: b.totalPrice || 0,
-        status: b.status,
-        createdAt: b.createdAt,
-      })),
+      ...dest.map((b: any) => {
+        const amount = b.totalPrice || 0
+        const { paid, balance, paymentStatus } = computePayment(amount, b.paymentStatus, b.paymentAmount)
+        return {
+          id: b.id,
+          type: 'destination' as const,
+          category: null,
+          displayType: 'Destination',
+          guest: b.user?.name || 'Guest',
+          email: b.user?.email || '',
+          phone: b.user?.phone || '',
+          guests: b.guests || 0,
+          title: b.destination?.name || 'Destination',
+          date: b.checkIn ? b.checkIn.toISOString() : null,
+          amount,
+          paid,
+          balance,
+          paymentStatus,
+          status: b.status,
+          createdAt: b.createdAt,
+        }
+      }),
+      ...pkg.map((b: any) => {
+        const amount = b.totalPrice || 0
+        const { paid, balance, paymentStatus } = computePayment(amount, b.paymentStatus, b.paymentAmount)
+        return {
+          id: b.id,
+          type: 'package' as const,
+          category: b.package?.category || null,
+          displayType: packageDisplayType(b.package?.category),
+          guest: b.user?.name || b.fullName || 'Guest',
+          email: b.user?.email || '',
+          phone: b.user?.phone || b.mobile || '',
+          guests: b.numberOfPeople || 0,
+          title: b.package?.name || 'Package',
+          date: b.preferredDate ? b.preferredDate.toISOString() : null,
+          amount,
+          paid,
+          balance,
+          paymentStatus,
+          status: b.status,
+          createdAt: b.createdAt,
+        }
+      }),
       ...tour.map((b: any) => {
         let title = b.destination || 'Tour'
         let displayType = 'Day Tour'
@@ -119,6 +161,8 @@ export async function GET(request: NextRequest) {
             type = 'taxi'
           }
         } catch {}
+        const amount = b.negotiatedPrice || b.totalPrice || 0
+        const { paid, balance, paymentStatus } = computePayment(amount, b.paymentStatus, b.paymentAmount)
         return {
           id: b.id,
           type,
@@ -126,24 +170,25 @@ export async function GET(request: NextRequest) {
           displayType,
           guest: b.user?.name || b.name || 'Guest',
           email: b.user?.email || '',
+          phone: b.user?.phone || b.phone || '',
+          guests: 0,
           title,
           date: b.travelDate || null,
-          amount: b.negotiatedPrice || b.totalPrice || 0,
+          amount,
+          paid,
+          balance,
+          paymentStatus,
           status: b.status,
           createdAt: b.createdAt,
         }
       }),
     ]
 
-    merged.sort((a, b) => {
-      const da = new Date(a.date || a.createdAt).getTime()
-      const db2 = new Date(b.date || b.createdAt).getTime()
-      return db2 - da
-    })
+    merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     const categoryFilters = ['bike-rental', 'stay-hotel', 'stay-camping']
     const filtered = merged.filter((b) => {
-      if (search && !(b.guest.toLowerCase().includes(search) || b.email.toLowerCase().includes(search))) return false
+      if (search && !(b.guest.toLowerCase().includes(search) || b.email.toLowerCase().includes(search) || b.phone.includes(search))) return false
       if (typeFilter) {
         if (categoryFilters.includes(typeFilter)) {
           if (b.category !== typeFilter) return false

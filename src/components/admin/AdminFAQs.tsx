@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
 import { DEFAULT_FAQS_DATA, FAQItem, FAQCategoryData } from '@/lib/faqs-data'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 const CATEGORY_ICONS: Record<string, any> = {
   rafting: Waves,
@@ -44,7 +45,7 @@ export function AdminFAQs() {
     queryKey: ['admin-faqs', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/admin/faqs', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return null
       return res.json()
@@ -64,8 +65,7 @@ export function AdminFAQs() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify(updatedData),
       })
       if (!res.ok) throw new Error('Failed to save FAQs')

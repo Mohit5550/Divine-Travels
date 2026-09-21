@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAppStore } from '@/lib/store'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function PackageWishlistButton({
   packageId,
@@ -25,7 +26,7 @@ export function PackageWishlistButton({
       return
     }
     let active = true
-    fetch('/api/package-wishlist', { headers: { 'x-user-id': user?.id || '' } })
+    fetch('/api/package-wishlist', { headers: { ...getAuthHeaders() } })
       .then((r) => (r.ok ? r.json() : []))
       .then((data: any[]) => {
         if (active && Array.isArray(data)) setSaved(data.some((w) => w.packageId === packageId))
@@ -47,7 +48,7 @@ export function PackageWishlistButton({
       if (saved) {
         const res = await fetch('/api/package-wishlist', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ packageId }),
         })
         if (!res.ok) throw new Error('failed')
@@ -57,7 +58,7 @@ export function PackageWishlistButton({
       } else {
         const res = await fetch('/api/package-wishlist', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ packageId }),
         })
         if (!res.ok) throw new Error('failed')

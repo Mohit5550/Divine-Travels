@@ -3,15 +3,34 @@ import { db } from '@/lib/db'
 import crypto from 'crypto'
 import { sendPasswordResetEmail } from '@/lib/email'
 
+const resetAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(email: string): boolean {
+  const now = Date.now()
+  const entry = resetAttempts.get(email)
+  if (!entry || now - entry.resetAt > 60 * 60 * 1000) {
+    resetAttempts.set(email, { count: 1, resetAt: now })
+    return false
+  }
+  entry.count++
+  return entry.count > 3
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
 
-    if (!email) {
+    if (!email || typeof email !== 'string') {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const user = await db.user.findUnique({ where: { email } })
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (isRateLimited(normalizedEmail)) {
+      return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+    }
+
+    const user = await db.user.findUnique({ where: { email: normalizedEmail } })
     if (!user) {
       return NextResponse.json({ message: 'If that email is registered, a reset link has been sent.' })
     }
@@ -29,7 +48,7 @@ export async function POST(request: NextRequest) {
     })
 
     try {
-      await sendPasswordResetEmail(email, resetCode, resetToken)
+      await sendPasswordResetEmail(normalizedEmail, resetCode, resetToken)
     } catch {
       return NextResponse.json({ error: 'Failed to send email. Please try again later.' }, { status: 500 })
     }

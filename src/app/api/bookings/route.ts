@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/bookings - List bookings
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 // POST /api/bookings - Create booking
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }

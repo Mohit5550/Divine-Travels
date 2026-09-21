@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, ArrowLeftRight, Send, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Offer {
   id: string
@@ -40,7 +41,7 @@ export function BookingOffers({
     mutationFn: async () => {
       const res = await fetch(`/api/booking-flow/${type}/${id}/offers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': localStorage.getItem('dt_user_id') || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ amount: Number(amount), note, offeredBy: isAdmin ? 'admin' : 'user' }),
       })
       if (!res.ok) {
@@ -64,7 +65,7 @@ export function BookingOffers({
     mutationFn: async (offerId: string) => {
       const res = await fetch(`/api/booking-flow/${type}/${id}/offers/${offerId}`, {
         method: 'POST',
-        headers: { 'x-user-id': localStorage.getItem('dt_user_id') || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))

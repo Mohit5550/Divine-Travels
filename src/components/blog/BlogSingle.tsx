@@ -7,6 +7,7 @@ import { Calendar, User, ArrowLeft, Clock, Tag, Share2 } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { toDirectImageUrl } from '@/lib/utils'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface BlogPost {
   id: string
@@ -144,7 +145,7 @@ export function BlogSingle() {
                 <User className="w-4 h-4" /> {post.author}
               </div>
 
-              <div className="prose prose-lg max-w-none prose-headings:text-brand-dark prose-a:text-brand-orange prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
+              <div className="prose prose-lg max-w-none prose-headings:text-brand-dark prose-a:text-brand-orange prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
 
               {/* Tags */}
               {tags.length > 0 && (

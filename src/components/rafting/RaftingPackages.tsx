@@ -28,6 +28,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
   id: string
@@ -100,13 +101,6 @@ const SUBOPTION_MAP: Record<string, string> = {
   'marine drive': 'Marine Drive 26km',
 }
 
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
-}
 
 export function RaftingPackages() {
   const { navigate, isAuthenticated, user } = useAppStore()
@@ -131,7 +125,7 @@ export function RaftingPackages() {
   })
 
   const getEffectivePrice = (pkg: PackageData) => {
-    const subOption = getSubOptionFromName(pkg.name)
+    const subOption = getSubOptionFromName(pkg.name, SUBOPTION_MAP)
     const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
     if (allDayMatch) return allDayMatch.price ?? pkg.price
     if (!subOption) return pkg.price
@@ -287,6 +281,7 @@ export function RaftingPackages() {
                         src={pkg.image}
                         alt={pkg.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

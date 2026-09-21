@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { sendPushToUser, sendPushToAdmins } from '@/lib/push'
 
 export async function notifyAdmin(title: string, message: string, type = 'info', link?: string) {
   try {
@@ -13,6 +14,7 @@ export async function notifyAdmin(title: string, message: string, type = 'info',
         link: link || null,
       })),
     })
+    sendPushToAdmins({ title, body: message, url: link || '/admin-dashboard' }).catch(() => {})
   } catch (error) {
     console.error('Error notifying admins:', error)
   }
@@ -23,6 +25,7 @@ export async function notifyUser(userId: string, title: string, message: string,
     await db.notification.create({
       data: { userId, title, message, type, link: link || null },
     })
+    sendPushToUser(userId, { title, body: message, url: link || '/user-dashboard' }).catch(() => {})
   } catch {
     // silently fail
   }

@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toDirectImageUrl } from '@/lib/utils'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface PackageData {
   id: string
@@ -216,7 +217,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       if (categoryFilter) params.set('category', categoryFilter)
       const res = await fetch(`/api/packages?${params}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -392,8 +393,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify(payload),
       })
 
@@ -419,7 +419,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
     try {
       const res = await fetch(`/api/packages/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
 
       if (!res.ok) {

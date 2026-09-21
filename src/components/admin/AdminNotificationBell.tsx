@@ -1,10 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, CheckCheck, Loader2, Trash2, X, Sparkles, MessageCircle, ArrowRight } from 'lucide-react'
+import {
+  Bell, CheckCheck, Trash2, X, ArrowRight,
+  Bike, Waves, Mountain, Package, Car, Map,
+  Landmark, Globe, Bed, Tent, CalendarCheck,
+  MessageCircle, Star, CreditCard, Send, AlertCircle,
+} from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Notification {
   id: string
@@ -14,6 +20,72 @@ interface Notification {
   read: boolean
   link: string | null
   createdAt: string
+}
+
+const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+  'bike-rental':    { label: 'Bike Rental',    color: 'text-orange-400', bg: 'bg-orange-600',  border: 'border-orange-500/40', icon: Bike },
+  'rafting':        { label: 'Rafting',        color: 'text-blue-400',   bg: 'bg-blue-500',   border: 'border-blue-500/40',   icon: Waves },
+  'trekking':       { label: 'Trekking',       color: 'text-emerald-400',bg: 'bg-emerald-500',border: 'border-emerald-500/40',icon: Mountain },
+  'adventure':      { label: 'Adventure',      color: 'text-red-400',    bg: 'bg-red-500',    border: 'border-red-500/40',    icon: Package },
+  'bkg-taxi':       { label: 'Taxi',           color: 'text-amber-400',  bg: 'bg-amber-500',  border: 'border-amber-500/40',  icon: Car },
+  'taxi':           { label: 'Taxi',           color: 'text-amber-400',  bg: 'bg-amber-500',  border: 'border-amber-500/40',  icon: Car },
+  'domestic-tours': { label: 'Domestic Tours', color: 'text-teal-400',   bg: 'bg-teal-500',   border: 'border-teal-500/40',   icon: Map },
+  'spiritual-tours':{ label: 'Spiritual Tours',color: 'text-yellow-400', bg: 'bg-amber-600',  border: 'border-amber-600/40',  icon: Landmark },
+  'international-tours':{ label: 'International', color: 'text-indigo-400', bg: 'bg-indigo-500', border: 'border-indigo-500/40', icon: Globe },
+  'stay-hotel':     { label: 'Hotel',          color: 'text-amber-400',  bg: 'bg-amber-600',  border: 'border-amber-600/40',  icon: Bed },
+  'stay-camping':   { label: 'Camping',        color: 'text-emerald-400',bg: 'bg-emerald-600',border: 'border-emerald-600/40',icon: Tent },
+  'bkg-tour':       { label: 'Day Tours',      color: 'text-brand-orange',bg: 'bg-brand-orange',border: 'border-brand-orange/40',icon: CalendarCheck },
+  'tour':           { label: 'Day Tours',      color: 'text-brand-orange',bg: 'bg-brand-orange',border: 'border-brand-orange/40',icon: CalendarCheck },
+  'bookings':       { label: 'Destinations',   color: 'text-sky-400',    bg: 'bg-sky-500',    border: 'border-sky-500/40',    icon: Map },
+  'inquiry':        { label: 'Inquiry',        color: 'text-purple-400', bg: 'bg-purple-500', border: 'border-purple-500/40', icon: MessageCircle },
+  'review':         { label: 'Review',         color: 'text-yellow-400', bg: 'bg-yellow-500', border: 'border-yellow-500/40', icon: Star },
+  'payment':        { label: 'Payment',        color: 'text-green-400',  bg: 'bg-green-500',  border: 'border-green-500/40',  icon: CreditCard },
+  'offer':          { label: 'Counter Offer',  color: 'text-cyan-400',   bg: 'bg-cyan-500',   border: 'border-cyan-500/40',   icon: Send },
+}
+
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+  'booking': { label: 'New Booking',   color: 'text-emerald-400', bg: 'bg-emerald-600', border: 'border-emerald-500/40', icon: CalendarCheck },
+  'inquiry': { label: 'New Inquiry',   color: 'text-purple-400',  bg: 'bg-purple-500',  border: 'border-purple-500/40',  icon: MessageCircle },
+  'review':  { label: 'New Review',    color: 'text-yellow-400',  bg: 'bg-yellow-500',  border: 'border-yellow-500/40',  icon: Star },
+  'payment': { label: 'Payment',       color: 'text-green-400',   bg: 'bg-green-500',   border: 'border-green-500/40',   icon: CreditCard },
+  'offer':   { label: 'Counter Offer', color: 'text-cyan-400',    bg: 'bg-cyan-500',    border: 'border-cyan-500/40',    icon: Send },
+}
+
+function parseTabFromLink(link: string | null): string | null {
+  if (!link) return null
+  try {
+    const url = new URL(link, window.location.origin)
+    return url.searchParams.get('tab')
+  } catch {
+    const match = link.match(/[?&]tab=([^&]+)/)
+    return match ? match[1] : null
+  }
+}
+
+function getNotificationConfig(n: Notification) {
+  const tab = parseTabFromLink(n.link)
+  if (tab && CATEGORY_CONFIG[tab]) return CATEGORY_CONFIG[tab]
+  if (n.type && TYPE_CONFIG[n.type]) return TYPE_CONFIG[n.type]
+  return { label: 'Notification', color: 'text-brand-orange', bg: 'bg-brand-orange', border: 'border-brand-orange/40', icon: Bell }
+}
+
+function resolveTabFromNotification(n: Notification): string {
+  const tab = parseTabFromLink(n.link)
+  if (tab) {
+    if (tab.startsWith('bkg-')) return tab
+    if (CATEGORY_CONFIG[tab]) {
+      if (tab === 'bkg-taxi' || tab === 'taxi') return 'bkg-taxi'
+      if (tab === 'tour' || tab === 'bkg-tour') return 'bkg-tour'
+      if (tab === 'bookings') return 'all-bookings'
+      return 'bkg-' + tab
+    }
+  }
+  if (n.type === 'inquiry') return 'inquiries'
+  if (n.type === 'review') return 'reviews'
+  if (n.type === 'payment') return 'all-bookings'
+  if (n.type === 'offer') return 'all-bookings'
+  if (n.title.toLowerCase().includes('inquiry')) return 'inquiries'
+  return 'all-bookings'
 }
 
 function playNotificationChime() {
@@ -27,12 +99,12 @@ function playNotificationChime() {
     const gain = ctx.createGain()
 
     osc1.type = 'sine'
-    osc1.frequency.setValueAtTime(587.33, now) // D5
-    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15) // A5
+    osc1.frequency.setValueAtTime(587.33, now)
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15)
 
     osc2.type = 'triangle'
     osc2.frequency.setValueAtTime(880, now + 0.1)
-    osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.3) // D6
+    osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.3)
 
     gain.gain.setValueAtTime(0.15, now)
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
@@ -62,7 +134,6 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
   useEffect(() => {
     if (!user?.id) return
     fetchNotifications()
-    // Poll every 5 seconds for real-time live booking & inquiry alerts
     const interval = setInterval(fetchNotifications, 5000)
     return () => clearInterval(interval)
   }, [user?.id])
@@ -81,63 +152,62 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
     if (!user?.id) return
     try {
       const res = await fetch('/api/notifications?unread=true', {
-        headers: { 'x-user-id': user.id },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return
       const data = await res.json()
       const list: Notification[] = data.notifications || []
       const count: number = data.unreadCount || 0
 
-      // Check for brand new notifications to trigger live audio chime and toast popup
       if (initialLoadDone.current) {
         const brandNew = list.filter((n) => !seenIds.current.has(n.id))
         if (brandNew.length > 0) {
           playNotificationChime()
           brandNew.forEach((n) => {
             seenIds.current.add(n.id)
+            const config = getNotificationConfig(n)
+            const CategoryIcon = config.icon
+            const targetTab = resolveTabFromNotification(n)
+
             toast.custom(
               (t) => (
-                <div className="bg-slate-950 text-white p-4 rounded-2xl shadow-2xl border border-brand-orange/60 flex items-start gap-3 w-full max-w-sm ring-2 ring-brand-orange/20 animate-in fade-in slide-in-from-top-2">
-                  <div className="w-10 h-10 rounded-xl bg-brand-orange flex items-center justify-center shrink-0 shadow-md">
-                    <Bell className="w-5 h-5 text-white animate-bounce" />
+                <div className={`bg-slate-950 text-white p-4 rounded-2xl shadow-2xl ${config.border} flex items-start gap-3 w-full max-w-sm ring-2 ring-white/10 animate-in fade-in slide-in-from-top-2`}>
+                  <div className={`w-11 h-11 rounded-xl ${config.bg} flex items-center justify-center shrink-0 shadow-lg`}>
+                    <CategoryIcon className="w-5 h-5 text-white animate-bounce" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
-                        New Booking / Lead
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${config.color} bg-white/5 px-2 py-0.5 rounded-full border ${config.border}`}>
+                        {config.label}
                       </span>
-                      <button
-                        onClick={() => toast.dismiss(t)}
-                        className="text-gray-400 hover:text-white p-1"
-                      >
+                      <button onClick={() => toast.dismiss(t)} className="text-gray-400 hover:text-white p-1 cursor-pointer">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <p className="font-bold text-white text-sm mt-1 leading-snug">{n.title}</p>
+                    <p className="font-bold text-white text-sm mt-1.5 leading-snug">{n.title}</p>
                     <p className="text-gray-300 text-xs mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
                     <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between">
-                      <span className="text-[10px] text-gray-400">Just now</span>
+                      <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full ${config.bg} animate-pulse`} />
+                        Just now
+                      </span>
                       <button
                         onClick={() => {
                           toast.dismiss(t)
-                          if (onSelectTab) {
-                            if (n.title.toLowerCase().includes('inquiry')) onSelectTab('inquiries')
-                            else onSelectTab('all-bookings')
-                          }
+                          if (onSelectTab && targetTab) onSelectTab(targetTab)
                         }}
-                        className="text-xs font-semibold text-brand-orange hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
+                        className={`text-xs font-semibold ${config.color} hover:text-white flex items-center gap-1 transition-colors cursor-pointer`}
                       >
-                        View in Admin <ArrowRight className="w-3 h-3" />
+                        View {config.label} <ArrowRight className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
                 </div>
               ),
-              { duration: 8000, position: 'top-right' }
+              { duration: 10000, position: 'top-right' }
             )
           })
 
-          // Invalidate admin statistics and inquiry tables for instant live updates
           queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
           queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
           queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] })
@@ -159,7 +229,7 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
     try {
       await fetch(`/api/notifications/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ read: true }),
       })
       setNotifications((prev) => prev.filter((n) => n.id !== id))
@@ -175,7 +245,7 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
         notifications.map((n) =>
           fetch(`/api/notifications/${n.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
             body: JSON.stringify({ read: true }),
           })
         )
@@ -192,7 +262,7 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
     try {
       await fetch('/api/notifications', {
         method: 'DELETE',
-        headers: { 'x-user-id': user.id },
+        headers: { ...getAuthHeaders() },
       })
       setNotifications([])
       setUnreadCount(0)
@@ -216,7 +286,6 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-84 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in-50 zoom-in-95">
-          {/* Header */}
           <div className="p-4 bg-brand-dark text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-brand-orange" />
@@ -250,7 +319,6 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
             </div>
           </div>
 
-          {/* List */}
           <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-400">
@@ -259,35 +327,59 @@ export function AdminNotificationBell({ onSelectTab }: { onSelectTab?: (tab: str
                 <p className="text-xs text-gray-400 mt-0.5">You're all caught up with bookings & inquiries!</p>
               </div>
             ) : (
-              notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className="p-3.5 hover:bg-brand-cream/40 transition-colors flex items-start justify-between gap-3 group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
-                      <h4 className="font-bold text-brand-dark text-xs sm:text-sm leading-tight truncate">
-                        {n.title}
-                      </h4>
-                    </div>
-                    <p className="text-gray-600 text-xs mt-1 leading-relaxed pl-4">
-                      {n.message}
-                    </p>
-                    <span className="text-[10px] text-gray-400 mt-1 block pl-4">
-                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(n.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
+              notifications.map((n) => {
+                const config = getNotificationConfig(n)
+                const ItemIcon = config.icon
+                const targetTab = resolveTabFromNotification(n)
 
-                  <button
-                    onClick={() => markRead(n.id)}
-                    className="text-gray-300 hover:text-emerald-600 p-1 rounded transition opacity-0 group-hover:opacity-100 cursor-pointer"
-                    title="Mark as read"
+                return (
+                  <div
+                    key={n.id}
+                    className="p-3.5 hover:bg-brand-cream/40 transition-colors flex items-start justify-between gap-3 group"
                   >
-                    <CheckCheck className="w-4 h-4" />
-                  </button>
-                </div>
-              ))
+                    <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg ${config.bg}/15 flex items-center justify-center shrink-0 mt-0.5`}>
+                        <ItemIcon className={`w-4 h-4 ${config.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9px] font-bold uppercase tracking-wider ${config.color} bg-white/5 px-1.5 py-0.5 rounded-full border ${config.border}`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-brand-dark text-xs sm:text-sm leading-tight mt-1 truncate">
+                          {n.title}
+                        </h4>
+                        <p className="text-gray-600 text-xs mt-0.5 leading-relaxed line-clamp-2">
+                          {n.message}
+                        </p>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(n.createdAt).toLocaleDateString()}
+                          </span>
+                          <button
+                            onClick={() => {
+                              if (onSelectTab && targetTab) onSelectTab(targetTab)
+                              markRead(n.id)
+                            }}
+                            className={`text-[10px] font-semibold ${config.color} hover:text-white flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all cursor-pointer`}
+                          >
+                            View <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => markRead(n.id)}
+                      className="text-gray-300 hover:text-emerald-600 p-1 rounded transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Mark as read"
+                    >
+                      <CheckCheck className="w-4 h-4" />
+                    </button>
+                  </div>
+                )
+              })
             )}
           </div>
         </div>

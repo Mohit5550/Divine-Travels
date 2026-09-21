@@ -54,6 +54,7 @@ export function DestinationCarousel() {
   useEffect(() => {
     if (packages.length === 0 || isDragged) return
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
       setCurrentIndex(prev => (prev + 1) % packages.length)
     }, 2000)
     return () => clearInterval(interval)

@@ -7,6 +7,7 @@ import { useAppStore } from '@/lib/store'
 import { Plus, Pencil, Trash2, Save, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface TourHighlight {
   icon: string
@@ -69,7 +70,7 @@ export function AdminTourDestinations() {
     queryKey: ['admin-tour-destinations'],
     queryFn: async () => {
       const res = await fetch('/api/admin/tour-destinations', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) throw new Error('Failed to fetch')
       return res.json() as Promise<TourDestinationData[]>
@@ -82,7 +83,7 @@ export function AdminTourDestinations() {
       const url = isEdit ? `/api/admin/tour-destinations/${editingId}` : '/api/admin/tour-destinations'
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(form),
       })
       if (!res.ok) {
@@ -105,7 +106,7 @@ export function AdminTourDestinations() {
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/admin/tour-destinations/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) throw new Error('Failed to delete')
     },

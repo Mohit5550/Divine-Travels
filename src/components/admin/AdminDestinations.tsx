@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Destination {
   id: string
@@ -104,8 +105,7 @@ export function AdminDestinations() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
@@ -135,7 +135,7 @@ export function AdminDestinations() {
     try {
       const res = await fetch(`/api/destinations/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
 
       if (!res.ok) {

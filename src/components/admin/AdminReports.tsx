@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminReports() {
   const { user } = useAppStore()
@@ -21,7 +22,7 @@ export function AdminReports() {
       if (to) params.set('to', to)
 
       const res = await fetch(`/api/admin/reports?${params}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
 
       if (!res.ok) { toast.error('Failed to export'); return }

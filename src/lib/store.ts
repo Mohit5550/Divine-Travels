@@ -22,14 +22,17 @@ interface AppStore {
   selectedDestinationId: string | null
   selectedPackageId: string | null
   user: AppUser | null
+  token: string | null
   isAuthenticated: boolean
   isAdmin: boolean
   sourceView: string | null
   navHistory: NavEntry[]
   dashboardTab: string | null
+  voucherModalOpen: boolean
+  setVoucherModalOpen: (open: boolean) => void
   navigate: (view: string, destId?: string | null, pkgId?: string | null) => void
   goBack: (fallbackView?: string | null) => void
-  setUser: (user: AppUser | null) => void
+  setUser: (user: AppUser | null, token?: string | null) => void
   setDashboardTab: (tab: string) => void
   logout: () => void
 }
@@ -39,7 +42,7 @@ const LISTING_VIEWS = [
   'domestic-tours', 'spiritual-tours', 'international-tours', 'hotel-packages',
   'camping-packages', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour',
   'nainital-tour', 'hill-stations-tour', 'char-dham-tour', 'taxi-booking-form',
-  'gallery', 'blog-archive', 'collaborate', 'partner',
+  'gallery', 'blog-archive', 'collaborate',
 ]
 
 const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'destination-detail', 'blog-single', 'hotel-detail']
@@ -47,7 +50,7 @@ const DETAIL_VIEWS = ['package-detail', 'package-booking', 'company-detail', 'de
 const ALL_VALID_VIEWS = new Set([
   'landing', 'user-dashboard', 'admin-dashboard', 'destination-detail',
   'booking-success', 'about-us', 'contact', 'privacy-policy', 'terms-of-service',
-  'refund-policy', 'cancellation-policy', 'collaborate', 'partner',
+  'refund-policy', 'cancellation-policy', 'cookie-policy', 'collaborate',
   ...LISTING_VIEWS,
   ...DETAIL_VIEWS,
 ])
@@ -73,7 +76,6 @@ const VIEW_TO_PATH: Record<string, string> = {
   'camping-packages': '/camping',
   'gallery': '/gallery',
   'collaborate': '/collaborate',
-  'partner': '/partner',
   'about-us': '/about',
   'contact': '/contact',
   'user-dashboard': '/dashboard',
@@ -82,13 +84,14 @@ const VIEW_TO_PATH: Record<string, string> = {
   'terms-of-service': '/terms',
   'refund-policy': '/refund',
   'cancellation-policy': '/cancellation',
+  'cookie-policy': '/cookie-policy',
   'blog-archive': '/blog',
-  'destination-detail': '/destination/:id',
+  'destination-detail': '/destination/:slug',
   'booking-success': '/booking-success',
   'package-detail': '/package/:id',
   'package-booking': '/package/:id/book',
-  'company-detail': '/company/:slug',
-  'blog-single': '/blog/:slug',
+  'company-detail': '/company/:id',
+  'blog-single': '/blog/:id',
   'hotel-detail': '/hotel/:id',
 }
 
@@ -105,6 +108,10 @@ function resolveFromURL(): { view: string; packageId: string | null; destination
   if (m) return { view: 'package-detail', packageId: m[1], destinationId: null }
   m = path.match(/^\/hotel\/([^/]+)$/)
   if (m) return { view: 'hotel-detail', packageId: m[1], destinationId: null }
+  m = path.match(/^\/company\/([^/]+)$/)
+  if (m) return { view: 'company-detail', packageId: m[1], destinationId: null }
+  m = path.match(/^\/blog\/([^/]+)$/)
+  if (m) return { view: 'blog-single', packageId: m[1], destinationId: null }
   m = path.match(/^\/destination\/([^/]+)$/)
   if (m) return { view: 'destination-detail', destinationId: m[1], packageId: null }
   return { view: PATH_TO_VIEW[path] || 'landing', packageId: null, destinationId: null }
@@ -141,11 +148,15 @@ export const useAppStore = create<AppStore>()(
       selectedDestinationId: null,
       selectedPackageId: null,
       user: null,
+      token: null,
       isAuthenticated: false,
       isAdmin: false,
       sourceView: null,
       navHistory: [],
       dashboardTab: null,
+      voucherModalOpen: false,
+
+      setVoucherModalOpen: (open: boolean) => set({ voucherModalOpen: open }),
 
       navigate: (view: string, destId?: string | null, pkgId?: string | null) => {
         const state = get()
@@ -212,9 +223,10 @@ export const useAppStore = create<AppStore>()(
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
 
-      setUser: (user: AppUser | null) => {
+      setUser: (user: AppUser | null, token?: string | null) => {
         set({
           user,
+          token: token ?? null,
           isAuthenticated: !!user,
           isAdmin: user?.role === 'admin',
         })
@@ -227,6 +239,7 @@ export const useAppStore = create<AppStore>()(
       logout: () => {
         set({
           user: null,
+          token: null,
           isAuthenticated: false,
           isAdmin: false,
           currentView: 'landing',
@@ -244,6 +257,7 @@ export const useAppStore = create<AppStore>()(
       skipHydration: true,
       partialize: (state) => ({
         user: state.user,
+        token: state.token,
         isAuthenticated: state.isAuthenticated,
         isAdmin: state.isAdmin,
       }),
@@ -261,15 +275,23 @@ export const useAppStore = create<AppStore>()(
 
 if (typeof window !== 'undefined' && !(window as any).__divineStorePopstate) {
   ;(window as any).__divineStorePopstate = true
-  window.addEventListener('popstate', () => {
+  const syncFromCurrentLocation = () => {
     const r = resolveFromURL()
     const state = useAppStore.getState()
-    if (state.currentView !== r.view || state.selectedPackageId !== r.packageId || state.selectedDestinationId !== r.destinationId) {
+    if (!state.currentView || state.currentView !== r.view || state.selectedPackageId !== r.packageId || state.selectedDestinationId !== r.destinationId) {
       useAppStore.setState({
-        currentView: r.view,
+        currentView: r.view || 'landing',
         selectedDestinationId: r.destinationId,
         selectedPackageId: r.packageId,
       })
     }
+  }
+
+  window.addEventListener('popstate', syncFromCurrentLocation)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncFromCurrentLocation()
+    }
   })
+  window.addEventListener('focus', syncFromCurrentLocation)
 }

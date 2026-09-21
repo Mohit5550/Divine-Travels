@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { Pagination } from '@/components/ui/Pagination'
 import { BookingCardActions } from '../booking/BookingCardActions'
 import { useAppStore } from '@/lib/store'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface TaxiBooking {
   id: string
@@ -80,7 +81,7 @@ export function AdminTaxiBookings() {
     try {
       const res = await fetch(`/api/booking-flow/tour/${bookingId}/accept-user-amount`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
       })
       if (res.ok) {
         toast.success('User amount accepted — booking confirmed')
@@ -101,14 +102,19 @@ export function AdminTaxiBookings() {
     try {
       const res = await fetch('/api/admin/bookings/update-status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ bookingId: id, type: 'taxi', status }),
       })
+      const data = await res.json()
       if (res.ok) {
-        toast.success(`Taxi status updated to ${status.replace('_', ' ').toUpperCase()}`)
+        if (status === 'confirmed' && data.whatsappUrl) {
+          window.open(data.whatsappUrl, '_blank')
+          toast.success('Taxi Booking Confirmed! WhatsApp opened to send 10% advance payment link.')
+        } else {
+          toast.success(`Taxi status updated to ${status.replace('_', ' ').toUpperCase()}`)
+        }
         fetchBookings()
       } else {
-        const data = await res.json()
         toast.error(data.error || 'Failed to update')
       }
     } catch {

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/lib/store'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface PricingTier {
   label: string
@@ -71,7 +72,7 @@ export function AdminStayContent() {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/stay-content', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       const data = await res.json()
       if (res.ok && data.records) {
@@ -165,8 +166,7 @@ export function AdminStayContent() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify(current),
       })
       if (res.ok) {

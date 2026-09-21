@@ -2,10 +2,22 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { MapPin, Calendar, Users, X, ArrowRight, Eye } from 'lucide-react'
+import { MapPin, Calendar, Users, X, ArrowRight, Eye, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { BookingCardActions } from '../booking/BookingCardActions'
+import { getAuthHeaders } from '@/lib/auth-client'
+
+function readDestinationAdvance(b: any) {
+  if (b.status !== 'confirmed' || b.paymentStatus === 'paid' || b.paymentStatus === 'completed') return null
+  const sr = b.specialReqs || ''
+  const req = sr.match(/\[advanceRequired:(true|false)\]/)
+  const amt = sr.match(/\[advanceAmount:(\d+)\]/)
+  const dl = sr.match(/\[advanceDeadline:([^\]]+)\]/)
+  if (!req || req[1] !== 'true' || !amt) return null
+  const deadline = dl ? new Date(dl[1]) : null
+  return { amount: Number(amt[1]), deadline, isExpired: deadline ? deadline < new Date() : false }
+}
 
 export function UserBookings() {
   const { user, navigate } = useAppStore()
@@ -14,22 +26,34 @@ export function UserBookings() {
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['user-bookings', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
     refetchInterval: 12000,
   })
 
-  const cancelBooking = async (id: string) => {
+  const cancelBooking = async (booking: any) => {
+    const total = booking.totalPrice || 0
+    const paid = booking.paymentStatus === 'paid' ? total : 0
+    const msg = paid > 0
+      ? `Cancel "${booking.destination?.name || 'this booking'}"?\n\nTotal: ₹${total.toLocaleString('en-IN')}\n\nRefund will be calculated based on cancellation policy (how many days before travel). Your UPI ID from profile will be used for refund.`
+      : `Cancel "${booking.destination?.name || 'this booking'}"?\n\nThis action cannot be undone.`
+    if (!confirm(msg)) return
+
     try {
-      const res = await fetch(`/api/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
-        body: JSON.stringify({ status: 'cancelled' }),
+      const res = await fetch('/api/cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ bookingType: 'destination', bookingId: booking.id }),
       })
-      if (!res.ok) { const data = await res.json(); toast.error(data.error || 'Failed to cancel'); return }
-      toast.success('Booking cancelled')
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to cancel'); return }
+      const data = await res.json()
+      if (data.refund) {
+        toast.success(`Refund: ₹${data.refund.refundAmount.toLocaleString('en-IN')} (${data.refund.refundPct}% of ₹${data.refund.amountPaid.toLocaleString('en-IN')} paid)`)
+      } else {
+        toast.success('Booking cancelled')
+      }
       queryClient.invalidateQueries({ queryKey: ['user-bookings'] })
     } catch { toast.error('Failed to cancel booking') }
   }
@@ -75,6 +99,33 @@ export function UserBookings() {
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                     </span>
                   </div>
+
+                  {(() => {
+                    const adv = readDestinationAdvance(booking)
+                    if (!adv) return null
+                    const timeLeft = adv.deadline ? Math.max(0, Math.floor((adv.deadline.getTime() - Date.now()) / (1000 * 60 * 60))) : 0
+                    return (
+                      <div className={`mt-3 p-3 rounded-xl border-2 ${adv.isExpired ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300 animate-pulse'}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${adv.isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                            <CreditCard className={`w-5 h-5 ${adv.isExpired ? 'text-red-600' : 'text-amber-600'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-bold ${adv.isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                              {adv.isExpired ? 'Advance Deadline Expired!' : `Pay 10% Advance: ₹${adv.amount.toLocaleString('en-IN')}`}
+                            </p>
+                            <p className={`text-xs mt-0.5 ${adv.isExpired ? 'text-red-600' : 'text-amber-600'}`}>
+                              {adv.isExpired
+                                ? 'Your booking may be cancelled. Contact support immediately.'
+                                : timeLeft > 0
+                                  ? `Time left: ~${timeLeft} hours. Pay now to lock your spot.`
+                                  : 'Pay now to confirm your booking.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                     <div>
                       <span className="text-muted-foreground text-xs">Check-in</span>
@@ -105,7 +156,7 @@ export function UserBookings() {
                         <Eye className="w-3 h-3 mr-1" /> View
                       </Button>
                       {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                        <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => cancelBooking(booking.id)}>
+                        <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => cancelBooking(booking)}>
                           <X className="w-3 h-3 mr-1" /> Cancel
                         </Button>
                       )}

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPayment, generateOrderId } from '@/lib/kwikupi'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }

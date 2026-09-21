@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { toast } from 'sonner'
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
+import { autoSubscribe } from '@/components/ui/PushNotificationManager'
 
 interface LoginModalProps {
   open: boolean
@@ -51,10 +53,10 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
         return
       }
 
-      setUser(data.user)
-      sessionStorage.setItem('dt_user_id', data.user.id)
+      setUser(data.user, data.token)
       toast.success(data.message || `Welcome, ${data.user.name}!`)
       onClose()
+      autoSubscribe(data.user.id)
       if (data.user.role === 'admin') {
         navigate('admin-dashboard')
       }
@@ -176,16 +178,11 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
               )}
 
               {mode === 'register' && (
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="tel"
-                    placeholder="Phone Number (optional)"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="pl-10 h-11 rounded-lg"
-                  />
-                </div>
+                <PhoneInput
+                  value={form.phone}
+                  onChange={(val) => setForm({ ...form, phone: val })}
+                  placeholder="Phone Number (optional)"
+                />
               )}
 
               <Button

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface GalleryImage {
   id: string
@@ -37,7 +38,7 @@ export function AdminGallery() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-gallery', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/gallery?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/gallery?page=${page}&limit=20`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { data: [], totalPages: 1 }
       return res.json()
     },
@@ -77,7 +78,7 @@ export function AdminGallery() {
       const method = editingId ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(form),
       })
       if (!res.ok) {
@@ -101,7 +102,7 @@ export function AdminGallery() {
     try {
       const res = await fetch(`/api/admin/gallery/${img.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ ...img, featured: newFeatured }),
       })
       if (!res.ok) {
@@ -118,7 +119,7 @@ export function AdminGallery() {
     try {
       const res = await fetch(`/api/admin/gallery/${img.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ ...img, active: !img.active }),
       })
       if (!res.ok) { toast.error('Failed to update'); return }
@@ -130,7 +131,7 @@ export function AdminGallery() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this image permanently?')) return
     try {
-      const res = await fetch(`/api/admin/gallery/${id}`, { method: 'DELETE', headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/gallery/${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } })
       if (!res.ok) { toast.error('Failed to delete'); return }
       toast.success('Image deleted')
       queryClient.invalidateQueries({ queryKey: ['admin-gallery'] })

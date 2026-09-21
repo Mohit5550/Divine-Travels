@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/lib/store'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface PriceRecord {
   id: string
@@ -76,7 +77,7 @@ export function AdminAvailability() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       const res = await fetch(`/api/admin/availability?${params}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       const data = await res.json()
       if (res.ok) {
@@ -141,8 +142,7 @@ export function AdminAvailability() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           id: editingId,
           date: form.date,
@@ -174,7 +174,7 @@ export function AdminAvailability() {
     try {
       const res = await fetch(`/api/admin/availability?id=${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (res.ok) {
         toast.success('Deleted')

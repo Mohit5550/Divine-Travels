@@ -41,27 +41,29 @@ export function ActivityBar() {
   return (
     <section className="bg-white border-b border-gray-100 shadow-sm pt-[92px] sm:pt-[104px]">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-5">
-        <div className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-auto hide-scrollbar pb-1 justify-start sm:justify-center">
-          {activities.map((activity, index) => {
-            const Icon = activity.icon
-            return (
-              <motion.button
-                key={activity.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                onClick={() => handleClick(activity.id)}
-                className="flex flex-col items-center gap-0.5 sm:gap-2 min-w-[40px] sm:min-w-[76px] md:min-w-[80px] px-1 sm:px-3 py-1.5 sm:py-3 rounded-xl transition-all duration-200 cursor-pointer group hover:scale-105 shrink-0"
-              >
-                <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full ${activity.color} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
-                  <Icon className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className="text-[8px] sm:text-xs font-medium text-brand-dark whitespace-nowrap group-hover:text-brand-orange transition-colors text-center leading-tight">
-                  {activity.label}
-                </span>
-              </motion.button>
-            )
-          })}
+        <div className="overflow-x-auto hide-scrollbar pb-1">
+          <div className="flex items-center justify-center min-w-full w-max mx-auto gap-1.5 sm:gap-3 md:gap-4 px-1 sm:px-2">
+            {activities.map((activity, index) => {
+              const Icon = activity.icon
+              return (
+                <motion.button
+                  key={activity.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  onClick={() => handleClick(activity.id)}
+                  className="flex flex-col items-center gap-1 sm:gap-2 min-w-[38px] sm:min-w-[76px] md:min-w-[80px] px-1 sm:px-3 py-1.5 sm:py-3 rounded-xl transition-all duration-200 cursor-pointer group hover:scale-105 shrink-0"
+                >
+                  <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full ${activity.color} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+                    <Icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <span className="text-[9px] sm:text-xs font-medium text-brand-dark whitespace-nowrap group-hover:text-brand-orange transition-colors text-center leading-tight">
+                    {activity.label}
+                  </span>
+                </motion.button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </section>

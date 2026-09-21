@@ -23,11 +23,12 @@ import { UserCartPanel } from './UserCartPanel'
 import { BookingVoucherModal, type BookingVoucherData } from '@/components/booking/BookingVoucherModal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
-type UserTab = 'overview' | 'bookings' | 'package-bookings' | 'tours' | 'taxi' | 'wishlist' | 'cart' | 'reviews' | 'payments' | 'coupons' | 'timeline' | 'profile'
+  type UserTab = 'overview' | 'bookings' | 'package-bookings' | 'tours' | 'taxi' | 'wishlist' | 'cart' | 'reviews' | 'payments' | 'coupons' | 'timeline' | 'profile' | 'payment-requests'
 
 export function UserDashboard() {
-  const { user, logout, navigate, dashboardTab, setDashboardTab } = useAppStore()
+  const { user, logout, navigate, dashboardTab, setDashboardTab, setVoucherModalOpen } = useAppStore()
   const queryClient = useQueryClient()
   const cartItems = useCart((s) => s.items)
   const [activeTab, setActiveTab] = useState<UserTab>('overview')
@@ -36,7 +37,7 @@ export function UserDashboard() {
   const [selectedTripIndex, setSelectedTripIndex] = useState(0)
 
   useEffect(() => {
-    const validTabs: UserTab[] = ['overview', 'bookings', 'package-bookings', 'tours', 'taxi', 'wishlist', 'cart', 'reviews', 'payments', 'coupons', 'timeline', 'profile']
+    const validTabs: UserTab[] = ['overview', 'bookings', 'package-bookings', 'tours', 'taxi', 'wishlist', 'cart', 'reviews', 'payments', 'coupons', 'timeline', 'profile', 'payment-requests']
     if (dashboardTab && validTabs.includes(dashboardTab as UserTab)) {
       setActiveTab(dashboardTab as UserTab)
       setDashboardTab('')
@@ -45,31 +46,59 @@ export function UserDashboard() {
 
   useEffect(() => {
     const tab = sessionStorage.getItem('dt_dashboard_tab')
-      if (tab && ['overview', 'bookings', 'package-bookings', 'tours', 'taxi', 'wishlist', 'cart', 'reviews', 'payments', 'coupons', 'timeline', 'profile'].includes(tab)) {
+      if (tab && ['overview', 'bookings', 'package-bookings', 'tours', 'taxi', 'wishlist', 'cart', 'reviews', 'payments', 'coupons', 'timeline', 'profile', 'payment-requests'].includes(tab)) {
       setActiveTab(tab as UserTab)
       sessionStorage.removeItem('dt_dashboard_tab')
     }
   }, [])
 
+  useEffect(() => {
+    if (!user?.id) return
+    fetch('/api/admin/cancel-expired-advance', {
+      method: 'POST',
+      headers: { ...getAuthHeaders() },
+    }).catch(() => {})
+  }, [user?.id])
+
   const handlePayNow = async (booking: any) => {
     try {
-      const res = await fetch('/api/kwikupi/create-payment', {
+      const isDest = booking._bookingType === 'dest'
+      const isTour = booking._bookingType === 'tour' || booking._bookingType === 'taxi'
+      const bType = isDest ? 'destination' : isTour ? 'tour' : 'package'
+      const res = await fetch(`/api/booking-flow/${bType}/${booking.id}/payments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
-        body: JSON.stringify({
-          customer_name: booking.fullName || user?.name,
-          customer_email: user?.email,
-          booking_id: booking.id,
-          service: 'package',
-          amount: booking.totalPrice || 500,
-        }),
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ method: 'online', payType: 'advance' }),
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
       const payData = await res.json()
       localStorage.setItem('dt_payment_id', payData.payment_id)
       localStorage.setItem('dt_booking_id', booking.id)
       localStorage.setItem('dt_user_id', user?.id || '')
-      localStorage.setItem('dt_service', 'package')
+      localStorage.setItem('dt_service', 'unified')
+      localStorage.setItem('dt_booking_type', bType)
+      localStorage.setItem('dt_pay_type', 'advance')
+      window.location.href = payData.payment_page
+    } catch {
+      toast.error('Failed to initiate payment')
+    }
+  }
+
+  const handlePayBalance = async (booking: any, bType: string) => {
+    try {
+      const res = await fetch(`/api/booking-flow/${bType}/${booking.id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ method: 'online', payType: 'balance' }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
+      const payData = await res.json()
+      localStorage.setItem('dt_payment_id', payData.payment_id)
+      localStorage.setItem('dt_booking_id', booking.id)
+      localStorage.setItem('dt_user_id', user?.id || '')
+      localStorage.setItem('dt_service', 'unified')
+      localStorage.setItem('dt_booking_type', bType)
+      localStorage.setItem('dt_pay_type', 'balance')
       window.location.href = payData.payment_page
     } catch {
       toast.error('Failed to initiate payment')
@@ -79,7 +108,7 @@ export function UserDashboard() {
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['user-bookings', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -89,7 +118,7 @@ export function UserDashboard() {
   const { data: pkgBookings = [], isLoading: pkgLoading } = useQuery({
     queryKey: ['user-package-bookings-stats', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/package-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/package-bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -99,7 +128,7 @@ export function UserDashboard() {
   const { data: wishlist = [] } = useQuery({
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -108,7 +137,7 @@ export function UserDashboard() {
   const { data: pkgWishlist = [] } = useQuery({
     queryKey: ['package-wishlist-stats', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/package-wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -117,7 +146,7 @@ export function UserDashboard() {
   const { data: notifData } = useQuery({
     queryKey: ['notifications-count', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/notifications', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/notifications', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { unreadCount: 0 }
       const d = await res.json()
       return d
@@ -125,10 +154,20 @@ export function UserDashboard() {
     refetchInterval: 30000,
   })
 
+  const { data: paymentRequests = [] } = useQuery({
+    queryKey: ['payment-requests', user?.id],
+    queryFn: async () => {
+      const res = await fetch('/api/payment-requests', { headers: { ...getAuthHeaders() } })
+      if (!res.ok) return []
+      return res.json()
+    },
+    refetchInterval: 15000,
+  })
+
   const { data: tourBookings = [], isLoading: tourLoading } = useQuery({
     queryKey: ['user-tour-bookings-stats', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/tour-bookings?excludeTaxi=true', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/tour-bookings?excludeTaxi=true', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -137,7 +176,7 @@ export function UserDashboard() {
   const { data: taxiBookings = [], isLoading: taxiLoading } = useQuery({
     queryKey: ['user-taxi-bookings-stats', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/taxi-bookings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/taxi-bookings', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -327,6 +366,7 @@ export function UserDashboard() {
     { id: 'cart' as UserTab, label: 'My Cart', icon: ShoppingCart },
     { id: 'reviews' as UserTab, label: 'Reviews', icon: Star },
     { id: 'payments' as UserTab, label: 'Payments', icon: CreditCard },
+    { id: 'payment-requests' as UserTab, label: 'Payment Requests', icon: Clock },
     { id: 'coupons' as UserTab, label: 'Coupons', icon: Gift },
     { id: 'timeline' as UserTab, label: 'Timeline', icon: Clock },
     { id: 'profile' as UserTab, label: 'Profile', icon: User },
@@ -645,6 +685,7 @@ export function UserDashboard() {
 
                         {/* Action Buttons Right Column */}
                         <div className="flex flex-row lg:flex-col gap-2.5 w-full lg:w-48 shrink-0">
+                          {tripPaid > 0 && (
                           <Button
                             onClick={() => {
                               const bId = currentTrip.id || 'DT-BOOKING'
@@ -692,12 +733,17 @@ export function UserDashboard() {
                                 createdAt: currentTrip.createdAt || new Date().toISOString(),
                               }
                               setVoucherData(vData)
+                              setVoucherModalOpen(true)
                             }}
                             className="flex-1 lg:w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold py-2.5 rounded-xl shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <Receipt className="w-4 h-4" />
                             <span>Download Ticket</span>
                           </Button>
+                          )}
+                          {tripPaid <= 0 && (
+                            <p className="text-[11px] text-amber-700 mt-1 text-center">Ticket will be available after 10% advance payment.</p>
+                          )}
 
                           <a
                             href={`https://wa.me/916396919007?text=${encodeURIComponent(`Hi Divine Travels Coordinator, I have an upcoming trip for "${tripTitle}" on ${tripDateStr}. Need reporting details / pickup assistance.`)}`}
@@ -733,6 +779,51 @@ export function UserDashboard() {
                       )
                     })}
                   </div>
+
+                  {/* Payment Requests Alert */}
+                  {(paymentRequests as any[]).filter((pr: any) => pr.status === 'pending').length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                          <Clock className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-brand-dark text-sm">You have payment requests pending</p>
+                          <p className="text-xs text-muted-foreground">Complete your balance payments to confirm bookings</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {(paymentRequests as any[]).filter((pr: any) => pr.status === 'pending').map((pr: any) => (
+                          <div key={pr.id} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-100">
+                            <div>
+                              <p className="text-sm font-medium text-brand-dark">{pr.bookingType}</p>
+                              <p className="text-xs text-muted-foreground">Due: ₹{pr.balanceAmount}</p>
+                            </div>
+                            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white h-8 text-xs" onClick={() => {
+                              const bType = pr.bookingType === 'taxi' ? 'tour' : pr.bookingType === 'destination' ? 'destination' : pr.bookingType
+                              fetch(`/api/booking-flow/${bType}/${pr.bookingId}/payments`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+                                body: JSON.stringify({ method: 'online', payType: 'balance' }),
+                              }).then(async (res) => {
+                                if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Payment failed'); return }
+                                const payData = await res.json()
+                                localStorage.setItem('dt_payment_id', payData.payment_id)
+                                localStorage.setItem('dt_booking_id', pr.bookingId)
+                                localStorage.setItem('dt_user_id', user?.id || '')
+                                localStorage.setItem('dt_service', 'unified')
+                                localStorage.setItem('dt_booking_type', bType)
+                                localStorage.setItem('dt_pay_type', 'balance')
+                                window.location.href = payData.payment_page
+                              }).catch(() => toast.error('Failed to initiate payment'))
+                            }}>
+                              Pay ₹{pr.balanceAmount}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Unread Notifications Alert */}
                   {unreadNotifs > 0 && (
@@ -778,8 +869,9 @@ export function UserDashboard() {
                           const title = isDest ? booking.destination.name : isPkg ? booking.package.name : isTaxi ? 'Taxi Booking Inquiry' : (booking.packageType || booking.destination || 'Booking')
                           const img = isDest ? booking.destination.image : isPkg ? booking.package.image : undefined
                           const dateVal = isDest ? booking.checkIn : isPkg ? booking.preferredDate : booking.travelDate
-                          const isPkgConfirmedUnpaid = isPkg && booking.status === 'confirmed' && booking.paymentStatus !== 'completed'
-                          const isPkgPaid = isPkg && booking.paymentStatus === 'completed'
+                          const isAdvancePending = isPkg && booking.status === 'confirmed' && (booking.paymentStatus === 'pending' || !booking.paymentStatus)
+                          const isAdvancePaid = isPkg && booking.status === 'confirmed' && booking.paymentStatus === 'advance_paid'
+                          const isFullyPaid = isPkg && booking.paymentStatus === 'completed'
                           const statusBadge = booking.status === 'pending'
                             ? 'bg-amber-100 text-amber-700'
                             : booking.status === 'confirmed' || booking.status === 'completed'
@@ -803,43 +895,57 @@ export function UserDashboard() {
                                 </p>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                {isPkgConfirmedUnpaid && (
+                                {isAdvancePending && (
                                   <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white h-8 text-xs" onClick={(e) => { e.stopPropagation(); handlePayNow(booking) }}>
-                                    <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{booking.totalPrice?.toLocaleString()}
+                                    <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{Math.ceil((booking.totalPrice || 0) * 0.1).toLocaleString()} (10%)
                                   </Button>
                                 )}
-                                {isPkgPaid && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-8 text-xs cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setVoucherData({
-                                        bookingId: booking.id || 'DT-BOOKING',
-                                        bookingType: 'package',
-                                        title: title || booking.package?.name || 'Package Booking',
-                                        guestName: booking.fullName || user?.name || 'Valued Traveler',
-                                        guestPhone: booking.mobile || user?.phone,
-                                        guestEmail: user?.email,
-                                        travelDate: dateVal ? new Date(dateVal).toLocaleDateString('en-IN') : '',
-                                        travelers: booking.numberOfPeople || 1,
-                                        pickupLocation: booking.package?.location || null,
-                                        totalPrice: booking.totalPrice || 0,
-                                        amountPaid: booking.paymentAmount || (booking.paymentStatus === 'completed' ? booking.totalPrice : Math.round((booking.totalPrice || 0) * 0.1)),
-                                        balanceDue: booking.paymentStatus === 'completed' ? 0 : Math.max(0, (booking.totalPrice || 0) - (booking.paymentAmount || Math.round((booking.totalPrice || 0) * 0.1))),
-                                        paymentStatus: booking.paymentStatus || 'pending',
-                                        status: booking.status || 'pending',
-                                        createdAt: booking.createdAt,
-                                      })
-                                    }}
-                                  >
-                                    <Receipt className="w-3 h-3 mr-1" /> Receipt
+                                {isAdvancePaid && (
+                                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white h-8 text-xs" onClick={(e) => {
+                                    e.stopPropagation()
+                                    const bType = booking._bookingType === 'dest' ? 'destination' : booking._bookingType === 'tour' || booking._bookingType === 'taxi' ? 'tour' : 'package'
+                                    const total = booking.totalPrice || 0
+                                    const paid = booking.paymentAmount || Math.ceil(total * 0.1)
+                                    const balance = Math.max(0, total - paid)
+                                    handlePayBalance(booking, bType)
+                                  }}>
+                                    <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{Math.max(0, (booking.totalPrice || 0) - (booking.paymentAmount || Math.ceil((booking.totalPrice || 0) * 0.1))).toLocaleString()} (Balance)
                                   </Button>
                                 )}
-                                {!isPkgConfirmedUnpaid && !isPkgPaid && (
-                                  <p className="font-semibold text-sm">₹{booking.totalPrice?.toLocaleString()}</p>
-                                )}
+                                 {(isAdvancePaid || isFullyPaid) && (
+                                 <Button
+                                   size="sm"
+                                   variant="outline"
+                                   className="h-8 text-xs cursor-pointer border-brand-teal/30 hover:bg-brand-teal/10 text-brand-teal"
+                                   onClick={(e) => {
+                                     e.stopPropagation()
+                                     const bType = booking._bookingType === 'dest' ? 'destination' : booking._bookingType === 'tour' || booking._bookingType === 'taxi' ? 'tour' : 'package'
+                                     const total = booking.totalPrice || 0
+                                     const paid = booking.paymentAmount || (isFullyPaid ? total : booking.paymentStatus === 'advance_paid' ? Math.ceil(total * 0.1) : 0)
+                                     const balance = Math.max(0, total - paid)
+                                     setVoucherData({
+                                       bookingId: booking.id || 'DT-BOOKING',
+                                       bookingType: bType,
+                                       title: title || booking.package?.name || booking.destination?.name || 'Booking Voucher',
+                                       guestName: booking.fullName || booking.name || user?.name || 'Valued Traveler',
+                                       guestPhone: booking.mobile || booking.phone || user?.phone,
+                                       guestEmail: user?.email,
+                                       travelDate: dateVal ? new Date(dateVal).toLocaleDateString('en-IN') : '',
+                                       travelers: booking.numberOfPeople || booking.travelers || booking.guests || 1,
+                                       pickupLocation: booking.package?.location || booking.destination?.name || null,
+                                       totalPrice: total,
+                                       amountPaid: paid,
+                                       balanceDue: balance,
+                                       paymentStatus: booking.paymentStatus || 'pending',
+                                       status: booking.status || 'pending',
+                                       createdAt: booking.createdAt,
+                                     })
+                                     setVoucherModalOpen(true)
+                                   }}
+                                 >
+                                   <Receipt className="w-3 h-3 mr-1" /> Receipt
+                                 </Button>
+                                 )}
                               </div>
                             </div>
                           )
@@ -922,6 +1028,73 @@ export function UserDashboard() {
                 </motion.div>
               )}
 
+              {activeTab === 'payment-requests' && (
+                <motion.div key="payment-requests" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                  <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div className="p-6">
+                      <h3 className="font-serif text-xl text-brand-dark mb-4">Payment Requests</h3>
+                      {(paymentRequests as any[]).length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">No payment requests. All clear!</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {(paymentRequests as any[]).map((pr: any) => (
+                            <div key={pr.id} className={`border rounded-xl p-4 ${
+                              pr.status === 'pending' ? 'border-amber-200 bg-amber-50/30' :
+                              pr.status === 'paid' ? 'border-green-200 bg-green-50/30' :
+                              'border-gray-200 bg-gray-50/30'
+                            }`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <p className="font-medium text-brand-dark">{pr.bookingType}</p>
+                                  <p className="text-xs text-muted-foreground">Booking ID: {pr.bookingId}</p>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  pr.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                  pr.status === 'paid' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {pr.status === 'pending' ? '⏳ Pending' : pr.status === 'paid' ? '✓ Paid' : 'Cancelled'}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Balance Due: <span className="font-bold text-brand-dark">₹{pr.balanceAmount}</span>
+                                  </p>
+                                  {pr.message && <p className="text-xs text-muted-foreground mt-1">{pr.message}</p>}
+                                </div>
+                                {pr.status === 'pending' && (
+                                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white h-8 text-xs" onClick={() => {
+                                    const bType = pr.bookingType === 'taxi' ? 'tour' : pr.bookingType === 'destination' ? 'destination' : pr.bookingType
+                                    fetch(`/api/booking-flow/${bType}/${pr.bookingId}/payments`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+                                      body: JSON.stringify({ method: 'online', payType: 'balance' }),
+                                    }).then(async (res) => {
+                                      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Payment failed'); return }
+                                      const payData = await res.json()
+                                      localStorage.setItem('dt_payment_id', payData.payment_id)
+                                      localStorage.setItem('dt_booking_id', pr.bookingId)
+                                      localStorage.setItem('dt_user_id', user?.id || '')
+                                      localStorage.setItem('dt_service', 'unified')
+                                      localStorage.setItem('dt_booking_type', bType)
+                                      localStorage.setItem('dt_pay_type', 'balance')
+                                      window.location.href = payData.payment_page
+                                    }).catch(() => toast.error('Failed to initiate payment'))
+                                  }}>
+                                    Pay Now
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {activeTab === 'coupons' && (
                 <motion.div key="coupons" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <UserCoupons />
@@ -947,7 +1120,10 @@ export function UserDashboard() {
       {/* Global Booking Voucher / Receipt Modal */}
       <BookingVoucherModal
         isOpen={!!voucherData}
-        onClose={() => setVoucherData(null)}
+        onClose={() => {
+          setVoucherData(null)
+          setVoucherModalOpen(false)
+        }}
         booking={voucherData}
       />
     </div>

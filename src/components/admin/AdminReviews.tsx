@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Trash2, Star, Package, MapPin } from 'lucide-reac
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminReviews() {
   const { user } = useAppStore()
@@ -18,7 +19,7 @@ export function AdminReviews() {
   const { data: destReviews = [], isLoading: loading1 } = useQuery({
     queryKey: ['admin-reviews-dest', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=destination`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=destination`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       const json = await res.json()
       if (json && !Array.isArray(json) && json.data) {
@@ -33,7 +34,7 @@ export function AdminReviews() {
   const { data: pkgReviews = [], isLoading: loading2 } = useQuery({
     queryKey: ['admin-reviews-pkg', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=package`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/reviews?page=${page}&limit=20&for=package`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       const json = await res.json()
       if (json && !Array.isArray(json) && json.data) {
@@ -49,7 +50,7 @@ export function AdminReviews() {
     try {
       const res = await fetch('/api/admin/reviews', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ reviewId, approved, for_pkg }),
       })
       if (!res.ok) { toast.error('Failed to update'); return }
@@ -63,7 +64,7 @@ export function AdminReviews() {
     if (!confirm('Delete this review permanently?')) return
     try {
       const res = await fetch(`/api/admin/reviews?reviewId=${reviewId}&for=${for_pkg}`, {
-        method: 'DELETE', headers: { 'x-user-id': user?.id || '' },
+        method: 'DELETE', headers: { ...getAuthHeaders() },
       })
       if (!res.ok) { toast.error('Failed to delete'); return }
       toast.success('Review deleted')

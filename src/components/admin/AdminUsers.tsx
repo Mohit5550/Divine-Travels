@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store'
 import { Shield, Mail, Calendar, User as UserIcon, Package, Search, Car, Compass, Phone } from 'lucide-react'
 import { Pagination } from '@/components/ui/Pagination'
 import { Input } from '@/components/ui/input'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface UserData {
   id: string
@@ -30,7 +31,7 @@ export function AdminUsers() {
     queryKey: ['admin-users', user?.id, page],
     queryFn: async () => {
       const res = await fetch(`/api/admin/users?page=${page}&limit=50`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return { users: [], total: 0, totalPages: 1 }
       const json = await res.json()

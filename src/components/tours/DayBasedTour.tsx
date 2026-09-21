@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, Mail, Phone, MapPin, Calendar, Users, Mountain, FileText } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
@@ -11,6 +12,7 @@ import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
 import { LoginModal } from '@/components/landing/LoginModal'
 import { useAppStore } from '@/lib/store'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Program {
   id: number
@@ -55,6 +57,7 @@ export function DayBasedTour({
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [phone, setPhone] = useState('')
   const days = selected.length
   const [today, setToday] = useState('')
 
@@ -82,12 +85,12 @@ export function DayBasedTour({
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = (fd.get('Name') as string)?.trim()
-    const phone = (fd.get('Phone') as string)?.replace(/[^0-9]/g, '').slice(-10) || ''
+    const phoneRaw = phone.replace(/[^0-9]/g, '').slice(-10) || ''
     const travelDate = fd.get('Date') as string
     const travelers = parseInt(fd.get('Travelers') as string) || 1
     const note = (fd.get('Note') as string)?.trim() || ''
 
-    if (!name || !phone || phone.length !== 10 || !travelDate) {
+    if (!name || !phoneRaw || phoneRaw.length !== 10 || !travelDate) {
       toast.error('Please fill name, a valid 10-digit phone and travel date')
       return
     }
@@ -102,7 +105,7 @@ export function DayBasedTour({
         days,
         note,
         name,
-        phone,
+        phone: phoneRaw,
         travelDate,
         travelers,
       }
@@ -111,7 +114,7 @@ export function DayBasedTour({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(user?.id ? { 'x-user-id': user.id } : {}),
+          ...(user?.id ? { ...getAuthHeaders() } : {}),
         },
         body: JSON.stringify(payload),
       })
@@ -284,16 +287,12 @@ export function DayBasedTour({
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone (10 digits)</label>
-                              <input
-                                type="tel"
-                                name="Phone"
+                              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                              <PhoneInput
+                                value={phone}
+                                onChange={setPhone}
+                                placeholder="Enter phone number"
                                 required
-                                maxLength={10}
-                                pattern="[0-9]{10}"
-                                placeholder="9876543210"
-                                defaultValue={user?.phone || ''}
-                                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange bg-white"
                               />
                             </div>
                             <div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { LoginModal } from '@/components/landing/LoginModal'
 import { useAppStore } from '@/lib/store'
 import { PackageWishlistOverlay } from '@/components/cart/PackageWishlistOverlay'
 import { useQuery } from '@tanstack/react-query'
@@ -14,6 +16,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { BackButton } from '@/components/ui/BackButton'
 import { Footer } from '@/components/landing/Footer'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
   id: string
@@ -68,13 +71,6 @@ const SUBOPTION_MAP: Record<string, string> = {
   'swiss tent': 'Swiss Tent',
 }
 
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
-}
 
 export function StayPackageView({
   category,
@@ -92,6 +88,7 @@ export function StayPackageView({
   faqs,
 }: StayPackageViewProps) {
   const { navigate, isAuthenticated } = useAppStore()
+  const [loginOpen, setLoginOpen] = useState(false)
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: [category + '-packages'],
@@ -113,7 +110,7 @@ export function StayPackageView({
   })
 
   const getEffectivePrice = (pkg: PackageData) => {
-    const subOption = getSubOptionFromName(pkg.name)
+    const subOption = getSubOptionFromName(pkg.name, SUBOPTION_MAP)
     const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
     if (allDayMatch) return allDayMatch.price ?? pkg.price
     if (!subOption) return pkg.price
@@ -125,7 +122,7 @@ export function StayPackageView({
 
   const handleBook = (pkg: PackageData) => {
     if (!isAuthenticated) {
-      toast.error('Please login to book')
+      setLoginOpen(true)
       return
     }
     navigate('package-booking', null, pkg.id)
@@ -410,6 +407,7 @@ export function StayPackageView({
       </div>
 
       <Footer />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

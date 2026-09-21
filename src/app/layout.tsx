@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { OrganizationJsonLd } from "@/components/seo/JsonLd";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,9 +46,13 @@ export const metadata: Metadata = {
     "Taxi Booking",
   ],
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/favicon.ico",
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
+  manifest: "/manifest.json",
   metadataBase: new URL("https://divinetravels.in"),
 
   // Open Graph / Facebook
@@ -84,6 +90,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <OrganizationJsonLd />
+      </head>
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} ${spaceGrotesk.variable} antialiased bg-background text-foreground`}
       >
@@ -91,6 +100,12 @@ export default function RootLayout({
           {children}
         </QueryProvider>
         <Toaster richColors position="bottom-right" />
+        <CookieConsent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}`,
+          }}
+        />
       </body>
     </html>
   );

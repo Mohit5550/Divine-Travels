@@ -7,6 +7,7 @@ import { Heart, Star, ArrowRight, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Destination {
   id: string
@@ -48,7 +49,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/wishlist', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return []
       const data = await res.json() as Array<{ destinationId: string }>
@@ -68,7 +69,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
       if (wishlistIds.has(destId)) {
         await fetch('/api/wishlist', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ destinationId: destId }),
         })
         setWishlistIds((prev) => {
@@ -80,7 +81,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
       } else {
         await fetch('/api/wishlist', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
           body: JSON.stringify({ destinationId: destId }),
         })
         setWishlistIds((prev) => new Set(prev).add(destId))

@@ -43,9 +43,9 @@ export function SocialCTASection() {
   const s = useSettings()
 
   const socialLinks: SocialLink[] = [
-    { platform: 'instagram', href: s.instagram },
-    { platform: 'youtube', href: s.youtube },
-    { platform: 'facebook', href: s.facebook },
+    { platform: 'instagram', href: s.instagram || '' },
+    { platform: 'youtube', href: s.youtube || '' },
+    { platform: 'facebook', href: s.facebook || '' },
   ]
 
   const { data: featuredImages = [] } = useQuery({
@@ -141,7 +141,7 @@ export function SocialCTASection() {
         >
           <div className="flex items-center gap-3 sm:gap-4">
             <a
-              href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`}
+              href={`https://wa.me/${(s.whatsapp || '').replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500 hover:bg-green-600 flex items-center justify-center transition-colors shadow-md shrink-0"
@@ -159,10 +159,10 @@ export function SocialCTASection() {
             <div>
               <p className="text-xs sm:text-sm text-muted-foreground">Don&apos;t wait any longer, Contact us!</p>
               <a
-                href={`tel:${s.phone}`}
+                href={`tel:${s.phone || ''}`}
                 className="text-base sm:text-xl md:text-2xl font-bold text-brand-dark hover:text-brand-orange transition-colors"
               >
-                {s.phone}
+                {s.phone || ''}
               </a>
             </div>
           </div>

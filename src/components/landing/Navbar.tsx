@@ -5,11 +5,13 @@ import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Menu, X, Heart, ShoppingCart, Loader2 } from 'lucide-react'
+import { PushNotificationManager } from '@/components/ui/PushNotificationManager'
 import { Button } from '@/components/ui/button'
 import { LoginModal } from './LoginModal'
 import { NavbarNotifications } from './NavbarNotifications'
 import NavbarUserMenu from './NavbarUserMenu'
 import { useCart } from '@/lib/cart'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface SearchPackage {
   id: string
@@ -58,7 +60,7 @@ export function Navbar() {
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
       if (!user?.id) return []
-      const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user.id } })
+      const res = await fetch('/api/wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -69,7 +71,7 @@ export function Navbar() {
     queryKey: ['package-wishlist', user?.id],
     queryFn: async () => {
       if (!user?.id) return []
-      const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user.id } })
+      const res = await fetch('/api/package-wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -146,7 +148,7 @@ export function Navbar() {
               className="flex items-center gap-2 cursor-pointer shrink-0"
             >
               <img
-                src="/logo.png?v=2"
+                src="/logo.png"
                 alt="Divine Travel"
                 className="h-10 sm:h-12 w-auto object-contain"
                 draggable={false}
@@ -270,6 +272,9 @@ export function Navbar() {
                   </Button>
                   <div className="hidden sm:block">
                     <NavbarNotifications />
+                  </div>
+                  <div className="hidden sm:block">
+                    <PushNotificationManager />
                   </div>
                   <NavbarUserMenu />
                   <Button

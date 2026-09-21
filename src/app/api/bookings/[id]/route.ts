@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/bookings/[id] - Get booking detail
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { id } = await params
     const booking = await db.booking.findUnique({
       where: { id },
@@ -18,6 +24,12 @@ export async function GET(
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    // Only allow booking owner or admin to view
+    const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } })
+    if (user?.role !== 'admin' && booking.userId !== userId) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
     return NextResponse.json(booking)
@@ -33,7 +45,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }

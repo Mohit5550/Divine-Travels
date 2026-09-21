@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/packages - List packages with optional filtering
 export async function GET(request: Request) {
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 // POST /api/packages - Create a new package (admin only)
 export async function POST(request: Request) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }

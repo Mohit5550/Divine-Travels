@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/destinations/[id] - Get one with reviews
 export async function GET(
@@ -35,7 +36,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
@@ -64,7 +65,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }

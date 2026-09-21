@@ -8,6 +8,7 @@ import { Calendar, Phone, User, Clock, ChevronDown, ChevronUp } from 'lucide-rea
 import { toast } from 'sonner'
 import { Pagination } from '@/components/ui/Pagination'
 import { BookingCardActions } from '../booking/BookingCardActions'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface TourBooking {
   id: string
@@ -35,7 +36,7 @@ export function AdminTourBookings() {
     queryKey: ['admin-tour-bookings', statusFilter, page],
     queryFn: async () => {
       const res = await fetch(`/api/admin/tour-bookings?status=${statusFilter}&page=${page}&limit=20`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) throw new Error('Failed to fetch')
       const json = await res.json()
@@ -154,7 +155,7 @@ export function AdminTourBookings() {
                           try {
                             const res = await fetch('/api/admin/bookings/update-status', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+                              headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
                               body: JSON.stringify({
                                 bookingId: booking.id,
                                 type: 'tour',
@@ -162,7 +163,13 @@ export function AdminTourBookings() {
                               }),
                             })
                             if (!res.ok) throw new Error()
-                            toast.success(`Tour status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                            const data = await res.json()
+                            if (newStatus === 'confirmed' && data.whatsappUrl) {
+                              window.open(data.whatsappUrl, '_blank')
+                              toast.success('Tour Confirmed! WhatsApp opened to send 10% advance payment link.')
+                            } else {
+                              toast.success(`Tour status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                            }
                             queryClient.invalidateQueries({ queryKey: ['admin-tour-bookings'] })
                             queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
                             queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })

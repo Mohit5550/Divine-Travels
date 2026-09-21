@@ -11,9 +11,26 @@ import { useState } from 'react'
 import { BookingCardActions } from '../booking/BookingCardActions'
 import { parseHotelNotes, parseCampingNotes } from '@/lib/hotelBooking'
 import { BookingVoucherModal } from '@/components/booking/BookingVoucherModal'
+import { getAuthHeaders } from '@/lib/auth-client'
+
+function readAdvance(notesStr?: string | null) {
+  if (!notesStr) return null
+  try {
+    const o = JSON.parse(notesStr)
+    if (o && o.advanceRequired && o.advanceAmount) return o
+  } catch {}
+  const m = notesStr.match(/\{[^{}]*"advanceRequired"[^{}]*\}/)
+  if (m) {
+    try {
+      const o = JSON.parse(m[0])
+      if (o.advanceAmount) return o
+    } catch {}
+  }
+  return null
+}
 
 export function UserPackageBookings() {
-  const { user, navigate } = useAppStore()
+  const { user, navigate, setVoucherModalOpen } = useAppStore()
   const queryClient = useQueryClient()
   const [receiptBooking, setReceiptBooking] = useState<any | null>(null)
 
@@ -21,7 +38,7 @@ export function UserPackageBookings() {
     queryKey: ['user-package-bookings', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/package-bookings', {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) return []
       return res.json()
@@ -29,46 +46,76 @@ export function UserPackageBookings() {
     refetchInterval: 12000,
   })
 
-  const cancelBooking = async (id: string) => {
+  const cancelBooking = async (booking: any) => {
+    const travelDate = booking.preferredDate
+    const total = booking.totalPrice || 0
+    const paid = booking.paymentAmount || 0
+    const msg = paid > 0
+      ? `Cancel "${booking.package?.name || 'this booking'}"?\n\nTotal: ₹${total.toLocaleString('en-IN')}\nPaid: ₹${paid.toLocaleString('en-IN')}\n\nRefund will be calculated based on cancellation policy (how many days before travel). Your UPI ID from profile will be used for refund.`
+      : `Cancel "${booking.package?.name || 'this booking'}"?\n\nThis action cannot be undone.`
+    if (!confirm(msg)) return
+
     try {
-      const res = await fetch(`/api/package-bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
-        body: JSON.stringify({ status: 'cancelled' }),
+      const res = await fetch('/api/cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ bookingType: 'package', bookingId: booking.id }),
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to cancel'); return }
-      toast.success('Booking cancelled')
+      const data = await res.json()
+      if (data.refund) {
+        toast.success(`Refund: ₹${data.refund.refundAmount.toLocaleString('en-IN')} (${data.refund.refundPct}% of ₹${data.refund.amountPaid.toLocaleString('en-IN')} paid)`)
+      } else {
+        toast.success('Booking cancelled')
+      }
       queryClient.invalidateQueries({ queryKey: ['user-package-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['user-package-bookings-stats'] })
     } catch { toast.error('Failed to cancel booking') }
   }
 
   const handlePayNow = async (booking: any) => {
     try {
-      const res = await fetch('/api/kwikupi/create-payment', {
+      const res = await fetch(`/api/booking-flow/package/${booking.id}/payments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
-        body: JSON.stringify({
-          customer_name: booking.fullName || user?.name,
-          customer_email: user?.email,
-          booking_id: booking.id,
-          service: 'package',
-          amount: booking.totalPrice || 500,
-        }),
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ method: 'online', payType: 'advance' }),
       })
       if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
       const payData = await res.json()
       localStorage.setItem('dt_payment_id', payData.payment_id)
       localStorage.setItem('dt_booking_id', booking.id)
       localStorage.setItem('dt_user_id', user?.id || '')
-      localStorage.setItem('dt_service', 'package')
+      localStorage.setItem('dt_service', 'unified')
+      localStorage.setItem('dt_booking_type', 'package')
+      localStorage.setItem('dt_pay_type', 'advance')
       window.location.href = payData.payment_page
     } catch {
       toast.error('Failed to initiate payment')
     }
   }
 
-  const getCategoryIcon = (cat: string) => {
-    const icons: Record<string, string> = { rafting: '🛶', trekking: '🥾', adventure: '🧗', bike: '🏍️', taxi: '🚕', domestic: '🏛️', spiritual: '🕉️' }
+  const handlePayBalance = async (booking: any) => {
+    try {
+      const res = await fetch(`/api/booking-flow/package/${booking.id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ method: 'online', payType: 'balance' }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to create payment'); return }
+      const payData = await res.json()
+      localStorage.setItem('dt_payment_id', payData.payment_id)
+      localStorage.setItem('dt_booking_id', booking.id)
+      localStorage.setItem('dt_user_id', user?.id || '')
+      localStorage.setItem('dt_service', 'unified')
+      localStorage.setItem('dt_booking_type', 'package')
+      localStorage.setItem('dt_pay_type', 'balance')
+      window.location.href = payData.payment_page
+    } catch {
+      toast.error('Failed to initiate payment')
+    }
+  }
+
+  const getCategoryIcon = (cat: string) => {    const icons: Record<string, string> = { rafting: '🛶', trekking: '🥾', adventure: '🧗', bike: '🏍️', taxi: '🚕', domestic: '🏛️', spiritual: '🕉️' }
     return icons[cat] || '📦'
   }
 
@@ -108,6 +155,64 @@ export function UserPackageBookings() {
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                     </Badge>
                   </div>
+                  {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (() => {
+                    const adv = readAdvance(booking.additionalNotes)
+                    let advanceAmount = 0
+                    let deadline: Date | null = null
+                    if (adv && adv.advanceAmount) {
+                      advanceAmount = adv.advanceAmount
+                      deadline = adv.advanceDeadline ? new Date(adv.advanceDeadline) : null
+                    }
+                    const isExpired = deadline ? deadline < new Date() : false
+                    const timeLeft = deadline ? Math.max(0, Math.floor((deadline.getTime() - Date.now()) / (1000 * 60 * 60))) : 0
+                    const balanceDue = Math.max(0, (booking.totalPrice || 0) - (booking.paymentAmount || advanceAmount))
+                    const showBalance = booking.paymentStatus === 'advance_paid' && balanceDue > 0 && !isExpired
+                    if (!advanceAmount && !showBalance) return null
+                    if (showBalance) {
+                      return (
+                        <div className="mt-3 p-3 rounded-xl border-2 bg-emerald-50 border-emerald-300">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-emerald-100">
+                              <CreditCard className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-emerald-700">Pay Remaining Balance: ₹{balanceDue.toLocaleString('en-IN')}</p>
+                              <p className="text-xs mt-0.5 text-emerald-600">10% advance received. Pay the balance to complete your booking.</p>
+                              <Button size="sm" className="mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs" onClick={() => handlePayBalance(booking)}>
+                                <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{balanceDue.toLocaleString('en-IN')} Now
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return (
+                      <div className={`mt-3 p-3 rounded-xl border-2 ${isExpired ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300 animate-pulse'}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                            <CreditCard className={`w-5 h-5 ${isExpired ? 'text-red-600' : 'text-amber-600'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-bold ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                              {isExpired ? 'Advance Deadline Expired!' : `Pay 10% Advance: ₹${advanceAmount.toLocaleString('en-IN')}`}
+                            </p>
+                            <p className={`text-xs mt-0.5 ${isExpired ? 'text-red-600' : 'text-amber-600'}`}>
+                              {isExpired
+                                ? 'Your booking may be cancelled. Contact support immediately.'
+                                : timeLeft > 0
+                                  ? `Time left: ~${timeLeft} hours. Pay now to lock your spot.`
+                                  : 'Pay now to confirm your booking.'}
+                            </p>
+                            {!isExpired && (
+                              <Button size="sm" className="mt-2 bg-amber-600 hover:bg-amber-700 text-white text-xs" onClick={() => handlePayNow(booking)}>
+                                <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{advanceAmount.toLocaleString('en-IN')} Now
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                     {camping ? (
                       <div>
@@ -137,36 +242,45 @@ export function UserPackageBookings() {
                       <p className="font-bold text-brand-orange">₹{booking.totalPrice?.toLocaleString()}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       {booking.discountAmount > 0 && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Saved ₹{booking.discountAmount}</span>
-                      )}
-                      {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (
-                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Unpaid</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">Saved ₹{booking.discountAmount}</span>
                       )}
                       {booking.paymentStatus === 'completed' && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Paid</span>
+                        <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">✓ Fully Paid</span>
+                      )}
+                      {(booking.paymentStatus === 'advance_paid' || (booking.paymentAmount && booking.paymentAmount > 0 && booking.paymentStatus !== 'completed')) && (
+                        <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold">10% Advance Paid</span>
+                      )}
+                      {booking.status === 'confirmed' && (!booking.paymentStatus || booking.paymentStatus === 'pending') && (
+                        <span className="text-xs bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-bold">10% Advance Due</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button variant="outline" size="sm" onClick={() => navigate('package-detail', null, booking.packageId)}>
                         <Eye className="w-3 h-3 mr-1" /> View
                       </Button>
-                      {booking.paymentStatus === 'completed' && (
-                        <Button size="sm" className="bg-brand-teal hover:bg-brand-teal/90 text-white" onClick={() => setReceiptBooking(booking)}>
-                          <Receipt className="w-3 h-3 mr-1" /> Receipt
+                      {(booking.paymentStatus === 'advance_paid' || booking.paymentStatus === 'completed') && (
+                        <Button size="sm" className="bg-brand-teal hover:bg-brand-teal/90 text-white" onClick={() => { setReceiptBooking(booking); setVoucherModalOpen(true) }}>
+                          <Receipt className="w-3 h-3 mr-1" /> Receipt / Ticket
                         </Button>
                       )}
-                      {booking.status === 'confirmed' && booking.paymentStatus !== 'completed' && (
-                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white" onClick={() => handlePayNow(booking)}>
-                          <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{booking.totalPrice?.toLocaleString()}
-                        </Button>
-                      )}
-                      {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                        <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => cancelBooking(booking.id)}>
-                          <X className="w-3 h-3 mr-1" /> Cancel
-                        </Button>
+                      {(booking.status === 'pending' || booking.status === 'confirmed') && booking.paymentStatus !== 'completed' && (
+                        <>
+                          {booking.paymentStatus === 'advance_paid' ? (
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handlePayBalance(booking)}>
+                              <CreditCard className="w-3 h-3 mr-1" /> Pay Balance ₹{Math.max(0, (booking.totalPrice || 0) - (booking.paymentAmount || Math.ceil((booking.totalPrice || 0) * 0.1))).toLocaleString('en-IN')}
+                            </Button>
+                          ) : (
+                            <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white" onClick={() => handlePayNow(booking)}>
+                              <CreditCard className="w-3 h-3 mr-1" /> Pay ₹{(readAdvance(booking.additionalNotes)?.advanceAmount || Math.ceil((booking.totalPrice || 0) * 0.1)).toLocaleString('en-IN')} (10% Advance)
+                            </Button>
+                          )}
+                          <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => cancelBooking(booking)}>
+                            <X className="w-3 h-3 mr-1" /> Cancel
+                          </Button>
+                        </>
                       )}
                       {booking.status === 'completed' && (
                         <Button variant="outline" size="sm" className="text-brand-teal" onClick={() => navigate('package-detail', null, booking.packageId)}>
@@ -188,7 +302,7 @@ export function UserPackageBookings() {
 
       <BookingVoucherModal
         isOpen={!!receiptBooking}
-        onClose={() => setReceiptBooking(null)}
+        onClose={() => { setReceiptBooking(null); setVoucherModalOpen(false) }}
         booking={
           receiptBooking
             ? {
@@ -202,7 +316,30 @@ export function UserPackageBookings() {
                 guestEmail: user?.email,
                 travelDate: receiptBooking.preferredDate || new Date().toISOString(),
                 travelers: receiptBooking.numberOfPeople || 1,
-                pickupLocation: receiptBooking.package?.location || null,
+                pickupLocation: (() => {
+                  try {
+                    const o = JSON.parse(receiptBooking.additionalNotes || '{}')
+                    return o.pickupLocation || receiptBooking.package?.location || null
+                  } catch { return receiptBooking.package?.location || null }
+                })(),
+                preferredTime: receiptBooking.preferredTime || null,
+                emergencyContact: (() => {
+                  try {
+                    const o = JSON.parse(receiptBooking.additionalNotes || '{}')
+                    return o.emergencyContact || null
+                  } catch { return null }
+                })(),
+                whatsappConsent: (() => {
+                  try {
+                    const o = JSON.parse(receiptBooking.additionalNotes || '{}')
+                    return o.whatsappConsent ?? null
+                  } catch { return null }
+                })(),
+                checkOut: (() => {
+                  const h = parseHotelNotes(receiptBooking.additionalNotes)
+                  const c = parseCampingNotes(receiptBooking.additionalNotes)
+                  return h?.checkOut || c?.checkOut || null
+                })(),
                 totalPrice: receiptBooking.totalPrice || 0,
                 originalPrice: receiptBooking.originalPrice ?? receiptBooking.package?.originalPrice ?? null,
                 basePrice: receiptBooking.basePrice ?? receiptBooking.package?.price ?? null,
@@ -242,7 +379,10 @@ export function UserPackageBookings() {
                   if (h) return h.specialRequests || null
                   const c = parseCampingNotes(receiptBooking.additionalNotes)
                   if (c) return c.specialRequests || null
-                  return receiptBooking.additionalNotes || null
+                  try {
+                    const o = JSON.parse(receiptBooking.additionalNotes || '{}')
+                    return o.notes || o.specialRequests || null
+                  } catch { return null }
                 })(),
                 createdAt: receiptBooking.createdAt,
               }

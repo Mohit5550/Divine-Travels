@@ -71,18 +71,36 @@ function PaymentContent() {
                 localStorage.removeItem('dt_pending_app')
               }
             } catch {}
-          } else if (bookingId && service === 'package') {
+            } else if (bookingId && service === 'package') {
+            const payType = localStorage.getItem('dt_pay_type') || 'balance'
             if (userId) {
               try {
+                let current: any = null
+                try {
+                  const curRes = await fetch(`/api/package-bookings/${bookingId}`, {
+                    headers: { 'x-user-id': userId },
+                  })
+                  if (curRes.ok) current = await curRes.json()
+                } catch {}
+                const existingPaid = current?.paymentAmount || 0
+                const total = current?.totalPrice || 0
+                const newPaid = existingPaid + (verifyData.amount || 0)
+                const isAdvance = payType === 'advance'
+                const newStatus = isAdvance
+                  ? 'advance_paid'
+                  : (newPaid >= total && total > 0 ? 'completed' : 'advance_paid')
                 const updateRes = await fetch(`/api/package-bookings/${bookingId}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
                   body: JSON.stringify({
                     paymentId: verifyData.payment_id,
                     paymentOrderId: verifyData.order_id,
-                    paymentStatus: 'completed',
-                    paymentAmount: verifyData.amount,
-                    paymentCompletedAt: new Date().toISOString(),
+                    paymentStatus: newStatus,
+                    paymentAmount: newPaid,
+                    paymentCompletedAt:
+                      newStatus === 'completed'
+                        ? new Date().toISOString()
+                        : current?.paymentCompletedAt || null,
                   }),
                 })
                 bookingUpdated = updateRes.ok

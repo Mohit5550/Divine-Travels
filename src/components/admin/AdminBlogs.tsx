@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toDirectImageUrl } from '@/lib/utils'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface BlogPost {
   id: string
@@ -74,7 +75,7 @@ export function AdminBlogs() {
   const { data: postsData, isLoading: postsLoading } = useQuery({
     queryKey: ['admin-blogs', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/blogs?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/blogs?page=${page}&limit=20`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { blogs: [], total: 0, page: 1, totalPages: 0 }
       return res.json()
     },
@@ -83,7 +84,7 @@ export function AdminBlogs() {
   const { data: categories = [] } = useQuery({
     queryKey: ['admin-blog-categories', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/admin/blogs/categories', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/admin/blogs/categories', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json() as Promise<BlogCategory[]>
     },
@@ -142,7 +143,7 @@ export function AdminBlogs() {
       const method = editingPost ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,
-        headers: { 'x-user-id': user?.id || '', 'Content-Type': 'application/json' },
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       if (!res.ok) {
@@ -164,7 +165,7 @@ export function AdminBlogs() {
     try {
       const res = await fetch(`/api/admin/blogs/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) throw new Error('Failed to delete')
       toast.success('Post deleted')
@@ -178,7 +179,7 @@ export function AdminBlogs() {
     try {
       const res = await fetch(`/api/admin/blogs/${post.id}`, {
         method: 'PUT',
-        headers: { 'x-user-id': user?.id || '', 'Content-Type': 'application/json' },
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ published: !post.published }),
       })
       if (!res.ok) throw new Error('Failed to update')
@@ -213,7 +214,7 @@ export function AdminBlogs() {
       const body = editCat ? { id: editCat.id, ...catForm } : catForm
       const res = await fetch(url, {
         method,
-        headers: { 'x-user-id': user?.id || '', 'Content-Type': 'application/json' },
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       if (!res.ok) {
@@ -235,7 +236,7 @@ export function AdminBlogs() {
     try {
       const res = await fetch(`/api/admin/blogs/categories?id=${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       if (!res.ok) throw new Error('Failed to delete')
       toast.success('Category deleted')

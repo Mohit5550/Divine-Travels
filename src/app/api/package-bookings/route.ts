@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 import { sendBookingConfirmationEmail } from '@/lib/email'
 import { resolveCampingTier } from '@/lib/hotelBooking'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/package-bookings - List bookings (admin: all, user: own)
 export async function GET(request: Request) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
@@ -105,7 +106,7 @@ export async function GET(request: Request) {
 // POST /api/package-bookings - Create a new package booking
 export async function POST(request: Request) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
@@ -184,10 +185,15 @@ export async function POST(request: Request) {
     } else if (isHotelBooking && additionalNotes) {
       try {
         const parsed = JSON.parse(additionalNotes)
-        stayBaseTotal = typeof parsed.total === 'number' ? parsed.total : pkg.price * (numberOfPeople || 1)
-        stayBreakdownJson = additionalNotes
+        const nights = typeof parsed.nights === 'number' && parsed.nights > 0 ? parsed.nights : 1
+        const rooms = typeof parsed.rooms === 'number' && parsed.rooms > 0 ? parsed.rooms : 1
+        const guests = typeof parsed.guests === 'number' && parsed.guests > 0 ? parsed.guests : 1
+        stayBaseTotal = pkg.price * nights * rooms
+        const stayBreakdown = { ...parsed, total: stayBaseTotal, nights, rooms, guests, pricePerNight: pkg.price }
+        stayBreakdownJson = JSON.stringify(stayBreakdown)
       } catch {
-        stayBaseTotal = pkg.price * (numberOfPeople || 1)
+        stayBaseTotal = pkg.price
+        stayBreakdownJson = additionalNotes
       }
     }
 
@@ -201,6 +207,7 @@ export async function POST(request: Request) {
     let baseTotal = isStayBooking ? stayBaseTotal : unitPrice * (numberOfPeople || 1)
     let discountAmount = 0
     let couponId: string | null = null
+    let totalPrice = 0
 
     // Validate and apply coupon if provided
     if (couponCode) {
@@ -256,7 +263,8 @@ export async function POST(request: Request) {
       }
     }
 
-    let totalPrice = body.totalPrice != null ? Number(body.totalPrice) : baseTotal - discountAmount
+    // ALWAYS compute totalPrice server-side. Never trust body.totalPrice.
+    totalPrice = Math.max(0, Math.round(baseTotal - discountAmount))
 
     // Camping: always trust the server-derived total + discount (tamper-proof).
     if (isCampingBooking) {

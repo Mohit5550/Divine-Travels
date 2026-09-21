@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, verifyPassword, isHashed } from '@/lib/password'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'divine-travels-secret-key-2026'
-const JWT_EXPIRES_IN = '7d'
+import { generateToken, getUserFromToken } from '@/lib/with-auth'
 
 // Rate limiter for auth endpoints
 const authAttempts = new Map()
@@ -28,26 +25,6 @@ function checkAuthRateLimit(email: string): { allowed: boolean; remaining: numbe
   authAttempts.set(email, recentAttempts)
 
   return { allowed: true, remaining: MAX_ATTEMPTS - recentAttempts.length - 1 }
-}
-
-// Helper: generate JWT token
-function generateToken(userId: string) {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
-}
-
-// Helper: verify JWT token from request
-function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) return null
-
-  const token = authHeader.substring(7)
-
-  try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: string }
-    return db.user.findUnique({ where: { id: payload.userId } })
-  } catch {
-    return null
-  }
 }
 
 // POST /api/auth - Login
@@ -92,14 +69,14 @@ export async function POST(request: NextRequest) {
 
 // GET /api/auth/me - Get current user (protected)
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request)
+  const authUser = await getUserFromToken(request)
 
-  if (!user) {
+  if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { password: _, ...userWithoutPassword } = user
-  return NextResponse.json({ user: userWithoutPassword })
+  const user = await db.user.findUnique({ where: { id: authUser.id }, select: { id: true, email: true, name: true, phone: true, avatar: true, role: true, createdAt: true } })
+  return NextResponse.json({ user })
 }
 
 // PUT /api/auth - Register

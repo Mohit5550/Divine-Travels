@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, MapPin, Star, ArrowRight, Trash2, Package, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 const TOUR_CATEGORIES = ['international-tours', 'domestic-tours', 'spiritual-tours']
 
@@ -18,7 +19,7 @@ export function UserWishlist() {
   const { data: destWishlist = [], isLoading: destLoading } = useQuery({
     queryKey: ['wishlist', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -27,7 +28,7 @@ export function UserWishlist() {
   const { data: pkgWishlist = [], isLoading: pkgLoading } = useQuery({
     queryKey: ['package-wishlist', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/package-wishlist', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/package-wishlist', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
@@ -37,7 +38,7 @@ export function UserWishlist() {
     try {
       await fetch('/api/wishlist', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ destinationId }),
       })
       toast.success('Removed from wishlist')
@@ -49,7 +50,7 @@ export function UserWishlist() {
     try {
       await fetch('/api/package-wishlist', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ packageId }),
       })
       toast.success('Removed from wishlist')

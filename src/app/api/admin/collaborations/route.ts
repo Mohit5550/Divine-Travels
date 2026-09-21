@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCollaborations, getCollaborationStats } from '@/lib/collaborations-db'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(req: NextRequest) {
   try {
+    const userId = getUserIdFromRequest(req)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const user = await db.user.findUnique({ where: { id: userId } })
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined

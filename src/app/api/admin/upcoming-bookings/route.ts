@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 const RANGE_DAYS: Record<string, number> = { today: 1, week: 7, '15': 15, '30': 30 }
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
     const user = await db.user.findUnique({ where: { id: userId } })

@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
 import { Bell, CheckCheck, CalendarCheck, CreditCard, Gift, AlertCircle, Info, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function NavbarNotifications({ inline = false, onNavigate }: { inline?: boolean; onNavigate?: () => void }) {
   const { user, isAdmin, navigate, setDashboardTab } = useAppStore()
@@ -15,7 +16,7 @@ export function NavbarNotifications({ inline = false, onNavigate }: { inline?: b
   const { data, isLoading } = useQuery({
     queryKey: ['navbar-notifications', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/notifications', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/notifications', { headers: { ...getAuthHeaders() } })
       return res.json()
     },
     enabled: !!user?.id,
@@ -36,7 +37,7 @@ export function NavbarNotifications({ inline = false, onNavigate }: { inline?: b
   const markAsRead = async (id: string) => {
     await fetch(`/api/notifications/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
       body: JSON.stringify({ read: true }),
     })
     queryClient.invalidateQueries({ queryKey: ['navbar-notifications'] })
@@ -59,7 +60,7 @@ export function NavbarNotifications({ inline = false, onNavigate }: { inline?: b
     for (const n of unread) {
       await fetch(`/api/notifications/${n.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ read: true }),
       })
     }
@@ -71,7 +72,7 @@ export function NavbarNotifications({ inline = false, onNavigate }: { inline?: b
     if (!window.confirm('Clear all notifications? This cannot be undone.')) return
     await fetch('/api/notifications', {
       method: 'DELETE',
-      headers: { 'x-user-id': user?.id || '' },
+      headers: { ...getAuthHeaders() },
     })
     toast.success('All notifications cleared')
     queryClient.invalidateQueries({ queryKey: ['navbar-notifications'] })

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 const defaultSettings: Record<string, string> = {
   whatsapp: '+916396919007',
@@ -31,7 +32,7 @@ export function AdminSettings() {
   const { data: fetched, isLoading } = useQuery({
     queryKey: ['admin-settings', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/admin/settings', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/admin/settings', { headers: { ...getAuthHeaders() } })
       return res.json() as Promise<Record<string, string>>
     },
   })
@@ -47,7 +48,7 @@ export function AdminSettings() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(settings),
       })
       if (!res.ok) { toast.error('Failed to save'); return }

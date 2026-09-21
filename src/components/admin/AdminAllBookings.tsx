@@ -3,11 +3,13 @@
 import { useState, Fragment } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { ChevronDown, ChevronUp, Download, FileSpreadsheet } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { BookingCardActions } from '../booking/BookingCardActions'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminAllBookings() {
   const { user } = useAppStore()
@@ -26,7 +28,7 @@ export function AdminAllBookings() {
       if (typeFilter) params.set('type', typeFilter)
       if (statusFilter) params.set('status', statusFilter)
       const res = await fetch(`/api/admin/all-bookings?${params.toString()}`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -61,33 +63,39 @@ export function AdminAllBookings() {
     }
   }
 
-  const exportToCSV = () => {
+  const exportToExcel = () => {
     if (!bookings.length) {
       toast.error('No bookings to export')
       return
     }
-    const headers = ['Booking ID', 'Guest Name', 'Email', 'Service Title', 'Type', 'Travel Date', 'Amount (INR)', 'Status', 'Booking Date']
-    const rows = bookings.map((b: any) => [
-      `"${b.id}"`,
-      `"${(b.guest || '').replace(/"/g, '""')}"`,
-      `"${(b.email || '').replace(/"/g, '""')}"`,
-      `"${(b.title || '').replace(/"/g, '""')}"`,
-      `"${b.displayType || b.type}"`,
-      `"${b.date ? new Date(b.date).toLocaleDateString('en-IN') : 'N/A'}"`,
-      b.amount || 0,
-      `"${b.status}"`,
-      `"${b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN') : 'N/A'}"`,
-    ])
+    const rows = bookings.map((b: any) => ({
+      'Booking ID': b.id,
+      'Guest Name': b.guest || '',
+      'Email': b.email || '',
+      'Phone': b.phone || '',
+      'Service Title': b.title || '',
+      'Type': b.displayType || b.type,
+      'Travel Date': b.date ? new Date(b.date).toLocaleDateString('en-IN') : 'N/A',
+      'Amount (INR)': b.amount || 0,
+      'Paid (INR)': b.paid || 0,
+      'Balance (INR)': b.balance || 0,
+      'Payment Status': b.paymentStatus || '',
+      'Status': b.status || '',
+      'Booking Date': b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN') : 'N/A',
+    }))
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e: any) => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Divine_Travels_Bookings_${new Date().toISOString().split('T')[0]}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast.success('Manifest exported to CSV successfully')
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Bookings')
+
+    ws['!cols'] = [
+      { wch: 22 }, { wch: 20 }, { wch: 25 }, { wch: 15 },
+      { wch: 25 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+      { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 14 },
+    ]
+
+    XLSX.writeFile(wb, `Divine_Travels_Bookings_${new Date().toISOString().split('T')[0]}.xlsx`)
+    toast.success('Exported to Excel successfully')
   }
 
   return (
@@ -100,7 +108,7 @@ export function AdminAllBookings() {
           </p>
         </div>
         <Button
-          onClick={exportToCSV}
+          onClick={exportToExcel}
           size="sm"
           className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2 font-medium shadow-sm self-start sm:self-auto"
         >
@@ -182,12 +190,13 @@ export function AdminAllBookings() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-brand-cream/50 border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Guest</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Service</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Details</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Guest</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Service</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Paid / Balance</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,32 +206,58 @@ export function AdminAllBookings() {
                   displayType: string
                   guest: string
                   email: string
+                  phone: string
+                  guests: number
                   title: string
                   date: string | null
                   amount: number
+                  paid: number
+                  balance: number
+                  paymentStatus: string
                   status: string
                 }) => (
                   <Fragment key={booking.id}>
                     <tr className="border-b border-border/50 hover:bg-brand-cream/30">
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <div>
-                          <p className="font-medium text-brand-dark">{booking.guest}</p>
-                          <p className="text-xs text-muted-foreground">{booking.email}</p>
+                          <p className="font-medium text-brand-dark text-sm">{booking.guest}</p>
+                          <p className="text-[11px] text-muted-foreground truncate max-w-[140px]">{booking.email}</p>
+                          {booking.phone && <p className="text-[11px] text-muted-foreground">{booking.phone}</p>}
+                          {booking.guests > 0 && <p className="text-[10px] text-muted-foreground">{booking.guests} guest{booking.guests > 1 ? 's' : ''}</p>}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <div>
-                          <p className="font-medium text-brand-dark">{booking.title}</p>
+                          <p className="font-medium text-brand-dark text-sm">{booking.title}</p>
                           <p className="text-[10px] text-muted-foreground capitalize">{booking.displayType}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3 text-sm">
                         {booking.date
                           ? new Date(booking.date).toLocaleDateString('en-IN')
                           : <span className="text-muted-foreground">—</span>}
                       </td>
-                      <td className="py-3 px-4 font-medium">₹{(booking.amount || 0).toLocaleString()}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3 text-sm font-medium">₹{booking.amount.toLocaleString()}</td>
+                      <td className="py-3 px-3">
+                        <div className="text-xs">
+                          {booking.paymentStatus === 'completed' ? (
+                            <span className="text-green-600 font-semibold">Fully Paid</span>
+                          ) : booking.paymentStatus === 'advance_paid' ? (
+                            <>
+                              <span className="text-amber-600 font-semibold">₹{booking.paid.toLocaleString()} paid</span>
+                              <p className="text-red-500 font-medium">₹{booking.balance.toLocaleString()} due</p>
+                            </>
+                          ) : booking.paid > 0 ? (
+                            <>
+                              <span className="text-amber-600 font-semibold">₹{booking.paid.toLocaleString()} paid</span>
+                              <p className="text-red-500 font-medium">₹{booking.balance.toLocaleString()} due</p>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">No payment</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
                         <select
                           value={booking.status || 'pending'}
                           onClick={(e) => e.stopPropagation()}
@@ -231,7 +266,7 @@ export function AdminAllBookings() {
                             try {
                               const res = await fetch('/api/admin/bookings/update-status', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+                                headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
                                 body: JSON.stringify({
                                   bookingId: booking.id,
                                   type: booking.type || 'package',
@@ -239,7 +274,13 @@ export function AdminAllBookings() {
                                 }),
                               })
                               if (!res.ok) throw new Error()
-                              toast.success(`Booking status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                              const data = await res.json()
+                              if (newStatus === 'confirmed' && data.whatsappUrl) {
+                                window.open(data.whatsappUrl, '_blank')
+                                toast.success('Booking Confirmed! WhatsApp opened to send 10% advance payment link.')
+                              } else {
+                                toast.success(`Booking status updated: ${newStatus.replace('_', ' ').toUpperCase()}`)
+                              }
                               queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] })
                               queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
                               queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
@@ -264,7 +305,7 @@ export function AdminAllBookings() {
                           <option value="cancelled">🔴 Cancelled</option>
                         </select>
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-3 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -276,7 +317,7 @@ export function AdminAllBookings() {
                     </tr>
                     {expandedId === booking.id && (
                       <tr key={`${booking.id}-expanded`}>
-                        <td colSpan={6} className="bg-brand-cream/30 px-4 py-4">
+                        <td colSpan={7} className="bg-brand-cream/30 px-4 py-4">
                           <BookingCardActions type={booking.type} id={booking.id} isAdmin={true} userId={user?.id} />
                         </td>
                       </tr>

@@ -39,6 +39,7 @@ export function HeroNotice() {
   })
 
   const next = useCallback(() => {
+    if (typeof document !== 'undefined' && document.hidden) return
     if (notices.length > 0) setCurrent((c) => (c + 1) % notices.length)
   }, [notices.length])
 

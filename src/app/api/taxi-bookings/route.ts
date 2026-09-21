@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     const paginate = searchParams.has('page')
     const skip = (page - 1) * limit
 
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     const where: any = {
       adminNotes: { contains: 'taxi-booking' },
     }
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = JSON.parse(selectedPrograms || '{}')
 
-    const userId = request.headers.get('x-user-id') || null
+    const userId = getUserIdFromRequest(request) || null
 
     const booking = await db.tourBooking.create({
       data: {
@@ -99,7 +100,8 @@ export async function POST(request: NextRequest) {
     notifyAdmin(
       'New Taxi Booking',
       `Taxi ${parsed.tripType === 'round-trip' ? '(Round Trip)' : '(One Way)'}: ${vehicleLabel} | ${route} | ${parsed.pickupDate} ${parsed.pickupTime}`,
-      'booking'
+      'booking',
+      '/admin?tab=bkg-taxi'
     )
 
     return NextResponse.json({ success: true, id: booking.id }, { status: 201 })

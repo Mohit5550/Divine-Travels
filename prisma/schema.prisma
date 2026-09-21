@@ -19,6 +19,7 @@ model User {
   resetToken       String?
   resetCode        String?
   resetTokenExpiry DateTime?
+  upiId            String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   bookings         Booking[]
@@ -28,9 +29,12 @@ model User {
   packageBookings  PackageBooking[]
   packageWishlist  PackageWishlist[]
   notifications    Notification[]
+  paymentRequests  PaymentRequest[]
   payments         Payment[]
   paymentReceipts  PaymentReceipt[]
   tourBookings     TourBooking[]
+  refunds          Refund[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Destination {
@@ -68,12 +72,17 @@ model Booking {
   totalPrice    Int
   status            String      @default("pending")
   paymentStatus String      @default("pending")
+  paymentAmount Int?
   phone         String?
   specialReqs   String?
   negotiatedPrice Int?
   priceLocked   Boolean      @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Review {
@@ -199,6 +208,10 @@ model PackageBooking {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   coupon            Coupon?    @relation(fields: [couponId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model PackageWishlist {
@@ -221,6 +234,22 @@ model Notification {
   read      Boolean  @default(false)
    link      String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint     String
+  p256dh       String
+  auth         String
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, endpoint])
 }
 
 model Payment {
@@ -241,12 +270,28 @@ model BookingOffer {
   id          String   @id @default(cuid())
   bookingType String   // "tour" | "package" | "destination"
   bookingId   String
-   offeredBy   String   // "admin" | "user"
+    offeredBy   String   // "admin" | "user"
   amount      Int
   note        String?
   status      String   @default("pending") // pending | accepted | rejected | countered
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Payment request from admin to user for balance/due amount
+model PaymentRequest {
+  id            String   @id @default(cuid())
+  bookingType   String   // "destination" | "package" | "tour" | "taxi"
+  bookingId     String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Int
+  paidAmount    Int      @default(0)
+  balanceAmount Int
+  status        String   @default("pending") // pending | paid | cancelled
+  message       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // A receipt for any payment made against a booking (advance, balance, or full).
@@ -429,6 +474,10 @@ model TourBooking {
   user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model BlogCategory {
@@ -492,4 +541,27 @@ model CreatorCollaboration {
   adminNotes        String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model Refund {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingType   String   // "tour" | "package" | "destination"
+  bookingId     String
+  bookingTitle  String?
+  totalAmount   Int
+  amountPaid    Int
+  refundAmount  Int
+  refundPct     Int      // percentage applied (e.g. 90 for 90%)
+  reason        String?
+  cancelDate    DateTime @default(now())
+  travelDate    DateTime?
+  daysBefore    Int?     // days between cancel and travel
+  status        String   @default("pending") // pending | paid | rejected
+  paidAt        DateTime?
+  paidMethod    String?  // upi | bank | cash
+  adminNote     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

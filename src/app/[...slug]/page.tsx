@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useCart } from '@/lib/cart'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -16,30 +16,8 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { PartnersSection } from '@/components/landing/PartnersSection'
 import { SocialCTASection } from '@/components/landing/SocialCTASection'
 import { Footer } from '@/components/landing/Footer'
-import { UserDashboard } from '@/components/user/UserDashboard'
-import { AdminDashboard } from '@/components/admin/AdminDashboard'
 import { DestinationDetail } from '@/components/destination/DestinationDetail'
 import { BookingSuccess } from '@/components/booking/BookingSuccess'
-import { RaftingPackages } from '@/components/rafting/RaftingPackages'
-import { BikePackages } from '@/components/bike-rental/BikePackages'
-import { TaxiPackages } from '@/components/taxi-booking/TaxiPackages'
-import { TaxiBookingForm } from '@/components/taxi-booking/TaxiBookingForm'
-import { TrekkingPackages } from '@/components/trekking/TrekkingPackages'
-import { AdventurePackages } from '@/components/adventure/AdventurePackages'
-import { DomesticPackages } from '@/components/domestic/DomesticPackages'
-import { SpiritualPackages } from '@/components/spiritual/SpiritualPackages'
-import { InternationalPackages } from '@/components/international/InternationalPackages'
-import { GalleryPage } from '@/components/gallery/GalleryPage'
-import { RishikeshTour } from '@/components/tours/RishikeshTour'
-import { HaridwarTour } from '@/components/tours/HaridwarTour'
-import { MussoorieTour } from '@/components/tours/MussoorieTour'
-import { NainitalTour } from '@/components/tours/NainitalTour'
-import { HillStationsTour } from '@/components/tours/HillStationsTour'
-import { CharDhamTour } from '@/components/tours/CharDhamTour'
-import { HotelPackages } from '@/components/stay/HotelPackages'
-import { CampingPackages } from '@/components/stay/CampingPackages'
-import { PackageDetail } from '@/components/package/PackageDetail'
-import { PackageBookingForm } from '@/components/package/PackageBookingForm'
 import { AboutUs } from '@/components/pages/AboutUs'
 import { Contact } from '@/components/pages/Contact'
 import { BlogSection } from '@/components/landing/BlogSection'
@@ -51,208 +29,150 @@ import { HotelDetail } from '@/components/hotel/HotelDetail'
 import { TermsOfService } from '@/components/pages/TermsOfService'
 import { RefundPolicy } from '@/components/pages/RefundPolicy'
 import { CancellationPolicy } from '@/components/pages/CancellationPolicy'
+import { CookiePolicy } from '@/components/pages/CookiePolicy'
 import { WhatsAppWidget } from '@/components/ui/WhatsAppWidget'
-import { HeroSearch } from '@/components/landing/HeroSearch'
+import { CookieConsent } from '@/components/ui/CookieConsent'
 import { TrustGuarantee } from '@/components/landing/TrustGuarantee'
 import { FAQSection } from '@/components/landing/FAQSection'
+import { CreatorCollaborationPage } from '@/components/landing/CreatorCollaborationPage'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { BootSplash } from '@/components/ui/BootSplash'
+import { ViewLoader } from '@/components/ui/ViewLoader'
+
+const UserDashboard = React.lazy(() => import('@/components/user/UserDashboard').then(m => ({ default: m.UserDashboard })))
+const AdminDashboard = React.lazy(() => import('@/components/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const RaftingPackages = React.lazy(() => import('@/components/rafting/RaftingPackages').then(m => ({ default: m.RaftingPackages })))
+const BikePackages = React.lazy(() => import('@/components/bike-rental/BikePackages').then(m => ({ default: m.BikePackages })))
+const TaxiPackages = React.lazy(() => import('@/components/taxi-booking/TaxiPackages').then(m => ({ default: m.TaxiPackages })))
+const TaxiBookingForm = React.lazy(() => import('@/components/taxi-booking/TaxiBookingForm').then(m => ({ default: m.TaxiBookingForm })))
+const TrekkingPackages = React.lazy(() => import('@/components/trekking/TrekkingPackages').then(m => ({ default: m.TrekkingPackages })))
+const AdventurePackages = React.lazy(() => import('@/components/adventure/AdventurePackages').then(m => ({ default: m.AdventurePackages })))
+const DomesticPackages = React.lazy(() => import('@/components/domestic/DomesticPackages').then(m => ({ default: m.DomesticPackages })))
+const SpiritualPackages = React.lazy(() => import('@/components/spiritual/SpiritualPackages').then(m => ({ default: m.SpiritualPackages })))
+const InternationalPackages = React.lazy(() => import('@/components/international/InternationalPackages').then(m => ({ default: m.InternationalPackages })))
+const GalleryPage = React.lazy(() => import('@/components/gallery/GalleryPage').then(m => ({ default: m.GalleryPage })))
+const RishikeshTour = React.lazy(() => import('@/components/tours/RishikeshTour').then(m => ({ default: m.RishikeshTour })))
+const HaridwarTour = React.lazy(() => import('@/components/tours/HaridwarTour').then(m => ({ default: m.HaridwarTour })))
+const MussoorieTour = React.lazy(() => import('@/components/tours/MussoorieTour').then(m => ({ default: m.MussoorieTour })))
+const NainitalTour = React.lazy(() => import('@/components/tours/NainitalTour').then(m => ({ default: m.NainitalTour })))
+const HillStationsTour = React.lazy(() => import('@/components/tours/HillStationsTour').then(m => ({ default: m.HillStationsTour })))
+const CharDhamTour = React.lazy(() => import('@/components/tours/CharDhamTour').then(m => ({ default: m.CharDhamTour })))
+const HotelPackages = React.lazy(() => import('@/components/stay/HotelPackages').then(m => ({ default: m.HotelPackages })))
+const CampingPackages = React.lazy(() => import('@/components/stay/CampingPackages').then(m => ({ default: m.CampingPackages })))
+const PackageDetail = React.lazy(() => import('@/components/package/PackageDetail').then(m => ({ default: m.PackageDetail })))
+const PackageBookingForm = React.lazy(() => import('@/components/package/PackageBookingForm').then(m => ({ default: m.PackageBookingForm })))
 
 const selfContainedViews = [
-  'admin-dashboard',
-  'company-detail',
-  'rafting-packages',
-  'bike-rental',
-  'taxi-booking',
-  'taxi-booking-form',
-  'trekking',
-  'adventure',
-  'domestic-tours',
-  'spiritual-tours',
-  'international-tours',
-  'gallery',
-  'rishikesh-tour',
-  'haridwar-tour',
-  'mussoorie-tour',
-  'nainital-tour',
-  'hill-stations-tour',
-  'char-dham-tour',
-  'hotel-packages',
-  'camping-packages',
-  'package-detail',
-  'about-us',
-  'contact',
-  'privacy-policy',
-  'terms-of-service',
-  'refund-policy',
-  'cancellation-policy',
-  'blog-archive',
-  'blog-single',
+  'admin-dashboard', 'company-detail', 'collaborate', 'cookie-policy',
+  'rafting-packages', 'bike-rental', 'taxi-booking', 'taxi-booking-form',
+  'trekking', 'adventure', 'domestic-tours', 'spiritual-tours', 'international-tours',
+  'gallery', 'rishikesh-tour', 'haridwar-tour', 'mussoorie-tour', 'nainital-tour',
+  'hill-stations-tour', 'char-dham-tour', 'hotel-packages', 'camping-packages',
+  'package-detail', 'about-us', 'contact', 'privacy-policy', 'terms-of-service',
+  'refund-policy', 'cancellation-policy', 'blog-archive', 'blog-single',
 ]
 
 export default function Home() {
-  const { currentView, navigate } = useAppStore()
+  const { currentView, navigate, voucherModalOpen } = useAppStore()
   const [renderError, setRenderError] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    useAppStore.persist.rehydrate()
-    useCart.persist.rehydrate()
+    try { useAppStore.persist.rehydrate(); useCart.persist.rehydrate() } catch {}
     setHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (renderError) {
-      localStorage.removeItem('divine-travel-store')
-      navigate('landing')
-      setRenderError(false)
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        try { useAppStore.persist.rehydrate() } catch {}
+        setHydrated(true)
+      }
     }
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+    window.addEventListener('focus', handleVisibilityOrFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+      window.removeEventListener('focus', handleVisibilityOrFocus)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (renderError) { localStorage.removeItem('divine-travel-store'); navigate('landing'); setRenderError(false) }
   }, [renderError, navigate])
 
   useEffect(() => {
     if (!hydrated) return
     const redirect = localStorage.getItem('dt_redirect')
-    if (redirect) {
-      localStorage.removeItem('dt_redirect')
-      navigate(redirect)
-    }
+    if (redirect) { localStorage.removeItem('dt_redirect'); navigate(redirect) }
   }, [navigate, hydrated])
+
+  const renderLanding = () => (
+    <>
+      <Navbar /><ActivityBar /><HeroBanner /><TrustGuarantee />
+      <DestinationCarousel /><CompanySection /><TopDestinations />
+      <StaySection /><BlogSection /><TestimonialsSection />
+      <FAQSection /><PartnersSection /><SocialCTASection />
+      <CTABanner /><Footer />
+    </>
+  )
 
   const renderView = useCallback(() => {
     try {
       switch (currentView) {
-        case 'user-dashboard':
-          return <UserDashboard />
-        case 'admin-dashboard':
-          return <AdminDashboard />
-        case 'destination-detail':
-          return <DestinationDetail />
-        case 'booking-success':
-          return <BookingSuccess />
-        case 'rafting-packages':
-          return <RaftingPackages />
-        case 'bike-rental':
-          return <BikePackages />
-        case 'taxi-booking':
-          return <TaxiPackages />
-        case 'taxi-booking-form':
-          return <TaxiBookingForm />
-        case 'trekking':
-          return <TrekkingPackages />
-        case 'adventure':
-          return <AdventurePackages />
-        case 'domestic-tours':
-          return <DomesticPackages />
-        case 'spiritual-tours':
-          return <SpiritualPackages />
-        case 'international-tours':
-          return <InternationalPackages />
-        case 'gallery':
-          return <GalleryPage />
-        case 'rishikesh-tour':
-          return <RishikeshTour />
-        case 'haridwar-tour':
-          return <HaridwarTour />
-        case 'mussoorie-tour':
-          return <MussoorieTour />
-        case 'nainital-tour':
-          return <NainitalTour />
-        case 'hill-stations-tour':
-          return <HillStationsTour />
-        case 'char-dham-tour':
-          return <CharDhamTour />
-        case 'hotel-packages':
-          return <HotelPackages />
-        case 'camping-packages':
-          return <CampingPackages />
-        case 'package-detail':
-          return <PackageDetail />
-        case 'package-booking':
-          return <PackageBookingForm />
-        case 'about-us':
-          return <AboutUs />
-        case 'contact':
-          return <Contact />
-        case 'company-detail':
-          return <CompanyDetail />
-        case 'privacy-policy':
-          return <PrivacyPolicy />
-        case 'terms-of-service':
-          return <TermsOfService />
-        case 'refund-policy':
-          return <RefundPolicy />
-        case 'cancellation-policy':
-          return <CancellationPolicy />
-        case 'blog-archive':
-          return <BlogArchive />
-        case 'blog-single':
-          return <BlogSingle />
-        case 'hotel-detail':
-          return <HotelDetail />
+        case 'user-dashboard': return <Suspense fallback={<ViewLoader />}><UserDashboard /></Suspense>
+        case 'admin-dashboard': return <Suspense fallback={<ViewLoader />}><AdminDashboard /></Suspense>
+        case 'destination-detail': return <DestinationDetail />
+        case 'booking-success': return <BookingSuccess />
+        case 'rafting-packages': return <Suspense fallback={<ViewLoader />}><RaftingPackages /></Suspense>
+        case 'bike-rental': return <Suspense fallback={<ViewLoader />}><BikePackages /></Suspense>
+        case 'taxi-booking': return <Suspense fallback={<ViewLoader />}><TaxiPackages /></Suspense>
+        case 'taxi-booking-form': return <Suspense fallback={<ViewLoader />}><TaxiBookingForm /></Suspense>
+        case 'trekking': return <Suspense fallback={<ViewLoader />}><TrekkingPackages /></Suspense>
+        case 'adventure': return <Suspense fallback={<ViewLoader />}><AdventurePackages /></Suspense>
+        case 'domestic-tours': return <Suspense fallback={<ViewLoader />}><DomesticPackages /></Suspense>
+        case 'spiritual-tours': return <Suspense fallback={<ViewLoader />}><SpiritualPackages /></Suspense>
+        case 'international-tours': return <Suspense fallback={<ViewLoader />}><InternationalPackages /></Suspense>
+        case 'gallery': return <Suspense fallback={<ViewLoader />}><GalleryPage /></Suspense>
+        case 'rishikesh-tour': return <Suspense fallback={<ViewLoader />}><RishikeshTour /></Suspense>
+        case 'haridwar-tour': return <Suspense fallback={<ViewLoader />}><HaridwarTour /></Suspense>
+        case 'mussoorie-tour': return <Suspense fallback={<ViewLoader />}><MussoorieTour /></Suspense>
+        case 'nainital-tour': return <Suspense fallback={<ViewLoader />}><NainitalTour /></Suspense>
+        case 'hill-stations-tour': return <Suspense fallback={<ViewLoader />}><HillStationsTour /></Suspense>
+        case 'char-dham-tour': return <Suspense fallback={<ViewLoader />}><CharDhamTour /></Suspense>
+        case 'hotel-packages': return <Suspense fallback={<ViewLoader />}><HotelPackages /></Suspense>
+        case 'camping-packages': return <Suspense fallback={<ViewLoader />}><CampingPackages /></Suspense>
+        case 'package-detail': return <Suspense fallback={<ViewLoader />}><PackageDetail /></Suspense>
+        case 'package-booking': return <Suspense fallback={<ViewLoader />}><PackageBookingForm /></Suspense>
+        case 'about-us': return <AboutUs />
+        case 'contact': return <Contact />
+        case 'company-detail': return <CompanyDetail />
+        case 'privacy-policy': return <PrivacyPolicy />
+        case 'terms-of-service': return <TermsOfService />
+        case 'refund-policy': return <RefundPolicy />
+        case 'cancellation-policy': return <CancellationPolicy />
+        case 'cookie-policy': return <CookiePolicy />
+        case 'blog-archive': return <BlogArchive />
+        case 'blog-single': return <BlogSingle />
+        case 'hotel-detail': return <HotelDetail />
+        case 'collaborate': return <CreatorCollaborationPage />
         case 'landing':
-        default:
-          return (
-            <>
-              <Navbar />
-              <ActivityBar />
-              <HeroBanner />
-              <HeroSearch />
-              <TrustGuarantee />
-              <DestinationCarousel />
-              <CompanySection />
-              <TopDestinations />
-              <StaySection />
-              <BlogSection />
-              <TestimonialsSection />
-              <FAQSection />
-              <PartnersSection />
-              <SocialCTASection />
-              <CTABanner />
-              <Footer />
-            </>
-          )
+        default: return renderLanding()
       }
-    } catch {
-      setRenderError(true)
-      return null
-    }
+    } catch { return renderLanding() }
   }, [currentView])
 
-  if (!hydrated) {
-    return (
-      <main className="min-h-screen flex flex-col">
-        <div className="h-16 bg-white border-b" />
-        <div className="flex-1 animate-pulse">
-          <div className="h-64 bg-gray-100" />
-          <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
-            <div className="h-8 bg-gray-100 rounded w-1/3" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="h-48 bg-gray-100 rounded-lg" />
-              <div className="h-48 bg-gray-100 rounded-lg" />
-              <div className="h-48 bg-gray-100 rounded-lg" />
-            </div>
-          </div>
-        </div>
-      </main>
-    )
-  }
-
   return (
-    <main className="min-h-screen flex flex-col">
-      {!selfContainedViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentView}
-          initial={false}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex-1"
-        >
-          {renderView()}
-        </motion.div>
-      </AnimatePresence>
-
-      {currentView !== 'admin-dashboard' && <WhatsAppWidget />}
-    </main>
+    <ErrorBoundary fallback={renderLanding()}>
+      <main className="min-h-screen flex flex-col">
+        {hydrated && !selfContainedViews.includes(currentView) && currentView !== 'landing' && <Navbar />}
+        <div key={hydrated ? (currentView || 'landing') : 'splash'} className="flex-1">
+          {hydrated ? renderView() : <ViewLoader />}
+        </div>
+        {hydrated && currentView !== 'admin-dashboard' && !voucherModalOpen && <WhatsAppWidget />}
+        <CookieConsent />
+        <BootSplash visible={!hydrated} />
+      </main>
+    </ErrorBoundary>
   )
 }

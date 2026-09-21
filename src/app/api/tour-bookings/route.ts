@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 import { computeSummary, fetchReceipts, fetchOffers } from '@/lib/booking-service'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/tour-bookings - list (admin: all, user: own)
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     const user = await db.user.findUnique({ where: { id: userId } })
     const where: Record<string, unknown> = {}
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const userId = request.headers.get('x-user-id')
+    const userId = getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Please log in to send an enquiry' }, { status: 401 })
     }
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    notifyAdmin('New Tour Booking', `${name} booked ${resolvedDestination} for ${pax} traveler(s)`, 'booking', '/admin')
+    notifyAdmin('New Tour Booking', `${name} booked ${resolvedDestination} for ${pax} traveler(s)`, 'booking', '/admin?tab=bkg-tour')
 
     return NextResponse.json({ success: true, id: booking.id }, { status: 201 })
   } catch (error) {

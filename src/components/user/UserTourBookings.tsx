@@ -1,22 +1,25 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/lib/store'
-import { CalendarDays, Users, FileText, Tag, Clock } from 'lucide-react'
+import { CalendarDays, Users, FileText, Tag, Clock, CreditCard, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { BookingCardActions } from '../booking/BookingCardActions'
+import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function UserTourBookings() {
   const { user } = useAppStore()
+  const qc = useQueryClient()
   const { data: rawBookings = [], isLoading } = useQuery({
     queryKey: ['user-tour-bookings', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/tour-bookings?excludeTaxi=true', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/tour-bookings?excludeTaxi=true', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },
   })
 
-  // Filter out any taxi bookings so Tours tab ONLY shows actual day tours & spiritual packages
   const bookings = rawBookings.filter((b: any) => {
     const isTaxi = b.packageType?.startsWith('Taxi') ||
       b.packageType?.toLowerCase().includes('taxi') ||
@@ -26,6 +29,30 @@ export function UserTourBookings() {
 
   if (isLoading) return <p className="text-muted-foreground text-sm">Loading…</p>
   if (bookings.length === 0) return <p className="text-muted-foreground text-sm">No tour inquiries yet.</p>
+
+  const cancelBooking = async (b: any) => {
+    const total = b.negotiatedPrice || b.totalPrice || 0
+    const paid = b.paymentAmount || 0
+    const msg = paid > 0
+      ? `Cancel "${b.destination || b.packageType || 'this tour'}"?\n\nTotal: ₹${total.toLocaleString('en-IN')}\nPaid: ₹${paid.toLocaleString('en-IN')}\n\nRefund will be calculated based on cancellation policy.`
+      : `Cancel "${b.destination || b.packageType || 'this tour'}"?\n\nThis action cannot be undone.`
+    if (!confirm(msg)) return
+    try {
+      const res = await fetch('/api/cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
+        body: JSON.stringify({ bookingType: 'tour', bookingId: b.id }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Failed to cancel'); return }
+      const data = await res.json()
+      if (data.refund) {
+        toast.success(`Refund: ₹${data.refund.refundAmount.toLocaleString('en-IN')} (${data.refund.refundPct}% of ₹${data.refund.amountPaid.toLocaleString('en-IN')} paid)`)
+      } else {
+        toast.success('Booking cancelled')
+      }
+      qc.invalidateQueries({ queryKey: ['user-tour-bookings'] })
+    } catch { toast.error('Failed to cancel booking') }
+  }
 
   return (
     <div className="space-y-4">
@@ -38,6 +65,21 @@ export function UserTourBookings() {
             return []
           }
         })()
+
+        const advanceInfo = (() => {
+          if (b.status !== 'confirmed' || b.paymentStatus === 'completed') return null
+          try {
+            const notes = JSON.parse(b.adminNotes || '{}')
+            if (notes.advanceRequired && notes.advanceAmount) {
+              const deadline = notes.advanceDeadline ? new Date(notes.advanceDeadline) : null
+              const isExpired = deadline ? deadline < new Date() : false
+              const timeLeft = deadline ? Math.max(0, Math.floor((deadline.getTime() - Date.now()) / (1000 * 60 * 60))) : 0
+              return { amount: notes.advanceAmount, deadline, isExpired, timeLeft }
+            }
+          } catch {}
+          return null
+        })()
+
         return (
           <div key={b.id} className="bg-white rounded-2xl shadow-sm border border-border/50 p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
@@ -57,6 +99,28 @@ export function UserTourBookings() {
                 {b.status}
               </span>
             </div>
+
+            {advanceInfo && (
+              <div className={`mb-3 p-3 rounded-xl border-2 ${advanceInfo.isExpired ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300 animate-pulse'}`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${advanceInfo.isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                    <CreditCard className={`w-5 h-5 ${advanceInfo.isExpired ? 'text-red-600' : 'text-amber-600'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-bold ${advanceInfo.isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                      {advanceInfo.isExpired ? 'Advance Deadline Expired!' : `Pay 10% Advance: ₹${advanceInfo.amount.toLocaleString('en-IN')}`}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${advanceInfo.isExpired ? 'text-red-600' : 'text-amber-600'}`}>
+                      {advanceInfo.isExpired
+                        ? 'Your booking may be cancelled. Contact support immediately.'
+                        : advanceInfo.timeLeft > 0
+                          ? `Time left: ~${advanceInfo.timeLeft} hours. Pay now to lock your spot.`
+                          : 'Pay now to confirm your booking.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-2">
               <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" /> {b.travelDate}</span>
@@ -81,8 +145,13 @@ export function UserTourBookings() {
               </p>
             )}
 
-            <div className="border-t border-border/50 pt-3 mt-1">
+            <div className="border-t border-border/50 pt-3 mt-1 flex items-center justify-between">
               <BookingCardActions type="tour" id={b.id} isAdmin={false} userId={user?.id} />
+              {(b.status === 'pending' || b.status === 'confirmed') && (
+                <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50 text-xs" onClick={() => cancelBooking(b)}>
+                  <X className="w-3 h-3 mr-1" /> Cancel
+                </Button>
+              )}
             </div>
           </div>
         )

@@ -9,6 +9,7 @@ import {
   Search, RefreshCw, AlertCircle, Receipt, Lock, CheckCircle, Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { ActivityBar } from './ActivityBar'
@@ -811,13 +812,11 @@ export function CreatorCollaborationPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
                         <label className="text-xs font-semibold text-gray-700 mb-1.5 block">WhatsApp Phone Number *</label>
-                        <input
-                          required
-                          type="tel"
-                          placeholder="+91 98765 43210"
+                        <PhoneInput
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange"
+                          onChange={(val) => setFormData({ ...formData, phone: val })}
+                          placeholder="Enter WhatsApp number"
+                          required
                         />
                       </div>
                       <div>

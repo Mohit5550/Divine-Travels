@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { Pagination } from '@/components/ui/Pagination'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Inquiry {
   id: string; name: string; email: string; phone: string | null; message: string
@@ -21,7 +22,7 @@ export function AdminInquiries() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['admin-inquiries', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/inquiries?page=${page}&limit=20`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/inquiries?page=${page}&limit=20`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { data: [], totalPages: 1 }
       const data = await res.json()
       if (data && typeof data === 'object' && Array.isArray(data.data)) {
@@ -37,14 +38,14 @@ export function AdminInquiries() {
   const totalPages = response?.totalPages ?? 1
 
   const markRead = async (id: string) => {
-    await fetch(`/api/admin/inquiries?markRead=${id}`, { headers: { 'x-user-id': user?.id || '' } })
+    await fetch(`/api/admin/inquiries?markRead=${id}`, { headers: { ...getAuthHeaders() } })
     queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] })
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this inquiry?')) return
     try {
-      const res = await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } })
       if (!res.ok) { toast.error('Failed to delete'); return }
       toast.success('Inquiry deleted')
       if (selected?.id === id) setSelected(null)

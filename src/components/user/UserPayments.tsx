@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CreditCard, Download, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function UserPayments() {
   const { user } = useAppStore()
@@ -13,7 +14,7 @@ export function UserPayments() {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ['user-payments', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/payments', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/payments', { headers: { ...getAuthHeaders() } })
       if (!res.ok) return []
       return res.json()
     },

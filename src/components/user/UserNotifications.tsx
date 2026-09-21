@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, CheckCheck, X, CalendarCheck, CreditCard, Gift, AlertCircle, Info, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function UserNotifications() {
   const { user, navigate, setDashboardTab } = useAppStore()
@@ -17,7 +18,7 @@ export function UserNotifications() {
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/notifications', { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch('/api/notifications', { headers: { ...getAuthHeaders() } })
       return res.json()
     },
     refetchInterval: 30000, // Poll every 30s
@@ -37,7 +38,7 @@ export function UserNotifications() {
   const markAsRead = async (id: string) => {
     await fetch(`/api/notifications/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
       body: JSON.stringify({ read: true }),
     })
     queryClient.invalidateQueries({ queryKey: ['notifications'] })
@@ -56,7 +57,7 @@ export function UserNotifications() {
     for (const n of unread) {
       await fetch(`/api/notifications/${n.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify({ read: true }),
       })
     }
@@ -68,7 +69,7 @@ export function UserNotifications() {
     if (!window.confirm('Clear all notifications? This cannot be undone.')) return
     await fetch('/api/notifications', {
       method: 'DELETE',
-      headers: { 'x-user-id': user?.id || '' },
+      headers: { ...getAuthHeaders() },
     })
     toast.success('All notifications cleared')
     queryClient.invalidateQueries({ queryKey: ['notifications'] })

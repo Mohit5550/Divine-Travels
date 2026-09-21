@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateCollaboration, deleteCollaboration } from '@/lib/collaborations-db'
 import { db } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = getUserIdFromRequest(req)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const user = await db.user.findUnique({ where: { id: userId } })
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const { id } = await context.params
     const body = await req.json()
     const { status, assignedCoupon, commissionPct, selectedFreeActivity, expectedBudget, adminNotes } = body
@@ -72,6 +82,15 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = getUserIdFromRequest(req)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const user = await db.user.findUnique({ where: { id: userId } })
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const { id } = await context.params
     await deleteCollaboration(id)
 

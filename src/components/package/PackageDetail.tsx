@@ -37,9 +37,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { LoginModal } from '@/components/landing/LoginModal'
 import { useSettings } from '@/lib/useSettings'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { PackageWishlistButton } from '@/components/cart/PackageWishlistButton'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 interface PackageImage {
   url: string
@@ -141,6 +143,7 @@ export function PackageDetail() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' })
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
 
   const { data: pkg, isLoading } = useQuery({
     queryKey: ['package-detail', selectedPackageId],
@@ -230,7 +233,7 @@ export function PackageDetail() {
 
   const handleBookNow = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to book this package')
+      setLoginOpen(true)
       return
     }
     if (pkg?.category === 'taxi-booking') {
@@ -243,7 +246,7 @@ export function PackageDetail() {
   const handleReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      toast.error('Please login to write a review')
+      setLoginOpen(true)
       return
     }
 
@@ -253,8 +256,7 @@ export function PackageDetail() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({
           rating: reviewForm.rating,
           comment: reviewForm.comment,
@@ -647,7 +649,7 @@ export function PackageDetail() {
                 <p className="text-xs text-muted-foreground mb-2">Still have questions?</p>
                 <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal/5 rounded-xl h-10"
                   onClick={() => {
-                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')
+                    window.open(`https://wa.me/${(settings.whatsapp || '').replace(/[^0-9]/g, '')}`, '_blank')
                   }}>
                   <Phone className="w-4 h-4 mr-2" />
                   Connect with Team
@@ -1281,7 +1283,7 @@ export function PackageDetail() {
                   className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-xl h-10 font-medium"
                   onClick={() => {
                     const text = encodeURIComponent(`Hi Divine Travels, I am inquiring about "${pkg?.name}" (₹${displayPrice}/person). Please share availability & full details.`)
-                    window.open(`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=${text}`, '_blank')
+                    window.open(`https://wa.me/${(settings.whatsapp || '').replace(/[^0-9]/g, '')}?text=${text}`, '_blank')
                   }}
                 >
                   <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" />
@@ -1293,6 +1295,7 @@ export function PackageDetail() {
         </div>
       </div>
       <Footer />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

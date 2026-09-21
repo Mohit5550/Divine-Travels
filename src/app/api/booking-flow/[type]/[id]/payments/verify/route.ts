@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { checkPaymentStatus } from '@/lib/kwikupi'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 import {
   isValidBookingType,
   fetchBooking,
@@ -11,7 +12,7 @@ import {
 } from '@/lib/booking-service'
 
 async function getUser(req: Request) {
-  const userId = req.headers.get('x-user-id')
+  const userId = getUserIdFromRequest(req)
   if (!userId) return null
   return db.user.findUnique({ where: { id: userId } })
 }

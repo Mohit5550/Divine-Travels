@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/Pagination'
 import { toast } from 'sonner'
 import { BookingCardActions } from '../booking/BookingCardActions'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 export function AdminBookings() {
   const { user, navigate } = useAppStore()
@@ -19,7 +20,7 @@ export function AdminBookings() {
     queryKey: ['admin-bookings', user?.id, page],
     queryFn: async () => {
       const res = await fetch(`/api/bookings?page=${page}&limit=20`, {
-        headers: { 'x-user-id': user?.id || '' },
+        headers: { ...getAuthHeaders() },
       })
       return res.json()
     },
@@ -34,18 +35,22 @@ export function AdminBookings() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
-        },
+          ...getAuthHeaders(), },
         body: JSON.stringify({ bookingId: id, type: 'destination', status }),
       })
 
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         toast.error(data.error || 'Failed to update booking')
         return
       }
 
-      toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
+      if (status === 'confirmed' && data.whatsappUrl) {
+        window.open(data.whatsappUrl, '_blank')
+        toast.success('Booking Confirmed! WhatsApp opened to send 10% advance payment link.')
+      } else {
+        toast.success(`Booking status updated to ${status.replace('_', ' ').toUpperCase()}`)
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-bookings'] })
       queryClient.invalidateQueries({ queryKey: ['upcoming-bookings'] })
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })

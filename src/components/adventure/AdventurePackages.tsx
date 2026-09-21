@@ -26,6 +26,7 @@ import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
+import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
   id: string
@@ -91,14 +92,6 @@ const SUBOPTION_MAP: Record<string, string> = {
   'bumper boat': 'Bumper Boat',
   parasailing: 'Parasailing',
   flyboard: 'Flyboard',
-}
-
-function getSubOptionFromName(name: string): string | undefined {
-  const lower = name.toLowerCase()
-  for (const [key, sub] of Object.entries(SUBOPTION_MAP)) {
-    if (lower.includes(key)) return sub
-  }
-  return undefined
 }
 
 export function AdventurePackages() {
@@ -184,7 +177,7 @@ export function AdventurePackages() {
   }, [packages, slugToCompany, activeCompany])
 
   const getEffectivePrice = (pkg: PackageData) => {
-    const subOption = getSubOptionFromName(pkg.name)
+    const subOption = getSubOptionFromName(pkg.name, SUBOPTION_MAP)
     const allDayMatch = availabilityRecords.find((r: any) => r.allDay)
     if (allDayMatch) return allDayMatch.price ?? pkg.price
     if (!subOption) return pkg.price

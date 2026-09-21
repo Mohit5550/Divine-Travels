@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getAuthHeaders } from '@/lib/auth-client'
 
 const emptyForm = {
   code: '',
@@ -37,7 +38,7 @@ export function AdminCoupons() {
   const { data: couponsResponse, isLoading } = useQuery({
     queryKey: ['admin-coupons', user?.id, page],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/coupons?page=${page}&limit=25`, { headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/coupons?page=${page}&limit=25`, { headers: { ...getAuthHeaders() } })
       if (!res.ok) return { data: [], totalPages: 1 }
       return res.json()
     },
@@ -85,7 +86,7 @@ export function AdminCoupons() {
       const method = editingId ? 'PUT' : 'POST'
       const res = await fetch('/api/admin/coupons', {
         method,
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), },
         body: JSON.stringify(payload),
       })
       if (!res.ok) {
@@ -106,7 +107,7 @@ export function AdminCoupons() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this coupon code?')) return
     try {
-      const res = await fetch(`/api/admin/coupons?id=${id}`, { method: 'DELETE', headers: { 'x-user-id': user?.id || '' } })
+      const res = await fetch(`/api/admin/coupons?id=${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } })
       if (!res.ok) { toast.error('Failed to delete'); return }
       toast.success('Coupon deleted')
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] })

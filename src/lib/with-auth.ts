@@ -2,7 +2,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { db } from '@/lib/db'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'divine-travels-secret-key-2026'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set')
+}
 
 interface AuthUser {
   id: string
@@ -11,7 +14,7 @@ interface AuthUser {
   role: string
 }
 
-// Helper: extract user ID from JWT or x-user-id header, then fetch full user from DB.
+// Helper: extract user ID from JWT token only (x-user-id fallback removed for security)
 export async function getUserFromToken(request: NextRequest): Promise<AuthUser | null> {
   let userId: string | null = null
 
@@ -19,15 +22,12 @@ export async function getUserFromToken(request: NextRequest): Promise<AuthUser |
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.substring(7)
     try {
+      if (!JWT_SECRET) return null
       const payload = jwt.verify(token, JWT_SECRET) as { userId: string }
       userId = payload.userId
     } catch {
-      // fall through to x-user-id fallback below
+      return null
     }
-  }
-
-  if (!userId) {
-    userId = request.headers.get('x-user-id')
   }
 
   if (!userId) return null
@@ -37,7 +37,8 @@ export async function getUserFromToken(request: NextRequest): Promise<AuthUser |
 }
 
 // Helper: generate JWT token
-function generateToken(userId: string) {
+export function generateToken(userId: string) {
+  if (!JWT_SECRET) throw new Error('JWT_SECRET not configured')
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' })
 }
 

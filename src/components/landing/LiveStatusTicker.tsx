@@ -50,6 +50,7 @@ export function LiveStatusTicker() {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
       setActiveIndex((prev) => (prev + 1) % statusItems.length)
     }, 3500)
     return () => clearInterval(interval)
