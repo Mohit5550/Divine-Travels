@@ -6,7 +6,20 @@ export type BookingType = (typeof BOOKING_TYPES)[number]
 
 const ADVANCE_RATE = 0.1
 
-function delegate(type: BookingType) {
+// Structural delegate type: the three booking delegates have incompatible
+// generated `update` signatures, so callers use this uniform `any`-args shape.
+export interface AnyBookingDelegate {
+  findUnique: (args: any) => Promise<any>
+  findFirst?: (args: any) => Promise<any>
+  findMany?: (args: any) => Promise<any[]>
+  create?: (args: any) => Promise<any>
+  update: (args: any) => Promise<any>
+  updateMany?: (args: any) => Promise<any>
+  delete?: (args: any) => Promise<any>
+  count?: (args: any) => Promise<number>
+}
+
+function delegate(type: BookingType): AnyBookingDelegate {
   switch (type) {
     case 'tour':
       return db.tourBooking
