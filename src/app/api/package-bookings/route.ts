@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 import { sendBookingConfirmationEmail } from '@/lib/email'
-import { resolveCampingTier } from '@/lib/hotelBooking'
+import { resolveCampingTier, maxTierPax, evenSplit, computeHotelBreakdown, nightsBetween } from '@/lib/hotelBooking'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/package-bookings - List bookings (admin: all, user: own)
@@ -160,18 +160,30 @@ export async function POST(request: Request) {
         const roomTypes = JSON.parse(pkg.roomTypes || '[]') as any[]
         const rt = roomTypes.find((r) => r.name === parsed.campTypeName)
         const headcount = (Number(parsed.adults) || 0) + (Number(parsed.children) || 0)
-        const camps = Math.max(1, Number(parsed.camps) || 1)
+        const userCamps = Math.max(1, Number(parsed.camps) || 1)
         const nights = Math.max(1, Number(parsed.nights) || 1)
-        const headcountPerCamp = Math.ceil(headcount / camps)
-        const tier = rt ? resolveCampingTier(rt as any, headcountPerCamp) : null
-        const pricePerPerson = tier ? tier.pricePerPerson : (rt?.price || pkg.price)
-        const campCost = pricePerPerson * headcount * nights
+        // Same auto-split as the client: overflow spills into extra camps,
+        // each camp billed at its own tier. Client totals are never trusted.
+        const fallbackCap = Number(rt?.guests) || (Number(rt?.baseOccupancy) || 2) + 2
+        const maxPerCamp = maxTierPax((rt || {}) as any, fallbackCap)
+        const neededCamps = headcount > 0 ? Math.max(1, Math.ceil(headcount / maxPerCamp)) : userCamps
+        const camps = Math.max(userCamps, neededCamps)
+        const occupancies = evenSplit(headcount, camps)
+        const campSplit = occupancies.map((pax) => {
+          const tier = rt ? resolveCampingTier(rt as any, pax) : null
+          const ppp = tier ? tier.pricePerPerson : (rt?.price || pkg.price)
+          return { pax, pricePerPerson: ppp, cost: ppp * pax * nights }
+        })
+        const campCost = campSplit.reduce((s, c) => s + c.cost, 0)
+        const pricePerPerson = headcount > 0 ? Math.round(campCost / (headcount * nights)) : 0
         const mealPlanPrice = Number(parsed.mealPlanPrice) || 0
         const mealCost = mealPlanPrice * headcount * nights
         const preDiscount = campCost + mealCost
         const corrected = {
           ...parsed,
-          tierPerCamp: headcountPerCamp,
+          camps,
+          campSplit,
+          tierPerCamp: occupancies.length > 0 ? Math.max(...occupancies) : 0,
           pricePerPerson,
           roomCost: campCost,
           mealCost,
@@ -183,16 +195,33 @@ export async function POST(request: Request) {
         stayBaseTotal = pkg.price * (numberOfPeople || 1)
       }
     } else if (isHotelBooking && additionalNotes) {
+      // Server-side re-derivation of the hotel total from the package's own
+      // roomTypes/mealPlans + the actual stay details. Room-type price, extra
+      // adult/child charges and meal rates always come from the DB — the
+      // client-sent breakdown is never trusted for money math.
       try {
         const parsed = JSON.parse(additionalNotes)
+        const roomTypes = JSON.parse(pkg.roomTypes || '[]') as any[]
+        const mealPlans = JSON.parse((pkg as any).mealPlans || '[]') as any[]
+        const rt = roomTypes.find((r) => r.name === parsed.roomTypeName) || roomTypes[0]
+        if (!rt) throw new Error('no room types')
+        const mp = mealPlans.find((m: any) => m.name === parsed.mealPlanName)
+        const rooms = typeof parsed.rooms === 'number' && parsed.rooms > 0 ? Math.min(10, Math.floor(parsed.rooms)) : 1
+        const adults = Math.max(1, Math.floor(Number(parsed.adults) || 1))
+        const children = Math.max(0, Math.floor(Number(parsed.children) || 0))
+        const checkIn = String(parsed.checkIn || '')
+        const checkOut = String(parsed.checkOut || '')
+        const nights = nightsBetween(checkIn, checkOut)
+        const bd = computeHotelBreakdown(rt as any, mp || undefined, {
+          checkIn, checkOut, nights, rooms, adults, children, discount: 0,
+        })
+        stayBaseTotal = bd.total
+        stayBreakdownJson = JSON.stringify({ ...parsed, ...bd })
+      } catch {
+        const parsed = (() => { try { return JSON.parse(additionalNotes) } catch { return {} as any } })()
         const nights = typeof parsed.nights === 'number' && parsed.nights > 0 ? parsed.nights : 1
         const rooms = typeof parsed.rooms === 'number' && parsed.rooms > 0 ? parsed.rooms : 1
-        const guests = typeof parsed.guests === 'number' && parsed.guests > 0 ? parsed.guests : 1
         stayBaseTotal = pkg.price * nights * rooms
-        const stayBreakdown = { ...parsed, total: stayBaseTotal, nights, rooms, guests, pricePerNight: pkg.price }
-        stayBreakdownJson = JSON.stringify(stayBreakdown)
-      } catch {
-        stayBaseTotal = pkg.price
         stayBreakdownJson = additionalNotes
       }
     }
@@ -266,8 +295,8 @@ export async function POST(request: Request) {
     // ALWAYS compute totalPrice server-side. Never trust body.totalPrice.
     totalPrice = Math.max(0, Math.round(baseTotal - discountAmount))
 
-    // Camping: always trust the server-derived total + discount (tamper-proof).
-    if (isCampingBooking) {
+    // Stay bookings: always trust the server-derived total + discount (tamper-proof).
+    if (isStayBooking) {
       totalPrice = Math.max(0, Math.round(stayBaseTotal - discountAmount))
       if (stayBreakdownJson) {
         try {

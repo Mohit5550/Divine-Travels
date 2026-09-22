@@ -71,7 +71,7 @@ export function computeHotelBreakdown(
   const totalBaseOccupancy = base * rooms
   const extraAdults = Math.max(0, adults - totalBaseOccupancy)
   const extraAdultCost = extraAdults * (roomType.extraAdultPrice || 0) * nights
-  const extraChildCost = children * rooms * (roomType.extraChildPrice || 0) * nights
+  const extraChildCost = children * (roomType.extraChildPrice || 0) * nights
   const mealCost = (mealPlan?.price || 0) * (adults + children) * nights
   const discount = opts.discount || 0
   const total = roomCost + extraAdultCost + extraChildCost + mealCost - discount
@@ -100,6 +100,12 @@ export function computeHotelBreakdown(
   }
 }
 
+export interface CampSplit {
+  pax: number
+  pricePerPerson: number
+  cost: number
+}
+
 export interface CampingBookingBreakdown {
   isCamping: true
   checkIn: string
@@ -111,6 +117,7 @@ export interface CampingBookingBreakdown {
   campTypeName: string
   tierPerCamp: number
   pricePerPerson: number
+  campSplit: CampSplit[]
   roomCost: number
   mealPlanName: string
   mealPlanPrice: number
@@ -136,6 +143,26 @@ export function resolveCampingTier(
   return sorted[sorted.length - 1]
 }
 
+// Largest group size any tier of this camp type allows.
+// Falls back to the room's guest capacity when no tiers are defined.
+export function maxTierPax(roomType: RoomTypeInput, fallback: number): number {
+  const tiers = roomType.pricingTiers || []
+  if (tiers.length === 0) return Math.max(1, Math.floor(fallback) || 1)
+  return Math.max(...tiers.map((t) => t.maxPax))
+}
+
+// Evenly distribute `headcount` people across exactly `camps` camps.
+// Overflow automatically flows into extra camps instead of overstuffing one.
+// e.g. evenSplit(6, 2) -> [3, 3]; evenSplit(7, 2) -> [4, 3]; evenSplit(5, 2) -> [3, 2]
+export function evenSplit(headcount: number, camps: number): number[] {
+  const h = Math.max(0, Math.floor(headcount))
+  const c = Math.max(1, Math.floor(camps))
+  if (h === 0) return Array(c).fill(0)
+  const base = Math.floor(h / c)
+  const extra = h % c
+  return Array.from({ length: c }, (_, i) => base + (i < extra ? 1 : 0))
+}
+
 export function computeCampingBreakdown(
   roomType: RoomTypeInput,
   mealPlan: MealPlanInput | undefined,
@@ -150,14 +177,27 @@ export function computeCampingBreakdown(
   }
 ): CampingBookingBreakdown {
   const headcount = opts.adults + opts.children
-  const camps = Math.max(1, opts.camps)
-  const headcountPerCamp = Math.ceil(headcount / camps)
-  const tier = resolveCampingTier(roomType, headcountPerCamp)
-  const pricePerPerson = tier ? tier.pricePerPerson : roomType.price || 0
-  const roomCost = pricePerPerson * headcount * opts.nights
+  const fallbackCap = roomType.guests || (roomType.baseOccupancy || 2) + 2
+  const maxPerCamp = maxTierPax(roomType, fallbackCap)
+  // Auto-split: if the group is bigger than one camp allows, the extra
+  // people go into additional camps — never more than maxPerCamp per camp.
+  const requestedCamps = Math.max(1, opts.camps)
+  const neededCamps = headcount > 0 ? Math.max(1, Math.ceil(headcount / maxPerCamp)) : requestedCamps
+  const camps = Math.max(requestedCamps, neededCamps)
+  const occupancies = evenSplit(headcount, camps)
+
+  const campSplit: CampSplit[] = occupancies.map((pax) => {
+    const tier = resolveCampingTier(roomType, pax)
+    const ppp = tier ? tier.pricePerPerson : roomType.price || 0
+    return { pax, pricePerPerson: ppp, cost: ppp * pax * opts.nights }
+  })
+  const roomCost = campSplit.reduce((s, c) => s + c.cost, 0)
   const mealCost = (mealPlan?.price || 0) * headcount * opts.nights
   const discount = opts.discount || 0
   const total = roomCost + mealCost - discount
+  // Compat fields: largest camp occupancy + headcount-weighted average rate.
+  const tierPerCamp = occupancies.length > 0 ? Math.max(...occupancies) : 0
+  const pricePerPerson = headcount > 0 ? Math.round(roomCost / (headcount * opts.nights)) : 0
 
   return {
     isCamping: true,
@@ -168,8 +208,9 @@ export function computeCampingBreakdown(
     adults: opts.adults,
     children: opts.children,
     campTypeName: roomType.name,
-    tierPerCamp: headcountPerCamp,
+    tierPerCamp,
     pricePerPerson,
+    campSplit,
     roomCost,
     mealPlanName: mealPlan?.name || 'None',
     mealPlanPrice: mealPlan?.price || 0,
