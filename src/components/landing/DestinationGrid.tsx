@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Destination {
+  slug?: string
   id: string
   name: string
   tagline: string
@@ -143,7 +144,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -8 }}
               className="group cursor-pointer"
-              onClick={() => navigate('destination-detail', dest.id)}
+              onClick={() => navigate('destination-detail', dest.slug || dest.id)}
             >
               <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-lg">
                 {/* Image */}
@@ -223,7 +224,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
                   className="text-brand-orange text-xs p-0 h-auto hover:bg-transparent"
                   onClick={(e) => {
                     e.stopPropagation()
-                    navigate('destination-detail', dest.id)
+                    navigate('destination-detail', dest.slug || dest.id)
                   }}
                 >
                   View Details <ArrowRight className="w-3 h-3 ml-1" />

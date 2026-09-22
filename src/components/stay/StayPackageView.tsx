@@ -19,6 +19,7 @@ import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
+  slug?: string
   id: string
   name: string
   tagline: string
@@ -129,7 +130,7 @@ export function StayPackageView({
   }
 
   const handleViewDetails = (pkg: PackageData) => {
-    navigate('hotel-detail', null, pkg.id)
+    navigate('hotel-detail', null, pkg.slug || pkg.id)
   }
 
   return (

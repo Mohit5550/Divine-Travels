@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 import { getUserFromToken } from '@/lib/with-auth'
+import { resolvePackageId } from '@/lib/resolve-slug'
 
-// GET /api/packages/[id]/reviews - Get reviews for a package
+// GET /api/packages/[id]/reviews - Get reviews for a package (accepts cuid id or slug)
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
+    const packageId = (await resolvePackageId(id)) || id
 
     const reviews = await db.packageReview.findMany({
-      where: { packageId: id, approved: true },
+      where: { packageId, approved: true },
       include: {
         user: {
           select: { id: true, name: true, avatar: true },
@@ -51,8 +53,12 @@ export async function POST(
       return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
     }
 
-    // Verify package exists
-    const pkg = await db.package.findUnique({ where: { id } })
+    // Verify package exists (accepts cuid id or slug)
+    const resolvedId = await resolvePackageId(id)
+    if (!resolvedId) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 404 })
+    }
+    const pkg = await db.package.findUnique({ where: { id: resolvedId } })
     if (!pkg) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 })
     }
@@ -60,7 +66,7 @@ export async function POST(
     const review = await db.packageReview.create({
       data: {
         userId: user.id,
-        packageId: id,
+        packageId: resolvedId,
         rating: Number(rating),
         comment,
       },
@@ -73,13 +79,13 @@ export async function POST(
 
     // Update package rating and review count
     const stats = await db.packageReview.aggregate({
-      where: { packageId: id },
+      where: { packageId: resolvedId },
       _avg: { rating: true },
       _count: { rating: true },
     })
 
     await db.package.update({
-      where: { id },
+      where: { id: resolvedId },
       data: {
         rating: Math.round((stats._avg.rating || 0) * 10) / 10,
         reviewCount: stats._count.rating || 0,

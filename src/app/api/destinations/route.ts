@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
+import { slugify } from '@/lib/resolve-slug'
 
 // GET /api/destinations - List all with optional filters
 export async function GET(request: NextRequest) {
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
     const destination = await db.destination.create({
       data: {
         name,
+        slug: slugify(body.slug || name),
         tagline,
         description,
         state,

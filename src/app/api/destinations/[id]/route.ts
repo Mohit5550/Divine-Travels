@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
+import { resolveDestination, slugify } from '@/lib/resolve-slug'
 
-// GET /api/destinations/[id] - Get one with reviews
+// GET /api/destinations/[id] - Get one with reviews (accepts cuid id or slug)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const destination = await db.destination.findUnique({
-      where: { id },
-      include: {
-        reviews: {
-          include: { user: { select: { id: true, name: true, avatar: true } } },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    })
+    const found = await resolveDestination(id)
+    const destination = found
+      ? await db.destination.findUnique({
+          where: { id: found.id },
+          include: {
+            reviews: {
+              include: { user: { select: { id: true, name: true, avatar: true } } },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        })
+      : null
 
     if (!destination) {
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 })
@@ -47,6 +51,13 @@ export async function PUT(
     }
 
     const body = await request.json()
+    // Backfill slug on update when the record has none yet
+    if (!body.slug) {
+      const existing = await db.destination.findUnique({ where: { id } })
+      if (existing && !(existing as any).slug) {
+        body.slug = slugify(body.name || existing.name)
+      }
+    }
     const destination = await db.destination.update({
       where: { id },
       data: body,

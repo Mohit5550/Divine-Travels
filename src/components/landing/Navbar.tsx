@@ -127,7 +127,7 @@ export function Navbar() {
   const handleSelectPackage = (pkg: SearchPackage) => {
     setSearchQuery('')
     setShowDropdown(false)
-    navigate('package-detail', null, pkg.id)
+    navigate('package-detail', null, pkg.slug || pkg.id)
   }
 
   return (

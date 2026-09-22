@@ -81,7 +81,7 @@ export function CompanyDetail() {
 
   const handlePlanClick = (plan: Plan) => {
     if (plan.package?.id) {
-      navigate('package-detail', null, plan.package.id)
+      navigate('package-detail', null, plan.package.slug || plan.package.id)
     }
   }
 

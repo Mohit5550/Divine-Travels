@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getAuthHeaders } from '@/lib/auth-client'
 
 interface Destination {
+  slug?: string
   id: string
   name: string
   tagline: string

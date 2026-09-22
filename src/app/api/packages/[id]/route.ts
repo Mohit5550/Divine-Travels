@@ -1,30 +1,35 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
+import { resolvePackage } from '@/lib/resolve-slug'
 
-// GET /api/packages/[id] - Get package details with reviews
+// GET /api/packages/[id] - Get package details with reviews (accepts cuid id or slug)
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const pkg = await db.package.findUnique({
-      where: { id },
-      include: {
-        reviews: {
-          include: {
-            user: {
-              select: { id: true, name: true, avatar: true },
+    const pkg = await (async () => {
+      const base = await resolvePackage(id)
+      if (!base) return null
+      return db.package.findUnique({
+        where: { id: base.id },
+        include: {
+          reviews: {
+            include: {
+              user: {
+                select: { id: true, name: true, avatar: true },
+              },
             },
+            orderBy: { createdAt: 'desc' },
           },
-          orderBy: { createdAt: 'desc' },
+          _count: {
+            select: { bookings: true },
+          },
         },
-        _count: {
-          select: { bookings: true },
-        },
-      },
-    })
+      })
+    })()
 
     if (!pkg) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 })

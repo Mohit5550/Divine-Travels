@@ -196,7 +196,7 @@ export function AdventurePackages() {
   }
 
   const handleViewDetails = (pkg: PackageData) => {
-    navigate('package-detail', null, pkg.id)
+    navigate('package-detail', null, pkg.slug || pkg.id)
   }
 
   return (

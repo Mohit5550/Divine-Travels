@@ -35,6 +35,7 @@ import { getAuthHeaders } from '@/lib/auth-client'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
+  slug?: string
   id: string
   name: string
   subtitle: string

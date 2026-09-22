@@ -50,7 +50,7 @@ export function AdventureGrid() {
 
   const handleCardClick = (pkg: any) => {
     if (pkg.id) {
-      navigate('package-detail', null, pkg.id)
+      navigate('package-detail', null, pkg.slug || pkg.id)
     }
   }
 

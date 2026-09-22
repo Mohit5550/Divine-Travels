@@ -26,6 +26,7 @@ import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface PackageData {
+  slug?: string
   id: string
   name: string
   tagline: string
@@ -119,7 +120,7 @@ export function DomesticPackages() {
   }
 
   const handleViewDetails = (pkg: PackageData) => {
-    navigate('package-detail', null, pkg.id)
+    navigate('package-detail', null, pkg.slug || pkg.id)
   }
 
   return (

@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     destinations = await db.$queryRawUnsafe<{ slug: string; updatedAt: Date }[]>(
-      `SELECT "id" AS "slug", "updatedAt" FROM "Destination" WHERE "active" = 1`
+      `SELECT COALESCE("slug", "id") AS "slug", "updatedAt" FROM "Destination" WHERE "active" = 1`
     )
   } catch { /* ignore */ }
 

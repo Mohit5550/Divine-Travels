@@ -152,7 +152,7 @@ export function UserWishlist() {
                       <div className="flex items-center gap-1"><Star className="w-4 h-4 fill-brand-gold text-brand-gold" /><span className="text-sm font-medium">{item.data.destination?.rating}</span></div>
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-brand-orange">₹{item.data.destination?.price?.toLocaleString()}</span>
-                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('destination-detail', item.data.destination?.id)}>Book <ArrowRight className="w-3 h-3 ml-1" /></Button>
+                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('destination-detail', item.data.destination?.slug || item.data.destination?.id)}>Book <ArrowRight className="w-3 h-3 ml-1" /></Button>
                       </div>
                     </div>
                   </div>
@@ -179,7 +179,7 @@ export function UserWishlist() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-brand-orange">₹{item.data.package?.price?.toLocaleString()}</span>
-                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('package-detail', null, item.data.package?.id)}>
+                        <Button size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white text-xs h-8" onClick={() => navigate('package-detail', null, item.data.package?.slug || item.data.package?.id)}>
                           Book <ArrowRight className="w-3 h-3 ml-1" />
                         </Button>
                       </div>

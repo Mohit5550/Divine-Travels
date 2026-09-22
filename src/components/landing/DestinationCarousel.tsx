@@ -135,7 +135,7 @@ export function DestinationCarousel() {
                     style={{ width: `${cardWidth}px` }}
                   >
                     <div
-                      onClick={() => navigate('package-detail', null, pkg.id)}
+                      onClick={() => navigate('package-detail', null, pkg.slug || pkg.id)}
                       className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full"
                     >
                       <div className="relative h-40 sm:h-44 overflow-hidden">

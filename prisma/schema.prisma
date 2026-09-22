@@ -40,6 +40,7 @@ model User {
 model Destination {
   id          String   @id @default(cuid())
   name        String
+  slug        String?  @unique
   tagline     String
   description String
   state       String

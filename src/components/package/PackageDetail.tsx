@@ -84,6 +84,7 @@ interface Review {
 }
 
 interface PackageData {
+  slug?: string
   id: string
   name: string
   tagline: string
