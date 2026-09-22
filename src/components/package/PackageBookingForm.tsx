@@ -30,7 +30,7 @@ import { toast } from 'sonner'
 import { useState, useCallback, useEffect } from 'react'
 import { LoginModal } from '@/components/landing/LoginModal'
 import { BookingInquirySuccess } from '@/components/booking/BookingInquirySuccess'
-import { computeHotelBreakdown, computeCampingBreakdown, nightsBetween } from '@/lib/hotelBooking'
+import { computeHotelBreakdown, computeCampingBreakdown, nightsBetween, maxTierPax } from '@/lib/hotelBooking'
 import { getAuthHeaders } from '@/lib/auth-client'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
@@ -159,11 +159,25 @@ export function PackageBookingForm() {
   const adultHardCap = hasAdultCap ? Math.min(roomMaxAdults * rooms, maxPersons) : maxPersons
   const childHardCap = hasChildCap ? roomMaxChildren * rooms : maxPersons
 
+  // Camping: biggest group one camp allows (from tiers, else room capacity).
+  // Extra people automatically spill into more camps — pax is never clamped.
+  const campPerCampCap = isCamping && selRoom ? maxTierPax(selRoom, roomCapacity) : roomCapacity
+  const campingHeadCap = campPerCampCap * 10
+
   // Auto-select the first room type once loaded, and clamp guests when capacity shrinks.
   useEffect(() => {
     if (!isStay) return
     if (roomTypes.length > 0 && !roomTypeName) {
       setRoomTypeName(roomTypes[0].name)
+    }
+    if (isCamping && selRoom) {
+      // Camping overflow: grow camps instead of cutting people.
+      const head = adults + childrenCount
+      const needed = Math.min(10, Math.max(1, Math.ceil(head / campPerCampCap)))
+      if (needed > rooms) setRooms(needed)
+      if (adults < 1) setAdults(1)
+      if (childrenCount < 0) setChildrenCount(0)
+      return
     }
     let newAdults = adults
     let newChildren = childrenCount
@@ -174,7 +188,7 @@ export function PackageBookingForm() {
     if (newChildren < 0) newChildren = 0
     if (newAdults !== adults) setAdults(newAdults)
     if (newChildren !== childrenCount) setChildrenCount(newChildren)
-  }, [isStay, roomTypes, roomTypeName, rooms, roomCapacity, adults, childrenCount, maxPersons, adultHardCap, childHardCap])
+  }, [isStay, isCamping, roomTypes, roomTypeName, rooms, roomCapacity, adults, childrenCount, maxPersons, adultHardCap, childHardCap])
 
   const hotelBreakdown = isStay && !isCamping && selRoom && nights > 0
     ? computeHotelBreakdown(selRoom, selMeal, {
@@ -618,7 +632,7 @@ export function PackageBookingForm() {
                         <Minus className="w-4 h-4" />
                       </button>
                       <div className="flex-1 text-center"><span className="text-lg font-semibold text-brand-dark">{adults}</span></div>
-                      <button type="button" onClick={() => setAdults(Math.min(adults + 1, adultHardCap))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                      <button type="button" onClick={() => setAdults(isCamping ? Math.min(adults + 1, campingHeadCap) : Math.min(adults + 1, adultHardCap))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
                         <Plus className="w-4 h-4" />
                       </button>
                     </div>
@@ -630,7 +644,7 @@ export function PackageBookingForm() {
                         <Minus className="w-4 h-4" />
                       </button>
                       <div className="flex-1 text-center"><span className="text-lg font-semibold text-brand-dark">{childrenCount}</span></div>
-                      <button type="button" onClick={() => setChildrenCount(Math.min(childrenCount + 1, Math.min(childHardCap, maxPersons - adults)))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
+                      <button type="button" onClick={() => setChildrenCount(isCamping ? Math.min(childrenCount + 1, Math.max(0, campingHeadCap - adults)) : Math.min(childrenCount + 1, Math.min(childHardCap, maxPersons - adults)))} className="w-10 h-10 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center hover:bg-brand-teal/20">
                         <Plus className="w-4 h-4" />
                       </button>
                     </div>
@@ -639,8 +653,8 @@ export function PackageBookingForm() {
 
                 {selRoom && (
                   <p className="text-xs text-muted-foreground -mt-1">
-                    {isCamping
-                      ? `Max ${roomCapacity} guests per camp. Per-person rate drops as your group grows — see the live price summary below.`
+                      {isCamping
+                      ? `Max ${campPerCampCap} guests per camp — extra guests automatically move to another camp, each camp billed at its own group rate.`
                       : hasAdultCap || hasChildCap
                       ? `Limit per room: ${hasAdultCap ? `${roomMaxAdults} adults` : 'any adults'}${hasChildCap ? ` / ${roomMaxChildren} children` : ' / any children'}. Up to ${adultHardCap} adults / ${childHardCap} children for ${rooms} room${rooms > 1 ? 's' : ''}.`
                       : `Max ${roomCapacity} guests per room (${selRoom.baseOccupancy || 2} included · ₹${selRoom.extraAdultPrice || 0}/extra adult/night). Up to ${maxPersons} total for ${rooms} room${rooms > 1 ? 's' : ''}.`}
@@ -888,12 +902,17 @@ export function PackageBookingForm() {
             <div className="bg-brand-cream/70 rounded-xl p-4 space-y-2">
               {isCamping && campingBreakdown ? (
                 <>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {campingBreakdown.campTypeName} — Group of {campingBreakdown.tierPerCamp}/camp @ ₹{campingBreakdown.pricePerPerson.toLocaleString()}/pax/night
-                    </span>
-                    <span className="text-brand-dark font-medium">₹{campingBreakdown.roomCost.toLocaleString()}</span>
-                  </div>
+                  {(campingBreakdown.campSplit?.length
+                    ? campingBreakdown.campSplit
+                    : [{ pax: campingBreakdown.tierPerCamp, pricePerPerson: campingBreakdown.pricePerPerson, cost: campingBreakdown.roomCost }]
+                  ).map((s, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {campingBreakdown.campTypeName}{campingBreakdown.camps > 1 ? ` — Camp ${i + 1}` : ''} · {s.pax} pax @ ₹{s.pricePerPerson.toLocaleString()}/pax/night
+                      </span>
+                      <span className="text-brand-dark font-medium">₹{s.cost.toLocaleString()}</span>
+                    </div>
+                  ))}
                   {campingBreakdown.mealCost > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{campingBreakdown.mealPlanName} (₹{campingBreakdown.mealPlanPrice}/pax/night)</span>

@@ -335,16 +335,21 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
               {booking.isCamping && booking.campingBreakdown ? (
                 (() => {
                   const c = booking.campingBreakdown
+                  const split = c.campSplit?.length
+                    ? c.campSplit
+                    : [{ pax: c.tierPerCamp, pricePerPerson: c.pricePerPerson, cost: c.roomCost }]
                   return (
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-sm text-gray-600">
                         <span>Camp: {c.campTypeName} × {c.nights} night(s) × {c.camps} camp(s)</span>
                         <span className="font-medium">{fmt(c.roomCost)}</span>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Group rate: ₹{c.pricePerPerson}/person/night ({c.tierPerCamp}/camp)</span>
-                        <span className="font-medium">× {c.adults + c.children} pax</span>
-                      </div>
+                      {split.map((s: any, i: number) => (
+                        <div key={i} className="flex justify-between text-sm text-gray-600">
+                          <span>{c.camps > 1 ? `Camp ${i + 1}: ` : 'Group rate: '}₹{s.pricePerPerson}/person/night ({s.pax}/camp)</span>
+                          <span className="font-medium">× {s.pax} pax</span>
+                        </div>
+                      ))}
                       {c.mealCost > 0 && (
                         <div className="flex justify-between text-sm text-gray-600">
                           <span>Meal Plan: {c.mealPlanName}</span>
