@@ -18,11 +18,13 @@ import {
   Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PackageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import { applyDetailSeo, SITE_URL } from '@/lib/seo'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getAuthHeaders } from '@/lib/auth-client'
 
 export function DestinationDetail() {
@@ -185,6 +187,16 @@ export function DestinationDetail() {
     }
   }
 
+  // Per-destination SEO: unique title/description once data loads.
+  useEffect(() => {
+    if (!destination) return
+    applyDetailSeo({
+      title: `${destination.name} - Book at ₹${Number(destination.price || 0).toLocaleString('en-IN')}`,
+      desc: (destination.tagline || destination.description || '').slice(0, 160),
+      path: `/destination/${destination.slug || destination.id}`,
+    })
+  }, [destination])
+
   if (isLoading || !destination) {
     return (
       <div className="min-h-screen bg-brand-cream pt-20">
@@ -202,6 +214,22 @@ export function DestinationDetail() {
 
   return (
     <div className="min-h-screen bg-brand-cream pt-20">
+      <PackageJsonLd
+        pkg={{
+          name: destination.name,
+          description: destination.tagline || destination.description,
+          price: Number(destination.price || 0),
+          image: destination.image,
+          rating: destination.rating,
+          reviewCount: destination.reviewCount,
+        }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: SITE_URL },
+          { name: destination.name, url: `${SITE_URL}/destination/${destination.slug || destination.id}` },
+        ]}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Back Button */}
         <Button

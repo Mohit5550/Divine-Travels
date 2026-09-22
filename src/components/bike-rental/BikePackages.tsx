@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
+import { SpaLink } from '@/components/ui/SpaLink'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
@@ -151,13 +152,12 @@ export function BikePackages() {
           <BreadcrumbList className="text-white/80">
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <button
-                  type="button"
-                  onClick={() => navigate('landing')}
+                <SpaLink
+                  view="landing"
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Home
-                </button>
+                </SpaLink>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-white/50 [&>svg]:text-white/50" />

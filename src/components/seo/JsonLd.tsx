@@ -1,5 +1,5 @@
 interface JsonLdProps {
-  type: 'Organization' | 'TravelAction' | 'Product' | 'BreadcrumbList' | 'FAQPage'
+  type: 'Organization' | 'TravelAction' | 'Product' | 'BreadcrumbList' | 'FAQPage' | 'Article'
   data: Record<string, unknown>
 }
 

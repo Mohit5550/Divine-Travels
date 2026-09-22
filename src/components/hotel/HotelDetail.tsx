@@ -30,7 +30,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/landing/Footer'
-import { useState } from 'react'
+import { PackageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import { applyDetailSeo, SITE_URL } from '@/lib/seo'
+import { useState, useEffect } from 'react'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
 interface RoomType {
@@ -165,6 +167,16 @@ export function HotelDetail() {
     window.open(`https://wa.me/916396919007?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
+  // Per-hotel SEO: unique title/description once data loads.
+  useEffect(() => {
+    if (!pkg) return
+    applyDetailSeo({
+      title: `${pkg.name} - Book at ₹${pkg.price.toLocaleString('en-IN')}/night`,
+      desc: (pkg.tagline || pkg.subtitle || pkg.description || '').slice(0, 160),
+      path: `/hotel/${pkg.slug || pkg.id}`,
+    })
+  }, [pkg])
+
   if (isLoading || !pkg || !parsed) {
     return (
       <div className="min-h-screen bg-brand-cream">
@@ -178,6 +190,22 @@ export function HotelDetail() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <PackageJsonLd
+        pkg={{
+          name: pkg.name,
+          description: pkg.tagline || pkg.subtitle || pkg.description,
+          price: pkg.price,
+          image: pkg.image,
+          rating: pkg.rating,
+          reviewCount: pkg.reviewCount,
+        }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: SITE_URL },
+          { name: pkg.name, url: `${SITE_URL}/hotel/${pkg.slug || pkg.id}` },
+        ]}
+      />
       {/* Hero */}
       <div className="relative h-64 sm:h-80 md:h-[420px] overflow-hidden">
         <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />

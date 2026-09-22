@@ -33,10 +33,12 @@ import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { BackButton } from '@/components/ui/BackButton'
+import { PackageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import { applyDetailSeo, SITE_URL } from '@/lib/seo'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LoginModal } from '@/components/landing/LoginModal'
 import { useSettings } from '@/lib/useSettings'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
@@ -280,6 +282,17 @@ export function PackageDetail() {
     }
   }
 
+  // Per-package SEO: unique title/description once data loads (view-level
+  // generic values are applied by the store on navigation).
+  useEffect(() => {
+    if (!pkg) return
+    applyDetailSeo({
+      title: `${pkg.name} - Book at ₹${pkg.price.toLocaleString('en-IN')}`,
+      desc: (pkg.tagline || pkg.subtitle || pkg.description || '').slice(0, 160),
+      path: `/package/${pkg.slug || pkg.id}`,
+    })
+  }, [pkg])
+
   if (isLoading || !pkg || !parsedData) {
     return (
       <div className="min-h-screen bg-brand-cream">
@@ -316,6 +329,22 @@ export function PackageDetail() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <PackageJsonLd
+        pkg={{
+          name: pkg.name,
+          description: pkg.tagline || pkg.subtitle || pkg.description,
+          price: pkg.price,
+          image: pkg.image,
+          rating: pkg.rating,
+          reviewCount: pkg.reviewCount,
+        }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: SITE_URL },
+          { name: pkg.name, url: `${SITE_URL}/package/${pkg.slug || pkg.id}` },
+        ]}
+      />
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 pt-4">
         <BackButton className="mb-2" />

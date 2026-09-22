@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -8,6 +9,8 @@ import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { toDirectImageUrl } from '@/lib/utils'
 import { sanitizeHtml } from '@/lib/sanitize'
+import { JsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import { applyDetailSeo, SITE_URL } from '@/lib/seo'
 
 interface BlogPost {
   id: string
@@ -65,6 +68,16 @@ export function BlogSingle() {
     enabled: !!slug,
   })
 
+  // Per-article SEO: unique title/description once the post loads.
+  useEffect(() => {
+    if (!post) return
+    applyDetailSeo({
+      title: post.title,
+      desc: (post.excerpt || '').slice(0, 160),
+      path: `/blog/${post.slug}`,
+    })
+  }, [post])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-brand-cream">
@@ -110,6 +123,24 @@ export function BlogSingle() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <JsonLd
+        type="Article"
+        data={{
+          headline: post.title,
+          description: post.excerpt,
+          image: post.featuredImage || undefined,
+          datePublished: post.publishedAt || post.createdAt,
+          dateModified: post.createdAt,
+          author: { '@type': 'Person', name: post.author },
+        }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: SITE_URL },
+          { name: 'Blog', url: `${SITE_URL}/blog` },
+          { name: post.title, url: `${SITE_URL}/blog/${post.slug}` },
+        ]}
+      />
       <Navbar />
 
       {/* Hero */}

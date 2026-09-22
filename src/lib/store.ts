@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { applyPageSeo } from '@/lib/seo'
 
 interface AppUser {
   id: string
@@ -125,6 +126,8 @@ function getPathForView(view: string): string {
     .replace(':slug', state.selectedDestinationId || ':slug')
 }
 
+export { getPathForView }
+
 function syncURL(view: string) {
   if (typeof window === 'undefined') return
   const path = getPathForView(view)
@@ -139,6 +142,7 @@ function syncURL(view: string) {
       window.history.pushState({ view }, '', path)
     }
   }
+  applyPageSeo(view)
 }
 
 export const useAppStore = create<AppStore>()(
@@ -267,6 +271,7 @@ export const useAppStore = create<AppStore>()(
         merged.currentView = r.view
         merged.selectedDestinationId = r.destinationId
         merged.selectedPackageId = r.packageId
+        applyPageSeo(r.view)
         return merged
       },
     }
@@ -284,6 +289,7 @@ if (typeof window !== 'undefined' && !(window as any).__divineStorePopstate) {
         selectedDestinationId: r.destinationId,
         selectedPackageId: r.packageId,
       })
+      applyPageSeo(r.view || 'landing')
     }
   }
 

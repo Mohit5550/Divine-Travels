@@ -3,6 +3,39 @@
 import { Mail, Phone, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { useSettings } from '@/lib/useSettings'
+import { SpaLink } from '@/components/ui/SpaLink'
+
+interface FooterLink {
+  label: string
+  view?: string
+}
+
+const QUICK_LINKS_MOBILE: FooterLink[] = [
+  { label: 'Home', view: 'landing' },
+  { label: 'Destinations' },
+  { label: '✨ Creator Program', view: 'collaborate' },
+  { label: 'About Us', view: 'about-us' },
+  { label: 'Blog', view: 'blog-archive' },
+  { label: 'Contact Us', view: 'contact' },
+  { label: 'Privacy Policy', view: 'privacy-policy' },
+  { label: 'Terms & Conditions', view: 'terms-of-service' },
+  { label: 'Refund Policy', view: 'refund-policy' },
+  { label: 'Cancellation Policy', view: 'cancellation-policy' },
+  { label: 'Cookie Policy', view: 'cookie-policy' },
+]
+
+const QUICK_LINKS_DESKTOP: FooterLink[] = [
+  { label: 'Home', view: 'landing' },
+  { label: 'Destinations' },
+  { label: '✨ Creator Program', view: 'collaborate' },
+  { label: 'About Us', view: 'about-us' },
+  { label: 'Contact Us', view: 'contact' },
+  { label: 'Privacy Policy', view: 'privacy-policy' },
+  { label: 'Terms & Conditions', view: 'terms-of-service' },
+  { label: 'Refund Policy', view: 'refund-policy' },
+  { label: 'Cancellation Policy', view: 'cancellation-policy' },
+  { label: 'Cookie Policy', view: 'cookie-policy' },
+]
 
 export function Footer() {
   const { navigate } = useAppStore()
@@ -52,29 +85,27 @@ export function Footer() {
               <div>
                 <h4 className="font-semibold text-sm mb-4 text-brand-orange">Quick Links</h4>
                 <div className="flex flex-col gap-2">
-                  {[
-                    { label: 'Home', action: () => navigate('landing') },
-                    { label: 'Destinations', action: handleDestClick },
-                    { label: '✨ Creator Program', action: () => navigate('collaborate') },
-                    { label: 'About Us', action: () => navigate('about-us') },
-                    { label: 'Blog', action: () => navigate('blog-archive') },
-                    { label: 'Contact Us', action: () => navigate('contact') },
-                    { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
-                    { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
-                    { label: 'Refund Policy', action: () => navigate('refund-policy') },
-                    { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
-                    { label: 'Cookie Policy', action: () => navigate('cookie-policy') },
-                  ].map((link) => (
-                    <button
-                      key={link.label}
-                      onClick={link.action}
-                      className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                    >
-                      {link.label}
-                      {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
-                        <ArrowUpRight className="w-3 h-3" />
-                      )}
-                    </button>
+                  {QUICK_LINKS_MOBILE.map((link) => (
+                    link.view ? (
+                      <SpaLink
+                        key={link.label}
+                        view={link.view}
+                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                      >
+                        {link.label}
+                        {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
+                          <ArrowUpRight className="w-3 h-3" />
+                        )}
+                      </SpaLink>
+                    ) : (
+                      <button
+                        key={link.label}
+                        onClick={handleDestClick}
+                        className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                      >
+                        {link.label}
+                      </button>
+                    )
                   ))}
                 </div>
               </div>
@@ -90,13 +121,13 @@ export function Footer() {
                     { label: 'Domestic Tours', view: 'domestic-tours' },
                     { label: 'Spiritual Tours', view: 'spiritual-tours' },
                   ].map((svc) => (
-                    <button
+                    <SpaLink
                       key={svc.label}
-                      onClick={() => navigate(svc.view)}
+                      view={svc.view}
                       className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left"
                     >
                       {svc.label}
-                    </button>
+                    </SpaLink>
                   ))}
                 </div>
               </div>
@@ -107,28 +138,27 @@ export function Footer() {
           <div className="hidden lg:block">
             <h4 className="font-semibold text-sm mb-4 text-brand-orange">Quick Links</h4>
             <div className="flex flex-col gap-2">
-              {[
-                { label: 'Home', action: () => navigate('landing') },
-                { label: 'Destinations', action: handleDestClick },
-                { label: '✨ Creator Program', action: () => navigate('collaborate') },
-                { label: 'About Us', action: () => navigate('about-us') },
-                { label: 'Contact Us', action: () => navigate('contact') },
-                { label: 'Privacy Policy', action: () => navigate('privacy-policy') },
-                { label: 'Terms & Conditions', action: () => navigate('terms-of-service') },
-                { label: 'Refund Policy', action: () => navigate('refund-policy') },
-                { label: 'Cancellation Policy', action: () => navigate('cancellation-policy') },
-                { label: 'Cookie Policy', action: () => navigate('cookie-policy') },
-              ].map((link) => (
-                <button
-                  key={link.label}
-                  onClick={link.action}
-                  className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
-                >
-                  {link.label}
-                  {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
-                    <ArrowUpRight className="w-3 h-3" />
-                  )}
-                </button>
+              {QUICK_LINKS_DESKTOP.map((link) => (
+                link.view ? (
+                  <SpaLink
+                    key={link.label}
+                    view={link.view}
+                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                  >
+                    {link.label}
+                    {['Privacy Policy', 'Terms & Conditions', 'Refund Policy', 'Cancellation Policy', 'Cookie Policy'].includes(link.label) && (
+                      <ArrowUpRight className="w-3 h-3" />
+                    )}
+                  </SpaLink>
+                ) : (
+                  <button
+                    key={link.label}
+                    onClick={handleDestClick}
+                    className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left flex items-center gap-1"
+                  >
+                    {link.label}
+                  </button>
+                )
               ))}
             </div>
           </div>
@@ -146,13 +176,13 @@ export function Footer() {
                 { label: 'Domestic Tours', view: 'domestic-tours' },
                 { label: 'Spiritual Tours', view: 'spiritual-tours' },
               ].map((svc) => (
-                <button
+                <SpaLink
                   key={svc.label}
-                  onClick={() => navigate(svc.view)}
+                  view={svc.view}
                   className="text-white/60 text-sm hover:text-brand-orange transition-colors text-left"
                 >
                   {svc.label}
-                </button>
+                </SpaLink>
               ))}
             </div>
           </div>
@@ -173,12 +203,12 @@ export function Footer() {
                 <MapPin className="w-4 h-4 text-brand-orange mt-0.5 shrink-0" />
                 <span>{s.address}</span>
               </div>
-              <button
-                onClick={() => navigate('contact')}
+              <SpaLink
+                view="contact"
                 className="text-brand-orange text-sm hover:underline text-left"
               >
                 Send us a message →
-              </button>
+              </SpaLink>
             </div>
             <div className="mt-4 pt-4 border-t border-white/10">
               <a
@@ -199,9 +229,9 @@ export function Footer() {
             © 2026 Divine Travels. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <button onClick={() => navigate('privacy-policy')} className="text-white/40 text-xs hover:text-white/60 transition-colors">Privacy Policy</button>
-            <button onClick={() => navigate('terms-of-service')} className="text-white/40 text-xs hover:text-white/60 transition-colors">Terms of Service</button>
-            <button onClick={() => navigate('refund-policy')} className="text-white/40 text-xs hover:text-white/60 transition-colors">Refund Policy</button>
+            <SpaLink view="privacy-policy" className="text-white/40 text-xs hover:text-white/60 transition-colors">Privacy Policy</SpaLink>
+            <SpaLink view="terms-of-service" className="text-white/40 text-xs hover:text-white/60 transition-colors">Terms of Service</SpaLink>
+            <SpaLink view="refund-policy" className="text-white/40 text-xs hover:text-white/60 transition-colors">Refund Policy</SpaLink>
           </div>
         </div>
       </div>

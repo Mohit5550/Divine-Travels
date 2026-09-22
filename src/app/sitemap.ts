@@ -8,9 +8,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
-    { url: `${BASE_URL}/#packages`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/#destinations`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/#blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    // High-value listing pages (real SPA routes served via rewrites)
+    ...[
+      '/rishikesh', '/haridwar', '/mussoorie', '/nainital', '/hill-stations', '/char-dham',
+      '/rafting', '/bike-rental', '/taxi', '/trekking', '/adventure',
+      '/domestic', '/spiritual', '/international',
+      '/hotels', '/camping', '/gallery', '/collaborate', '/about', '/contact', '/blog',
+    ].map((p) => ({
+      url: `${BASE_URL}${p}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
   ]
 
   let packages: { slug: string; updatedAt: Date }[] = []

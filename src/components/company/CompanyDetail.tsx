@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -17,6 +18,8 @@ import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 import { BackButton } from '@/components/ui/BackButton'
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import { applyDetailSeo, SITE_URL } from '@/lib/seo'
 
 interface PlanPackage {
   id: string
@@ -92,6 +95,16 @@ export function CompanyDetail() {
     }
   }
 
+  // Per-company SEO: unique title/description once data loads.
+  useEffect(() => {
+    if (!company) return
+    applyDetailSeo({
+      title: `${company.name} - Adventure Partner`,
+      desc: (company.description || '').slice(0, 160),
+      path: `/company/${company.slug}`,
+    })
+  }, [company])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-brand-cream">
@@ -129,6 +142,12 @@ export function CompanyDetail() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: SITE_URL },
+          { name: company.name, url: `${SITE_URL}/company/${company.slug}` },
+        ]}
+      />
       <Navbar />
       <ActivityBar />
 
