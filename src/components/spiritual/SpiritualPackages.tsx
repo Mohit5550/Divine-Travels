@@ -74,7 +74,7 @@ export function SpiritualPackages() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['spiritual-packages'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=spiritual-tours')
+      const res = await fetch('/api/packages/cards?category=spiritual-tours')
       if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]

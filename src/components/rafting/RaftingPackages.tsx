@@ -109,7 +109,7 @@ export function RaftingPackages() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['rafting-packages'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=rafting')
+      const res = await fetch('/api/packages/cards?category=rafting')
       if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]

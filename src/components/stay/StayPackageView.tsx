@@ -94,7 +94,7 @@ export function StayPackageView({
   const { data: packages = [], isLoading } = useQuery({
     queryKey: [category + '-packages'],
     queryFn: async () => {
-      const res = await fetch(`/api/packages?category=${category}`)
+      const res = await fetch(`/api/packages/cards?category=${category}`)
       if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]

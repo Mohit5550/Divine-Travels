@@ -103,7 +103,7 @@ export function Navbar() {
   const { data: searchResults = [], isFetching } = useQuery({
     queryKey: ['universal-search', searchQuery],
     queryFn: async () => {
-      const res = await fetch('/api/packages')
+      const res = await fetch('/api/packages/cards')
       const all = await res.json()
       const q = searchQuery.toLowerCase()
       return all.filter((p: SearchPackage) =>

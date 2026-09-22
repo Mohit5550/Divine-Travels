@@ -51,6 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json()
+    if (body.slug !== undefined) body.slug = slugify(body.slug)
     // Backfill slug on update when the record has none yet
     if (!body.slug) {
       const existing = await db.destination.findUnique({ where: { id } })

@@ -88,7 +88,7 @@ export function AdminCompanyPlans() {
 
   useEffect(() => {
     fetchCompanies()
-    fetch('/api/packages?category=adventure')
+    fetch('/api/packages/cards?category=adventure')
       .then((res) => res.ok ? res.json() : [])
       .then((data) => setAdventurePackages(data.map((p: { id: string; name: string; slug: string; category: string; price: number; location: string; badge: string | null }) => ({ id: p.id, name: p.name, slug: p.slug, category: p.category, price: p.price, location: p.location, badge: p.badge }))))
       .catch(() => {})

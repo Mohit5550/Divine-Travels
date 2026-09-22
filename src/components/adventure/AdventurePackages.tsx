@@ -101,7 +101,7 @@ export function AdventurePackages() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['adventure-packages'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=adventure')
+      const res = await fetch('/api/packages/cards?category=adventure')
       if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]

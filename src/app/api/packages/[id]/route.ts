@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
-import { resolvePackage } from '@/lib/resolve-slug'
+import { resolvePackage, cleanSlug } from '@/lib/resolve-slug'
 
 // GET /api/packages/[id] - Get package details with reviews (accepts cuid id or slug)
 export async function GET(
@@ -75,7 +75,7 @@ export async function PUT(
     const pkg = await db.package.update({
       where: { id },
       data: {
-        name, slug, tagline, subtitle, description,
+        name, slug: slug !== undefined ? cleanSlug(slug) : undefined, tagline, subtitle, description,
         price: price !== undefined ? Number(price) : undefined,
         originalPrice: originalPrice !== undefined ? (originalPrice ? Number(originalPrice) : null) : undefined,
         image, images, category, distance, duration, rapidsLevel,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(
@@ -44,7 +45,7 @@ export async function PUT(
       where: { id },
       data: {
         name: body.name,
-        slug: body.slug,
+        slug: body.slug !== undefined ? cleanSlug(body.slug) : undefined,
         logo: body.logo,
         photo: body.photo,
         description: body.description,

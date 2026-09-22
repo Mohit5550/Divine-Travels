@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(
@@ -36,7 +37,7 @@ export async function PUT(
 
     const data: Record<string, unknown> = {}
     if (title !== undefined) data.title = title
-    if (slug !== undefined) data.slug = slug
+    if (slug !== undefined) data.slug = cleanSlug(slug)
     if (content !== undefined) data.content = content
     if (excerpt !== undefined) data.excerpt = excerpt
     if (featuredImage !== undefined) data.featuredImage = featuredImage

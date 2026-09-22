@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET() {
@@ -37,13 +38,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
     }
 
-    const existing = await db.company.findUnique({ where: { slug } })
+    const existing = await db.company.findUnique({ where: { slug: cleanSlug(slug) } })
     if (existing) {
       return NextResponse.json({ error: 'A company with this slug already exists' }, { status: 409 })
     }
 
     const company = await db.company.create({
-      data: { name, slug, logo, photo, description, website },
+      data: { name, slug: cleanSlug(slug), logo, photo, description, website },
     })
 
     return NextResponse.json(company, { status: 201 })

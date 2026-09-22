@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: Request) {
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     const blog = await db.blog.create({
       data: {
         title,
-        slug,
+        slug: cleanSlug(slug),
         content,
         excerpt: excerpt || '',
         featuredImage: featuredImage || null,

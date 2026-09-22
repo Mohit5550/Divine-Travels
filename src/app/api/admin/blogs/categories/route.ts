@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: Request) {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
     }
 
-    const category = await db.blogCategory.create({ data: { name, slug, description: description || null } })
+    const category = await db.blogCategory.create({ data: { name, slug: cleanSlug(slug), description: description || null } })
     return NextResponse.json(category, { status: 201 })
   } catch (error) {
     console.error('Error creating blog category:', error)
@@ -56,7 +57,7 @@ export async function PUT(request: Request) {
 
     const data: Record<string, unknown> = {}
     if (name !== undefined) data.name = name
-    if (slug !== undefined) data.slug = slug
+    if (slug !== undefined) data.slug = cleanSlug(slug)
     if (description !== undefined) data.description = description
 
     const category = await db.blogCategory.update({ where: { id }, data })

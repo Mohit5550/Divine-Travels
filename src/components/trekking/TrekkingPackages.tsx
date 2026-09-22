@@ -98,7 +98,7 @@ export function TrekkingPackages() {
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['trekking-packages'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=trekking')
+      const res = await fetch('/api/packages/cards?category=trekking')
       if (!res.ok) return []
       const data = await res.json()
       return data as PackageData[]

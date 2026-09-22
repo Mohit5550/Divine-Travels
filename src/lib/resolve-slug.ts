@@ -11,6 +11,12 @@ export function slugify(input: string): string {
     .slice(0, 80) || 'item'
 }
 
+// Normalize a user/admin-supplied slug so dirty values (spaces, caps,
+// special chars) can never be saved. Always use on write paths.
+export function cleanSlug(input: string): string {
+  return slugify(input);
+}
+
 // Resolve a package by cuid id first, then by slug.
 // Keeps old cuid links/bookings working while new URLs use slugs.
 export async function resolvePackage(idOrSlug: string) {

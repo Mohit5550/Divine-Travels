@@ -39,7 +39,7 @@ export function TaxiBookingForm() {
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
 
   useEffect(() => {
-    fetch('/api/packages?category=taxi-booking')
+    fetch('/api/packages/cards?category=taxi-booking')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

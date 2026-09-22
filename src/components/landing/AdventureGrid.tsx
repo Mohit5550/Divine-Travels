@@ -40,7 +40,7 @@ export function AdventureGrid() {
   const { data: adventurePkgs = [], isLoading } = useQuery({
     queryKey: ['adventure-packages-home'],
     queryFn: async () => {
-      const res = await fetch('/api/packages?category=adventure')
+      const res = await fetch('/api/packages/cards?category=adventure')
       if (!res.ok) return []
       const data = await res.json()
       return Array.isArray(data) ? data.slice(0, 20) : []

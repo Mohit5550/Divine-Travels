@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/packages - List packages with optional filtering
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     const pkg = await db.package.create({
       data: {
         name,
-        slug,
+        slug: cleanSlug(slug),
         tagline: tagline || '',
         subtitle: subtitle || '',
         description,
