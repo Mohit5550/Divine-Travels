@@ -38,7 +38,7 @@ export function AboutUs() {
             </p>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-xl">
-            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&h=600&fit=crop" alt="Himalayan landscape" className="w-full h-80 object-cover" />
+            <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&h=600&fit=crop" alt="Himalayan landscape" className="w-full h-80 object-cover" />
           </div>
         </div>
 

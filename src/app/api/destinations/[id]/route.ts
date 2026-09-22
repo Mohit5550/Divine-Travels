@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { resolveDestination, slugify } from '@/lib/resolve-slug'
+import { publicJson } from '@/lib/cache'
 
 // GET /api/destinations/[id] - Get one with reviews (accepts cuid id or slug)
 export async function GET(
@@ -27,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 })
     }
 
-    return NextResponse.json(destination)
+    return publicJson(destination)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

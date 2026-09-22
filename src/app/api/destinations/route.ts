@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { slugify } from '@/lib/resolve-slug'
 
@@ -43,9 +44,9 @@ export async function GET(request: NextRequest) {
     ])
 
     if (paginate) {
-      return NextResponse.json({ data: destinations, total, page, totalPages: Math.ceil(total / limit) })
+      return publicJson({ data: destinations, total, page, totalPages: Math.ceil(total / limit) })
     }
-    return NextResponse.json(destinations)
+    return publicJson(destinations)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

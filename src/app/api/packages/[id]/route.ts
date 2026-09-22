@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { resolvePackage, cleanSlug } from '@/lib/resolve-slug'
+import { publicJson } from '@/lib/cache'
 
 // GET /api/packages/[id] - Get package details with reviews (accepts cuid id or slug)
 export async function GET(
@@ -35,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: 'Package not found' }, { status: 404 })
     }
 
-    return NextResponse.json(pkg)
+    return publicJson(pkg)
   } catch (error) {
     console.error('Error fetching package:', error)
     return NextResponse.json({ error: 'Failed to fetch package' }, { status: 500 })

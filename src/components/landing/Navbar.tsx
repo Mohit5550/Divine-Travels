@@ -147,7 +147,7 @@ export function Navbar() {
               onClick={() => navigate('landing')}
               className="flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <img
+              <img loading="lazy" decoding="async"
                 src="/logo.png"
                 alt="Divine Travel"
                 className="h-10 sm:h-12 w-auto object-contain"
@@ -192,7 +192,7 @@ export function Navbar() {
                             onClick={() => handleSelectPackage(pkg)}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-brand-cream transition-colors text-left"
                           >
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={pkg.image}
                               alt={pkg.name}
                               className="w-10 h-10 rounded-lg object-cover shrink-0"
@@ -362,7 +362,7 @@ export function Navbar() {
                           onClick={() => { handleSelectPackage(pkg); setMobileMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-brand-cream transition-colors text-left"
                         >
-                          <img src={pkg.image} alt={pkg.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                          <img loading="lazy" decoding="async" src={pkg.image} alt={pkg.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-medium text-brand-dark truncate block">{pkg.name}</span>
                             <span className={`${categoryColors[pkg.category] || 'bg-gray-500'} text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-block`}>

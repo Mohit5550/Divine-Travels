@@ -189,7 +189,7 @@ export function AdminGallery() {
                 </div>
                 {form.url && (
                   <div className="rounded-lg overflow-hidden h-40 border bg-muted">
-                    <img src={form.url} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    <img loading="lazy" decoding="async" src={form.url} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   </div>
                 )}
                 <div>
@@ -249,7 +249,7 @@ export function AdminGallery() {
           {filtered.map((img) => (
             <div key={img.id} className={cn('bg-white rounded-xl shadow-sm overflow-hidden group', !img.active && 'opacity-50')}>
               <div className="aspect-square bg-muted relative">
-                <img src={img.url} alt={img.alt} className="w-full h-full object-cover"
+                <img loading="lazy" decoding="async" src={img.url} alt={img.alt} className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/e2e8f0/94a3b8?text=Error' }} />
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   {img.featured && (

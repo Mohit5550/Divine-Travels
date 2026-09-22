@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { BackButton } from '@/components/ui/BackButton'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { Footer } from '@/components/landing/Footer'
 import { useAppStore } from '@/lib/store'
 import { LoginModal } from '@/components/landing/LoginModal'
@@ -181,7 +182,7 @@ export function SingleSelectTour({
       {/* Hero */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage} alt={heroTitle} className="w-full h-full object-cover" />
+          <SmartImage src={heroImage} alt={heroTitle} className="w-full h-full object-cover" priority sizes="100vw" />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-20">
@@ -231,7 +232,7 @@ export function SingleSelectTour({
                   }`}
                 >
                   <div className="relative h-40 sm:h-48 overflow-hidden">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={tour.img}
                       alt={tour.title}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"

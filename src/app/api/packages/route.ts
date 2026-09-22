@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
@@ -38,9 +39,9 @@ export async function GET(request: Request) {
     ])
 
     if (paginate) {
-      return NextResponse.json({ data: packages, total, page, totalPages: Math.ceil(total / limit) })
+      return publicJson({ data: packages, total, page, totalPages: Math.ceil(total / limit) })
     }
-    return NextResponse.json(packages)
+    return publicJson(packages)
   } catch (error) {
     console.error('Error fetching packages:', error)
     return NextResponse.json({ error: 'Failed to fetch packages' }, { status: 500 })

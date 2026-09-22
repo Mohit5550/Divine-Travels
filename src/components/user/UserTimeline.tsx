@@ -108,7 +108,7 @@ export function UserTimeline() {
 
               <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => booking.type === 'destination' ? navigate('destination-detail', booking.destinationId) : navigate('package-detail', null, booking.packageId)}>
                 <div className="flex items-start gap-3">
-                  <img src={booking.image || '/placeholder.svg'} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                  <img loading="lazy" decoding="async" src={booking.image || '/placeholder.svg'} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div>

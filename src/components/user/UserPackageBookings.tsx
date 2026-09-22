@@ -141,7 +141,7 @@ export function UserPackageBookings() {
             return (
             <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="flex flex-col sm:flex-row">
-                <img src={booking.package?.image || '/placeholder.svg'} alt={booking.package?.name} className="w-full sm:w-40 h-32 sm:h-auto object-cover" />
+                <img loading="lazy" decoding="async" src={booking.package?.image || '/placeholder.svg'} alt={booking.package?.name} className="w-full sm:w-40 h-32 sm:h-auto object-cover" />
                 <div className="flex-1 p-4 sm:p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>

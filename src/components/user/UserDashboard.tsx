@@ -382,7 +382,7 @@ export function UserDashboard() {
               <div className="text-center mb-6 pt-2">
                 <div className="w-16 h-16 rounded-full bg-brand-orange/10 flex items-center justify-center mx-auto mb-3 overflow-hidden">
                   {user?.avatar ? (
-                    <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={user.avatar} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-8 h-8 text-brand-orange" />
                   )}
@@ -448,7 +448,7 @@ export function UserDashboard() {
                   <div className="text-center mb-6 pt-2">
                     <div className="w-16 h-16 rounded-full bg-brand-orange/10 flex items-center justify-center mx-auto mb-3 overflow-hidden">
                       {user?.avatar ? (
-                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={user.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-8 h-8 text-brand-orange" />
                       )}
@@ -881,7 +881,7 @@ export function UserDashboard() {
                             : 'bg-gray-100 text-gray-600'
                           return (
                             <div key={`${booking._bookingType || 'b'}-${booking.id}`} className="flex items-center gap-3 p-3 rounded-lg bg-brand-cream/50 hover:bg-brand-cream transition-colors">
-                              <img src={img || '/placeholder.svg'} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                              <img loading="lazy" decoding="async" src={img || '/placeholder.svg'} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm text-brand-dark truncate">{title}</p>
                                 {taxiRoute && (

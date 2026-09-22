@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { BackButton } from '@/components/ui/BackButton'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
 
@@ -144,7 +145,7 @@ export function StayPackageView({
       {/* Hero Section */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage} alt={badgeText} className="w-full h-full object-cover" />
+          <SmartImage src={heroImage} alt={badgeText} className="w-full h-full object-cover" priority sizes="100vw" />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
         <div className="absolute top-8 left-8 w-32 h-32 border border-white/10 rounded-full pointer-events-none" />
@@ -213,7 +214,7 @@ export function StayPackageView({
                   )}
                   <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer ${isPopular ? 'ring-2 ring-brand-orange' : ''}`}>
                     <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
-                      <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img loading="lazy" decoding="async" src={pkg.image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <PackageWishlistOverlay packageId={pkg.id} />
                       {pkg.badge && (

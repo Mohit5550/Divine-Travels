@@ -29,6 +29,7 @@ import {
   Map,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { Footer } from '@/components/landing/Footer'
 import { PackageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 import { applyDetailSeo, SITE_URL } from '@/lib/seo'
@@ -208,7 +209,7 @@ export function HotelDetail() {
       />
       {/* Hero */}
       <div className="relative h-64 sm:h-80 md:h-[420px] overflow-hidden">
-        <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+        <SmartImage src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" priority sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4 z-10">
           <div className="max-w-7xl mx-auto flex items-end justify-between">
@@ -342,7 +343,7 @@ export function HotelDetail() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {parsed.images.slice(0, showAllImages ? parsed.images.length : 6).map((img, i) => (
                     <button key={i} onClick={() => { setSelectedImage(i); setShowAllImages(true) }} className="relative h-32 sm:h-40 rounded-xl overflow-hidden group">
-                      <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                     </button>
                   ))}
@@ -494,7 +495,7 @@ export function HotelDetail() {
               </button>
             </>
           )}
-          <img src={parsed.images[selectedImage] || pkg.image} alt="" className="max-w-full max-h-[80vh] object-contain rounded-xl" onClick={e => e.stopPropagation()} />
+          <img loading="lazy" decoding="async" src={parsed.images[selectedImage] || pkg.image} alt="" className="max-w-full max-h-[80vh] object-contain rounded-xl" onClick={e => e.stopPropagation()} />
           <div className="flex items-center justify-center gap-2 mt-4 absolute bottom-6 left-0 right-0">
             {parsed.images.map((_, i) => (
               <button key={i} onClick={e => { e.stopPropagation(); setSelectedImage(i) }} className={`w-2.5 h-2.5 rounded-full transition-colors ${i === selectedImage ? 'bg-brand-orange' : 'bg-white/40'}`} />

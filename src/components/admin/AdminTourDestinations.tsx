@@ -206,7 +206,7 @@ export function AdminTourDestinations() {
           {destinations.map((dest) => (
             <motion.div key={dest.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`bg-white rounded-xl overflow-hidden shadow-sm border ${dest.active ? 'border-border' : 'border-red-200 opacity-60'}`}>
               <div className="relative h-32 overflow-hidden">
-                <img src={dest.config.heroImage || 'https://placehold.co/400x200?text=No+Image'} alt={dest.name} className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={dest.config.heroImage || 'https://placehold.co/400x200?text=No+Image'} alt={dest.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-3 left-3">
                   <h3 className="text-white font-bold text-sm">{dest.name}</h3>

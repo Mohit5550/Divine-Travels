@@ -289,7 +289,7 @@ export function AdminDestinations() {
                   <tr key={dest.id} className="border-b border-border/50 hover:bg-brand-cream/30">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img src={dest.image} alt={dest.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <img loading="lazy" decoding="async" src={dest.image} alt={dest.name} className="w-10 h-10 rounded-lg object-cover" />
                         <div>
                           <p className="font-medium text-brand-dark">{dest.name}</p>
                           <p className="text-xs text-muted-foreground line-clamp-1">{dest.tagline}</p>

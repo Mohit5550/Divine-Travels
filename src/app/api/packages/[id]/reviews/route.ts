@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/notify'
 import { getUserFromToken } from '@/lib/with-auth'
 import { resolvePackageId } from '@/lib/resolve-slug'
+import { publicJson } from '@/lib/cache'
 
 // GET /api/packages/[id]/reviews - Get reviews for a package (accepts cuid id or slug)
 export async function GET(
@@ -23,7 +24,7 @@ export async function GET(
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(reviews)
+    return publicJson(reviews)
   } catch (error) {
     console.error('Error fetching package reviews:', error)
     return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 })

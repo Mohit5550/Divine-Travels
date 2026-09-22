@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET() {
   try {
@@ -27,7 +28,7 @@ export async function GET() {
       (c: any) => !c.maxUses || c.maxUses === 0 || (c.usedCount || 0) < c.maxUses
     )
 
-    return NextResponse.json(availableCoupons)
+    return publicJson(availableCoupons)
   } catch (error) {
     console.error('Error fetching active coupons:', error)
     return NextResponse.json({ error: 'Failed to fetch coupons' }, { status: 500 })

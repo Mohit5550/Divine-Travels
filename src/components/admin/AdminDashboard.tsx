@@ -490,7 +490,7 @@ export function AdminDashboard() {
         <div className="p-4 flex items-center justify-between border-b border-white/10">
           {!sidebarCollapsed && (
             <button onClick={() => navigate('landing')} className="cursor-pointer">
-              <img
+              <img loading="lazy" decoding="async"
                 src="/logo-white.png"
                 alt="Divine Travel"
                 className="h-9 w-auto object-contain"
@@ -549,7 +549,7 @@ export function AdminDashboard() {
             >
               <div className="p-4 border-b border-white/10">
                 <button onClick={() => navigate('landing')} className="cursor-pointer">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src="/logo-white.png"
                     alt="Divine Travel"
                     className="h-9 w-auto object-contain"

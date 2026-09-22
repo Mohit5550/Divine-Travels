@@ -174,7 +174,7 @@ export function BookingVoucherModal({ isOpen, onClose, booking }: BookingVoucher
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b-2 border-brand-orange/20">
               <div className="flex items-center gap-3">
                 {/* Company Logo */}
-                <img
+                <img loading="lazy" decoding="async"
                   src="/logo.png"
                   alt="Divine Travels"
                   className="h-14 w-auto object-contain"

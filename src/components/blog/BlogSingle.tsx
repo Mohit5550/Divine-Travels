@@ -146,7 +146,7 @@ export function BlogSingle() {
       {/* Hero */}
       <div className="relative h-56 sm:h-72 md:h-96 overflow-hidden">
         {post.featuredImage ? (
-          <img src={toDirectImageUrl(post.featuredImage)} alt={post.title} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={toDirectImageUrl(post.featuredImage)} alt={post.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-brand-orange to-brand-teal" />
         )}
@@ -230,7 +230,7 @@ export function BlogSingle() {
                       <button key={rp.id} onClick={() => navigate('blog-single', null, rp.slug)} className="flex items-start gap-3 text-left group">
                         <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0">
                           {rp.featuredImage ? (
-                            <img src={toDirectImageUrl(rp.featuredImage)} alt="" className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" src={toDirectImageUrl(rp.featuredImage)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-brand-orange/20 to-brand-teal/20 flex items-center justify-center text-brand-orange/40 font-bold text-sm">{rp.title.charAt(0)}</div>
                           )}

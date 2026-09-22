@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
       dayConfigs: JSON.parse(d.dayConfigs),
     }))
 
-    return NextResponse.json(slug ? parsed[0] || null : parsed)
+    return publicJson(slug ? parsed[0] || null : parsed)
   } catch (error) {
     console.error('Tour destinations error:', error)
     return NextResponse.json({ error: 'Failed to fetch tour destinations' }, { status: 500 })

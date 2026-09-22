@@ -135,7 +135,7 @@ export function UserReviews() {
                 {destReviews.map((r: any) => (
                   <div key={r.id} className="bg-white rounded-xl shadow-sm p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <img src={r.destination?.image || '/placeholder.svg'} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <img loading="lazy" decoding="async" src={r.destination?.image || '/placeholder.svg'} alt="" className="w-10 h-10 rounded-lg object-cover" />
                       <div>
                         <p className="font-medium text-sm text-brand-dark">{r.destination?.name}</p>
                         <div className="flex items-center gap-1">
@@ -157,7 +157,7 @@ export function UserReviews() {
                 {pkgReviews.map((r: any) => (
                   <div key={r.id} className="bg-white rounded-xl shadow-sm p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <img src={r.package?.image || '/placeholder.svg'} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <img loading="lazy" decoding="async" src={r.package?.image || '/placeholder.svg'} alt="" className="w-10 h-10 rounded-lg object-cover" />
                       <div>
                         <p className="font-medium text-sm text-brand-dark">{r.package?.name}</p>
                         <span className="text-xs text-muted-foreground capitalize">{r.package?.category}</span>

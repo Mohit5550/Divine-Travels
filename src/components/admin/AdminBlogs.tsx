@@ -305,7 +305,7 @@ export function AdminBlogs() {
                 <div>
                   <Label>Featured Image URL</Label>
                   <Input value={form.featuredImage} onChange={e => setForm({ ...form, featuredImage: e.target.value })} placeholder="https://..." />
-                  {form.featuredImage && <img src={form.featuredImage} alt="" className="mt-2 h-20 w-auto rounded object-cover" />}
+                  {form.featuredImage && <img loading="lazy" decoding="async" src={form.featuredImage} alt="" className="mt-2 h-20 w-auto rounded object-cover" />}
                 </div>
                 <div>
                   <Label>Category</Label>
@@ -370,7 +370,7 @@ export function AdminBlogs() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
                               {post.featuredImage && (
-                                <img src={toDirectImageUrl(post.featuredImage)} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 hidden sm:block" />
+                                <img loading="lazy" decoding="async" src={toDirectImageUrl(post.featuredImage)} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 hidden sm:block" />
                               )}
                               <div>
                                 <p className="font-medium text-brand-dark truncate max-w-[200px] sm:max-w-[300px]">{post.title}</p>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET(request: Request) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       db.blog.count({ where }),
     ])
 
-    return NextResponse.json({ blogs, total, page, totalPages: Math.ceil(total / limit) })
+    return publicJson({ blogs, total, page, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     console.error('Error fetching blogs:', error)
     return NextResponse.json({ blogs: [], total: 0, page: 1, totalPages: 0 })

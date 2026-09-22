@@ -127,7 +127,7 @@ export function BlogArchive() {
                   >
                     <div className="h-48 overflow-hidden">
                       {post.featuredImage ? (
-                        <img src={toDirectImageUrl(post.featuredImage)} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img loading="lazy" decoding="async" src={toDirectImageUrl(post.featuredImage)} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-brand-orange/20 to-brand-teal/20 flex items-center justify-center">
                           <span className="text-4xl font-serif text-brand-orange/40">{post.title.charAt(0)}</span>

@@ -70,6 +70,22 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
+      { protocol: 'https', hostname: 'www.justahotels.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'vl-prod-static.b-cdn.net', pathname: '/**' },
+      { protocol: 'https', hostname: 'www.jumpinheights.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'media-cdn.tripadvisor.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'dynamic-media-cdn.tripadvisor.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'travelistaan.com', pathname: '/**' },
+      { protocol: 'https', hostname: '5.imimg.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'blog.ecohospitality.in', pathname: '/**' },
+      { protocol: 'https', hostname: 'encrypted-tbn0.gstatic.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'd26dp53kz39178.cloudfront.net', pathname: '/**' },
+      { protocol: 'https', hostname: 'd1kxjw4xo8k4dx.cloudfront.net', pathname: '/**' },
+      { protocol: 'https', hostname: 'cdn.dev.beautifuldestinations.app', pathname: '/**' },
+      { protocol: 'https', hostname: 'thrillfactory.in', pathname: '/**' },
+      { protocol: 'https', hostname: 'p0.piqsels.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'curlytales.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'media1.thrillophilia.com', pathname: '/**' },
     ],
   },
   // Enable caching headers
@@ -97,15 +113,6 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
-          },
-        ],
-      },
-      {
-        source: '/api/:all*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate',
           },
         ],
       },

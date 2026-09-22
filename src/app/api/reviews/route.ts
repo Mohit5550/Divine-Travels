@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 import { notifyAdmin } from '@/lib/notify'
 import { getUserFromToken } from '@/lib/with-auth'
 
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       take: destinationId ? undefined : 20,
     })
 
-    return NextResponse.json(reviews)
+    return publicJson(reviews)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

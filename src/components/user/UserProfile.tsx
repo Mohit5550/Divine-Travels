@@ -88,7 +88,7 @@ export function UserProfile() {
           <div className="relative group">
             <div className="w-24 h-24 rounded-full bg-brand-orange/10 flex items-center justify-center overflow-hidden">
               {user?.avatar ? (
-                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={user.avatar} alt="" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-brand-orange" />
               )}

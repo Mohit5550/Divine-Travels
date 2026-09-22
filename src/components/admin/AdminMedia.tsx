@@ -117,7 +117,7 @@ export function AdminMedia() {
                 </div>
                 {url && (
                   <div className="rounded-lg overflow-hidden h-32 border">
-                    <img src={url} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    <img loading="lazy" decoding="async" src={url} alt="preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   </div>
                 )}
                 <div>
@@ -153,7 +153,7 @@ export function AdminMedia() {
           {(filtered as Array<Record<string, unknown>>).map((item) => (
             <div key={item.id as string} className="bg-white rounded-xl shadow-sm overflow-hidden group">
               <div className="aspect-square bg-muted relative">
-                <img src={item.url as string} alt={(item.alt as string) || ''} className="w-full h-full object-cover"
+                <img loading="lazy" decoding="async" src={item.url as string} alt={(item.alt as string) || ''} className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/e2e8f0/94a3b8?text=Error' }} />
                 <button
                   onClick={() => copyUrl(item.url as string, item.id as string)}

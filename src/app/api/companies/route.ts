@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 import { cleanSlug } from '@/lib/resolve-slug'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
@@ -13,7 +14,7 @@ export async function GET() {
       },
       orderBy: { order: 'asc' },
     })
-    return NextResponse.json(companies)
+    return publicJson(companies)
   } catch (error) {
     console.error('Error fetching companies:', error)
     return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 })

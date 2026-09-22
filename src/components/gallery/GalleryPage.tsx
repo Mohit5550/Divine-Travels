@@ -313,7 +313,7 @@ export function GalleryPage() {
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-5xl max-h-[90vh] w-full"
             >
-              <img
+              <img loading="lazy" decoding="async"
                 src={filteredImages[lightboxIndex].url}
                 alt={filteredImages[lightboxIndex].alt}
                 className="w-full h-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"

@@ -90,7 +90,7 @@ export function AdminHeroNotices() {
               <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
               <span className="text-xs font-bold text-brand-orange w-5">{i + 1}</span>
               {notice.image ? (
-                <img src={notice.image} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+                <img loading="lazy" decoding="async" src={notice.image} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
               ) : (
                 <div className="w-16 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <Image className="w-5 h-5 text-gray-300" />

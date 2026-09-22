@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET(
   _request: Request,
@@ -14,7 +15,7 @@ export async function GET(
     if (!blog || !blog.published) {
       return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
     }
-    return NextResponse.json(blog)
+    return publicJson(blog)
   } catch (error) {
     console.error('Error fetching blog:', error)
     return NextResponse.json({ error: 'Failed to fetch blog' }, { status: 500 })

@@ -148,7 +148,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
             >
               <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-lg">
                 {/* Image */}
-                <img
+                <img loading="lazy" decoding="async"
                   src={dest.image}
                   alt={dest.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

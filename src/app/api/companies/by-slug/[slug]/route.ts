@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET(
   _request: NextRequest,
@@ -38,7 +39,7 @@ export async function GET(
       })
     )
 
-    return NextResponse.json({ ...company, plans: plansWithPackages })
+    return publicJson({ ...company, plans: plansWithPackages })
   } catch (error) {
     console.error('Error fetching company by slug:', error)
     return NextResponse.json({ error: 'Failed to fetch company' }, { status: 500 })

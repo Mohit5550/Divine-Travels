@@ -130,7 +130,7 @@ export function CompanySection() {
                   <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-5 z-10">
                     {company.logo && (
                       <div className="w-10 h-10 rounded-xl bg-white/90 p-1 mb-2.5 backdrop-blur-sm shadow-md overflow-hidden flex items-center justify-center">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={toDirectImageUrl(company.logo)}
                           alt=""
                           className="w-full h-full object-contain"

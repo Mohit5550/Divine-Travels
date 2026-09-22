@@ -250,7 +250,7 @@ export function DestinationDetail() {
               animate={{ opacity: 1, y: 0 }}
               className="relative rounded-2xl overflow-hidden h-64 sm:h-96"
             >
-              <img
+              <img loading="lazy" decoding="async"
                 src={destination.image}
                 alt={destination.name}
                 className="w-full h-full object-cover"

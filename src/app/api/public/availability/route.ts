@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 const SERVICE_ALIASES: Record<string, string[]> = {
   'bike-rental': ['bike-rental', 'bike'],
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       return r.date === today
     })
 
-    return NextResponse.json({ records: matching })
+    return publicJson({ records: matching })
   } catch (error) {
     console.error('Public availability error:', error)
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })

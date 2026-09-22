@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
@@ -128,10 +129,12 @@ export function TaxiPackages() {
       {/* Hero Section */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <SmartImage
             src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80"
             alt="Taxi Booking in Rishikesh"
             className="w-full h-full object-cover"
+            priority
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
@@ -252,7 +255,7 @@ export function TaxiPackages() {
                   }`}>
                     {/* Image Section */}
                     <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={pkg.image}
                         alt={pkg.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

@@ -39,7 +39,7 @@ export function BootSplash({ visible }: { visible: boolean }) {
             }}
           />
         </div>
-        <img
+        <img loading="lazy" decoding="async"
           src="/logo.png"
           alt="Divine Travel"
           style={{ height: '40px', width: 'auto', objectFit: 'contain' }}

@@ -81,7 +81,7 @@ export function UserCartPanel({ navigate }: { navigate: (view: string, destId?: 
               <div key={item.key} className="bg-white rounded-2xl shadow-sm border border-border/50 overflow-hidden flex flex-col">
                 {/* Image section */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={displayImage}
                     alt={displayName}
                     className="w-full h-full object-cover"

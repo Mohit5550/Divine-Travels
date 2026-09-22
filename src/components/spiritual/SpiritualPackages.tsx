@@ -123,7 +123,7 @@ export function SpiritualPackages() {
 
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <img loading="lazy" decoding="async"
             src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/0b/31/b3/53.jpg"
             alt="Spiritual Tours India"
             className="w-full h-full object-cover"
@@ -211,7 +211,7 @@ export function SpiritualPackages() {
               >
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer">
                   <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
-                    <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img loading="lazy" decoding="async" src={pkg.image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className={`absolute inset-0 bg-gradient-to-t ${pkg.gradient} to-transparent opacity-70`} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <PackageWishlistOverlay packageId={pkg.id} />

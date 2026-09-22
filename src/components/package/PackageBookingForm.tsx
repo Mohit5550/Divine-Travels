@@ -525,7 +525,7 @@ export function PackageBookingForm() {
         >
           {/* Header */}
           <div className="relative h-40 sm:h-48">
-            <img
+            <img loading="lazy" decoding="async"
               src={pkg.image}
               alt={pkg.name}
               className="w-full h-full object-cover"

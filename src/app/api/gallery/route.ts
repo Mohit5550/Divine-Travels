@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
       take: limit ? parseInt(limit, 10) : undefined,
     })
 
-    return NextResponse.json(images)
+    return publicJson(images)
   } catch (error) {
     console.error('Gallery fetch error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

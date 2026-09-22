@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicJson } from '@/lib/cache'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET() {
@@ -8,7 +9,7 @@ export async function GET() {
       where: { active: true },
       orderBy: { order: 'asc' },
     })
-    return NextResponse.json(notices)
+    return publicJson(notices)
   } catch (error) {
     console.error('Error fetching hero notices:', error)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })

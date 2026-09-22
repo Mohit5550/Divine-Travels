@@ -161,7 +161,7 @@ export function CompanyDetail() {
             <BackButton className="mb-4 text-white/50 hover:text-white" />
             <div className="flex items-center gap-4">
               {company.logo && (
-                <img src={company.logo} alt="" className="w-12 h-12 rounded-xl bg-white/10 object-contain p-1" />
+                <img loading="lazy" decoding="async" src={company.logo} alt="" className="w-12 h-12 rounded-xl bg-white/10 object-contain p-1" />
               )}
               <div>
                 <h1 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white tracking-tight">{company.name}</h1>

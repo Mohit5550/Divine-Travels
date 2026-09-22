@@ -382,7 +382,7 @@ export function PackageDetail() {
               </>
             )}
             <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-              <img
+              <img loading="lazy" decoding="async"
                 src={parsedData.images[selectedImage] || pkg.image}
                 alt={pkg.name}
                 className="w-full max-h-[80vh] object-contain rounded-xl"
@@ -435,7 +435,7 @@ export function PackageDetail() {
               className="rounded-2xl overflow-hidden"
             >
               <div className="relative h-64 sm:h-[400px]">
-                <img
+                <img loading="lazy" decoding="async"
                   src={pkg.image}
                   alt={pkg.name}
                   className="w-full h-full object-cover"
@@ -451,7 +451,7 @@ export function PackageDetail() {
                         onClick={() => { setSelectedImage(i); setShowGallery(true) }}
                         className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-white/50 hover:border-white transition-colors"
                       >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={img} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
                     {parsedData.images.length > 3 && (

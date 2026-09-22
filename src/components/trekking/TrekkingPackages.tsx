@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/landing/Navbar'
 import { BackButton } from '@/components/ui/BackButton'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { ActivityBar } from '@/components/landing/ActivityBar'
 import { Footer } from '@/components/landing/Footer'
 import { getSubOptionFromName } from '@/lib/subpackage-utils'
@@ -148,10 +149,12 @@ export function TrekkingPackages() {
       {/* Hero Section */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <SmartImage
             src="https://vl-prod-static.b-cdn.net/system/images/000/097/753/aeb47db7532b7691e18a1e981e3c95ca/original/Himalaya-Destination-1.jpg"
             alt="Trekking in Uttarakhand"
             className="w-full h-full object-cover"
+            priority
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/80 via-brand-dark/50 to-brand-cream" />
         </div>
@@ -267,7 +270,7 @@ export function TrekkingPackages() {
                   }`}>
                     {/* Image Section */}
                     <div className="relative h-36 sm:h-56 overflow-hidden" onClick={() => handleViewDetails(pkg)}>
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={pkg.image}
                         alt={pkg.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

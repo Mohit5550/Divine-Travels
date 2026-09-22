@@ -86,7 +86,7 @@ export function UserBookings() {
           {bookings.map((booking: any) => (
             <div key={booking.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="flex flex-col sm:flex-row">
-                <img src={booking.destination?.image || '/placeholder.svg'} alt={booking.destination?.name} className="w-full sm:w-40 h-32 sm:h-auto object-cover" />
+                <img loading="lazy" decoding="async" src={booking.destination?.image || '/placeholder.svg'} alt={booking.destination?.name} className="w-full sm:w-40 h-32 sm:h-auto object-cover" />
                 <div className="flex-1 p-4 sm:p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>

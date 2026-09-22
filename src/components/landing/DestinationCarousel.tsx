@@ -139,7 +139,7 @@ export function DestinationCarousel() {
                       className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full"
                     >
                       <div className="relative h-40 sm:h-44 overflow-hidden">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={pkg.image}
                           alt={pkg.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

@@ -298,7 +298,7 @@ export function AdminStayContent() {
               {current.images.map((url, i) =>
                 url.trim() ? (
                   <div key={i} className="w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={url}
                       alt={`Image ${i + 1}`}
                       className="w-full h-full object-cover"

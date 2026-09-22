@@ -136,7 +136,7 @@ export function UserWishlist() {
               item.kind === 'destination' ? (
                 <motion.div key={`dest-${item.data.id}`} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl shadow-sm overflow-hidden group">
                   <div className="relative h-40">
-                    <img src={item.data.destination?.image || '/placeholder.svg'} alt={item.data.destination?.name} className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={item.data.destination?.image || '/placeholder.svg'} alt={item.data.destination?.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <button onClick={() => removeDestWishlist(item.data.destination?.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
                       <Trash2 className="w-3.5 h-3.5 text-white" />
@@ -160,7 +160,7 @@ export function UserWishlist() {
               ) : (
                 <motion.div key={`pkg-${item.data.id}`} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl shadow-sm overflow-hidden group">
                   <div className="relative h-40">
-                    <img src={item.data.package?.image || '/placeholder.svg'} alt={item.data.package?.name} className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={item.data.package?.image || '/placeholder.svg'} alt={item.data.package?.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <button onClick={() => removePkgWishlist(item.data.package?.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/80 transition-colors">
                       <Trash2 className="w-3.5 h-3.5 text-white" />

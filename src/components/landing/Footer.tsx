@@ -58,7 +58,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="mb-4">
-              <img
+              <img loading="lazy" decoding="async"
                 src="/logo-white.png"
                 alt="Divine Travel"
                 className="h-12 w-auto object-contain"

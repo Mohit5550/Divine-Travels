@@ -199,7 +199,7 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
 
                 {/* Package Info */}
                 <div className="flex items-center gap-3 p-3 bg-brand-cream/70 rounded-xl">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={selectedBooking.package.image}
                     alt={selectedBooking.package.name}
                     className="w-14 h-14 rounded-lg object-cover"
@@ -364,7 +364,7 @@ export function AdminPackageBookings({ categoryFilter }: Props) {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <img src={booking.package.image} alt="" className="w-8 h-8 rounded object-cover" />
+                        <img loading="lazy" decoding="async" src={booking.package.image} alt="" className="w-8 h-8 rounded object-cover" />
                         <span className="text-sm">{booking.package.name}</span>
                       </div>
                     </td>

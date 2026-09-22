@@ -12,7 +12,7 @@ export function HeroBanner() {
     <section className="relative h-[55vh] sm:h-[80vh] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img
+        <img loading="lazy" decoding="async"
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop"
           alt="Divine Travel - Scenic River Landscape"
           className="w-full h-full object-cover"

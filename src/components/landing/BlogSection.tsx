@@ -74,7 +74,7 @@ export function BlogSection() {
             >
                <div className="h-32 sm:h-40 overflow-hidden">
                 {post.featuredImage ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={toDirectImageUrl(post.featuredImage)}
                     alt={post.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

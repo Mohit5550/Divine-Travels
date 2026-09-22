@@ -11,7 +11,7 @@ export function CTABanner() {
     <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img
+        <img loading="lazy" decoding="async"
           src="https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=1600&h=900&fit=crop"
           alt="Kayaking adventure on water"
           className="w-full h-full object-cover"

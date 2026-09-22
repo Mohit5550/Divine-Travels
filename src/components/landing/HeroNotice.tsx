@@ -145,7 +145,7 @@ export function HeroNotice() {
         >
           {/* Card Header & Media */}
           <div className="relative h-24 sm:h-32 w-full overflow-hidden bg-slate-900">
-            <img
+            <img loading="lazy" decoding="async"
               src={imgSrc}
               alt={notice.heading}
               onError={() => setImgErrors((prev) => ({ ...prev, [notice.id]: true }))}

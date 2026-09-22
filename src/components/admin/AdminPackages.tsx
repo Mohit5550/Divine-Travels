@@ -620,7 +620,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                       <Input id="image" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://... or Google Drive link" required />
                       {form.image && (
                         <div className="mt-2 rounded-lg overflow-hidden w-full max-w-xs h-32 border">
-                          <img src={toDirectImageUrl(form.image)} alt="featured preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                          <img loading="lazy" decoding="async" src={toDirectImageUrl(form.image)} alt="featured preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                         </div>
                       )}
                     </div>
@@ -641,7 +641,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                               />
                               {url && (
                                 <div className="mt-1 rounded-md overflow-hidden w-full max-w-[120px] h-16 border">
-                                  <img src={toDirectImageUrl(url)} alt={`gallery ${idx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                  <img loading="lazy" decoding="async" src={toDirectImageUrl(url)} alt={`gallery ${idx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                 </div>
                               )}
                             </div>
@@ -1258,7 +1258,7 @@ export function AdminPackages({ categoryFilter }: { categoryFilter?: string }) {
                   <tr key={pkg.id} className="border-b border-border/50 hover:bg-brand-cream/30">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img src={pkg.image} alt={pkg.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <img loading="lazy" decoding="async" src={pkg.image} alt={pkg.name} className="w-10 h-10 rounded-lg object-cover" />
                         <div>
                           <p className="font-medium text-brand-dark">{pkg.name}</p>
                           <p className="text-xs text-muted-foreground line-clamp-1">{pkg.subtitle}</p>
