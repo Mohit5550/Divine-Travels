@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Gift, Copy, Calendar, Tag, CheckCircle, Sparkles, Check, ArrowRight, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { couponUpToText } from '@/lib/coupon'
 
 export function UserCoupons() {
   const [manualCode, setManualCode] = useState('')
@@ -99,7 +100,7 @@ export function UserCoupons() {
           >
             <div>
               <span className="font-bold font-mono text-sm mr-2">{validatedCoupon.code}</span>
-              <span>— {validatedCoupon.discountPct}% OFF {validatedCoupon.maxDiscount ? `(up to ₹${validatedCoupon.maxDiscount})` : ''}</span>
+              <span>— {couponUpToText(validatedCoupon.discountPct, validatedCoupon.maxDiscount)}</span>
               {validatedCoupon.applicableCategory !== 'all' && (
                 <span className="block text-[11px] text-emerald-700">Valid on: {validatedCoupon.applicableCategory}</span>
               )}
@@ -137,7 +138,7 @@ export function UserCoupons() {
                     <span className="text-xl font-bold font-mono tracking-wider">{coupon.code}</span>
                   </div>
                   <p className="text-sm mt-1 font-semibold opacity-95">
-                    {coupon.discountPct}% OFF {coupon.maxDiscount ? `(up to ₹${coupon.maxDiscount.toLocaleString()})` : ''}
+                    {couponUpToText(coupon.discountPct, coupon.maxDiscount)}
                   </p>
                 </div>
                 <div className="p-4 space-y-3">

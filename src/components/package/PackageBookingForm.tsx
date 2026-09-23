@@ -894,7 +894,7 @@ export function PackageBookingForm() {
               </div>
               {appliedCoupon && (
                 <p className="text-xs text-green-600 mt-1">
-                  Coupon {appliedCoupon.code} applied — {appliedCoupon.discountPct}% off (save ₹{appliedCoupon.discountAmount})
+                  Coupon {appliedCoupon.code} applied — Get up to {appliedCoupon.discountPct}% OFF (you save ₹{appliedCoupon.discountAmount.toLocaleString('en-IN')})
                 </p>
               )}
             </div>
