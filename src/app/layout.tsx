@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { ChunkReloadGuard } from "@/lib/lazy-retry";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -101,6 +102,7 @@ export default function RootLayout({
         </QueryProvider>
         <Toaster richColors position="bottom-right" />
         <CookieConsent />
+        <ChunkReloadGuard />
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}`,

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useState, useCallback, Suspense } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { lazyView } from '@/lib/lazy-retry'
 import { useAppStore } from '@/lib/store'
 import { useCart } from '@/lib/cart'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -39,28 +40,28 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { BootSplash } from '@/components/ui/BootSplash'
 import { ViewLoader } from '@/components/ui/ViewLoader'
 
-const UserDashboard = React.lazy(() => import('@/components/user/UserDashboard').then(m => ({ default: m.UserDashboard })))
-const AdminDashboard = React.lazy(() => import('@/components/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
-const RaftingPackages = React.lazy(() => import('@/components/rafting/RaftingPackages').then(m => ({ default: m.RaftingPackages })))
-const BikePackages = React.lazy(() => import('@/components/bike-rental/BikePackages').then(m => ({ default: m.BikePackages })))
-const TaxiPackages = React.lazy(() => import('@/components/taxi-booking/TaxiPackages').then(m => ({ default: m.TaxiPackages })))
-const TaxiBookingForm = React.lazy(() => import('@/components/taxi-booking/TaxiBookingForm').then(m => ({ default: m.TaxiBookingForm })))
-const TrekkingPackages = React.lazy(() => import('@/components/trekking/TrekkingPackages').then(m => ({ default: m.TrekkingPackages })))
-const AdventurePackages = React.lazy(() => import('@/components/adventure/AdventurePackages').then(m => ({ default: m.AdventurePackages })))
-const DomesticPackages = React.lazy(() => import('@/components/domestic/DomesticPackages').then(m => ({ default: m.DomesticPackages })))
-const SpiritualPackages = React.lazy(() => import('@/components/spiritual/SpiritualPackages').then(m => ({ default: m.SpiritualPackages })))
-const InternationalPackages = React.lazy(() => import('@/components/international/InternationalPackages').then(m => ({ default: m.InternationalPackages })))
-const GalleryPage = React.lazy(() => import('@/components/gallery/GalleryPage').then(m => ({ default: m.GalleryPage })))
-const RishikeshTour = React.lazy(() => import('@/components/tours/RishikeshTour').then(m => ({ default: m.RishikeshTour })))
-const HaridwarTour = React.lazy(() => import('@/components/tours/HaridwarTour').then(m => ({ default: m.HaridwarTour })))
-const MussoorieTour = React.lazy(() => import('@/components/tours/MussoorieTour').then(m => ({ default: m.MussoorieTour })))
-const NainitalTour = React.lazy(() => import('@/components/tours/NainitalTour').then(m => ({ default: m.NainitalTour })))
-const HillStationsTour = React.lazy(() => import('@/components/tours/HillStationsTour').then(m => ({ default: m.HillStationsTour })))
-const CharDhamTour = React.lazy(() => import('@/components/tours/CharDhamTour').then(m => ({ default: m.CharDhamTour })))
-const HotelPackages = React.lazy(() => import('@/components/stay/HotelPackages').then(m => ({ default: m.HotelPackages })))
-const CampingPackages = React.lazy(() => import('@/components/stay/CampingPackages').then(m => ({ default: m.CampingPackages })))
-const PackageDetail = React.lazy(() => import('@/components/package/PackageDetail').then(m => ({ default: m.PackageDetail })))
-const PackageBookingForm = React.lazy(() => import('@/components/package/PackageBookingForm').then(m => ({ default: m.PackageBookingForm })))
+const UserDashboard = lazyView(() => import('@/components/user/UserDashboard'), 'UserDashboard')
+const AdminDashboard = lazyView(() => import('@/components/admin/AdminDashboard'), 'AdminDashboard')
+const RaftingPackages = lazyView(() => import('@/components/rafting/RaftingPackages'), 'RaftingPackages')
+const BikePackages = lazyView(() => import('@/components/bike-rental/BikePackages'), 'BikePackages')
+const TaxiPackages = lazyView(() => import('@/components/taxi-booking/TaxiPackages'), 'TaxiPackages')
+const TaxiBookingForm = lazyView(() => import('@/components/taxi-booking/TaxiBookingForm'), 'TaxiBookingForm')
+const TrekkingPackages = lazyView(() => import('@/components/trekking/TrekkingPackages'), 'TrekkingPackages')
+const AdventurePackages = lazyView(() => import('@/components/adventure/AdventurePackages'), 'AdventurePackages')
+const DomesticPackages = lazyView(() => import('@/components/domestic/DomesticPackages'), 'DomesticPackages')
+const SpiritualPackages = lazyView(() => import('@/components/spiritual/SpiritualPackages'), 'SpiritualPackages')
+const InternationalPackages = lazyView(() => import('@/components/international/InternationalPackages'), 'InternationalPackages')
+const GalleryPage = lazyView(() => import('@/components/gallery/GalleryPage'), 'GalleryPage')
+const RishikeshTour = lazyView(() => import('@/components/tours/RishikeshTour'), 'RishikeshTour')
+const HaridwarTour = lazyView(() => import('@/components/tours/HaridwarTour'), 'HaridwarTour')
+const MussoorieTour = lazyView(() => import('@/components/tours/MussoorieTour'), 'MussoorieTour')
+const NainitalTour = lazyView(() => import('@/components/tours/NainitalTour'), 'NainitalTour')
+const HillStationsTour = lazyView(() => import('@/components/tours/HillStationsTour'), 'HillStationsTour')
+const CharDhamTour = lazyView(() => import('@/components/tours/CharDhamTour'), 'CharDhamTour')
+const HotelPackages = lazyView(() => import('@/components/stay/HotelPackages'), 'HotelPackages')
+const CampingPackages = lazyView(() => import('@/components/stay/CampingPackages'), 'CampingPackages')
+const PackageDetail = lazyView(() => import('@/components/package/PackageDetail'), 'PackageDetail')
+const PackageBookingForm = lazyView(() => import('@/components/package/PackageBookingForm'), 'PackageBookingForm')
 
 const selfContainedViews = [
   'admin-dashboard', 'company-detail', 'collaborate', 'cookie-policy',
