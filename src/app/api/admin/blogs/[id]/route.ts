@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { cleanSlug } from '@/lib/resolve-slug'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(
@@ -40,7 +41,7 @@ export async function PUT(
     if (slug !== undefined) data.slug = cleanSlug(slug)
     if (content !== undefined) data.content = content
     if (excerpt !== undefined) data.excerpt = excerpt
-    if (featuredImage !== undefined) data.featuredImage = featuredImage
+    if (featuredImage !== undefined) data.featuredImage = featuredImage ? toDirectImageUrl(featuredImage) : null
     if (tags !== undefined) data.tags = JSON.stringify(tags)
     if (categoryId !== undefined) data.categoryId = categoryId
     if (author !== undefined) data.author = author

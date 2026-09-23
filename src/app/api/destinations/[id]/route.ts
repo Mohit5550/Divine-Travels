@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { resolveDestination, slugify } from '@/lib/resolve-slug'
 import { publicJson } from '@/lib/cache'
+import { toDirectImageUrl } from '@/lib/utils'
 
 // GET /api/destinations/[id] - Get one with reviews (accepts cuid id or slug)
 export async function GET(
@@ -53,6 +54,7 @@ export async function PUT(
 
     const body = await request.json()
     if (body.slug !== undefined) body.slug = slugify(body.slug)
+    if (body.image !== undefined) body.image = toDirectImageUrl(body.image)
     // Backfill slug on update when the record has none yet
     if (!body.slug) {
       const existing = await db.destination.findUnique({ where: { id } })

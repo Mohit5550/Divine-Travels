@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: NextRequest) {
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     const image = await db.galleryImage.create({
-      data: {
-        url,
+        data: {
+          url: toDirectImageUrl(url),
         title: title || null,
         alt: alt || title || null,
         category: category || null,

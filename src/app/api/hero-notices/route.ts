@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toDirectImageUrl } from '@/lib/utils'
 import { publicJson } from '@/lib/cache'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     const { image, heading, description, link, order } = body
     if (!heading) return NextResponse.json({ error: 'Heading required' }, { status: 400 })
     const notice = await db.heroNotice.create({
-      data: { image, heading, description, link: link || null, order: order || 0 },
+      data: { image: image ? toDirectImageUrl(image) : image, heading, description, link: link || null, order: order || 0 },
     })
     return NextResponse.json(notice, { status: 201 })
   } catch (error) {

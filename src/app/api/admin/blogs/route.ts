@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { cleanSlug } from '@/lib/resolve-slug'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(request: Request) {
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
         slug: cleanSlug(slug),
         content,
         excerpt: excerpt || '',
-        featuredImage: featuredImage || null,
+        featuredImage: featuredImage ? toDirectImageUrl(featuredImage) : null,
         tags: JSON.stringify(tags || []),
         categoryId: categoryId || null,
         author: author || 'Divine Travels',

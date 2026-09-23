@@ -41,6 +41,19 @@ export function toDirectImageUrl(url: string): string {
   return trimmed
 }
 
+// Normalize a gallery JSON payload (array of image URLs) to direct URLs.
+// Returns the original string untouched when it isn't valid JSON.
+export function normalizeGalleryImages(images: unknown): string {
+  if (typeof images !== 'string') return '[]'
+  try {
+    const arr = JSON.parse(images)
+    if (!Array.isArray(arr)) return images
+    return JSON.stringify(arr.map((u) => (typeof u === 'string' ? toDirectImageUrl(u) : u)))
+  } catch {
+    return images
+  }
+}
+
 export function htmlToMarkdown(html: string): string {
   if (!html) return ''
   let md = html

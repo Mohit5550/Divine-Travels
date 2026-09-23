@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { publicJson } from '@/lib/cache'
 import { cleanSlug } from '@/lib/resolve-slug'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET() {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const company = await db.company.create({
-      data: { name, slug: cleanSlug(slug), logo, photo, description, website },
+      data: { name, slug: cleanSlug(slug), logo: logo ? toDirectImageUrl(logo) : logo, photo: photo ? toDirectImageUrl(photo) : photo, description, website },
     })
 
     return NextResponse.json(company, { status: 201 })

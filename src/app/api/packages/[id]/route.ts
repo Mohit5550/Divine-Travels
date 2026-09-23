@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { resolvePackage, cleanSlug } from '@/lib/resolve-slug'
 import { publicJson } from '@/lib/cache'
+import { toDirectImageUrl, normalizeGalleryImages } from '@/lib/utils'
 
 // GET /api/packages/[id] - Get package details with reviews (accepts cuid id or slug)
 export async function GET(
@@ -79,7 +80,8 @@ export async function PUT(
         name, slug: slug !== undefined ? cleanSlug(slug) : undefined, tagline, subtitle, description,
         price: price !== undefined ? Number(price) : undefined,
         originalPrice: originalPrice !== undefined ? (originalPrice ? Number(originalPrice) : null) : undefined,
-        image, images, category, distance, duration, rapidsLevel,
+        image: image !== undefined ? toDirectImageUrl(image) : undefined,
+        images: images !== undefined ? normalizeGalleryImages(images) : undefined, category, distance, duration, rapidsLevel,
         rapidsDescription, targetDemo, timings, highlights,
         inclusions, exclusions, eligibility, location, pickupLocationUrl,
         locationUrls, cancellationPolicy, faqs, badge, badgeColor, gradient,

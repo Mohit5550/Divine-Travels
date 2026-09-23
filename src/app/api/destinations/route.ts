@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { publicJson } from '@/lib/cache'
-import { getUserIdFromRequest } from '@/lib/get-user-id'
 import { slugify } from '@/lib/resolve-slug'
+import { toDirectImageUrl } from '@/lib/utils'
+import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/destinations - List all with optional filters
 export async function GET(request: NextRequest) {
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
         category,
         price: Number(price),
         rating: Number(rating) || 0,
-        image,
+        image: toDirectImageUrl(image),
         badge: badge || null,
         badgeColor: badgeColor || null,
         tags: tags || '',

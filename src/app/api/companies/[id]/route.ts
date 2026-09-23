@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { cleanSlug } from '@/lib/resolve-slug'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function GET(
@@ -46,8 +47,8 @@ export async function PUT(
       data: {
         name: body.name,
         slug: body.slug !== undefined ? cleanSlug(body.slug) : undefined,
-        logo: body.logo,
-        photo: body.photo,
+        logo: body.logo !== undefined ? (body.logo ? toDirectImageUrl(body.logo) : body.logo) : undefined,
+        photo: body.photo !== undefined ? (body.photo ? toDirectImageUrl(body.photo) : body.photo) : undefined,
         description: body.description,
         website: body.website,
         order: body.order,

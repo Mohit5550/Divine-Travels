@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function PUT(
@@ -39,7 +40,7 @@ export async function PUT(
     const image = await db.galleryImage.update({
       where: { id },
       data: {
-        url: url ?? existing.url,
+        url: url !== undefined ? toDirectImageUrl(url) : existing.url,
         title: title !== undefined ? title : existing.title,
         alt: alt !== undefined ? alt : existing.alt,
         category: category !== undefined ? category : existing.category,

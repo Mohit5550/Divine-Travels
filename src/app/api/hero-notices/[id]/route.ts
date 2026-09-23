@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toDirectImageUrl } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 export async function PUT(
@@ -21,7 +22,7 @@ export async function PUT(
     const notice = await db.heroNotice.update({
       where: { id },
       data: {
-        image: body.image,
+        image: body.image !== undefined ? (body.image ? toDirectImageUrl(body.image) : body.image) : undefined,
         heading: body.heading,
         description: body.description,
         link: body.link || null,

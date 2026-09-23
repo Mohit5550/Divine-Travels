@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { publicJson } from '@/lib/cache'
 import { cleanSlug } from '@/lib/resolve-slug'
+import { toDirectImageUrl, normalizeGalleryImages } from '@/lib/utils'
 import { getUserIdFromRequest } from '@/lib/get-user-id'
 
 // GET /api/packages - List packages with optional filtering
@@ -97,8 +98,8 @@ export async function POST(request: Request) {
         description,
         price: priceNum,
         originalPrice: originalPriceNum !== null && !isNaN(originalPriceNum) ? originalPriceNum : null,
-        image: image || '',
-        images: images || '[]',
+        image: toDirectImageUrl(image || ''),
+        images: normalizeGalleryImages(images),
         category: category || 'rafting',
         distance: distance || '',
         duration: duration || '',
