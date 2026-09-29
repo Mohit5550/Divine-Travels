@@ -31,6 +31,8 @@ interface AppStore {
   dashboardTab: string | null
   voucherModalOpen: boolean
   setVoucherModalOpen: (open: boolean) => void
+  loginOpen: boolean
+  setLoginOpen: (open: boolean) => void
   navigate: (view: string, destId?: string | null, pkgId?: string | null) => void
   goBack: (fallbackView?: string | null) => void
   setUser: (user: AppUser | null, token?: string | null) => void
@@ -159,7 +161,8 @@ export const useAppStore = create<AppStore>()(
       navHistory: [],
       dashboardTab: null,
       voucherModalOpen: false,
-
+      loginOpen: false,
+      setLoginOpen: (open: boolean) => set({ loginOpen: open }),
       setVoucherModalOpen: (open: boolean) => set({ voucherModalOpen: open }),
 
       navigate: (view: string, destId?: string | null, pkgId?: string | null) => {
