@@ -143,7 +143,7 @@ export function CompanySection() {
                     </h3>
 
                     {company.description && (
-                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 leading-relaxed opacity-90">
+                      <p className="hidden sm:block text-gray-300 text-xs mt-1.5 line-clamp-2 leading-relaxed opacity-90">
                         {company.description}
                       </p>
                     )}
