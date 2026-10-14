@@ -216,7 +216,7 @@ export function SingleSelectTour({
         {tourData.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">No tour packages available.</div>
         ) : (
-          <motion.div {...fadeInUp} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div {...fadeInUp} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
             {tourData.map((tour, idx) => {
               const isSelected = selectedIdx === idx
               return (

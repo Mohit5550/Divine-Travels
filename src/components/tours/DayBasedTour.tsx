@@ -238,7 +238,7 @@ export function DayBasedTour({
                   className="border-t border-border/50 overflow-hidden"
                 >
                   <div className="p-4 sm:p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 mb-4">
                       {selected.map((id, idx) => {
                         const prog = programs[id]
                         if (!prog) return null

@@ -54,7 +54,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Mobile: Brand → Quick+Services side-by-side → Contact below */}
         {/* Desktop (lg): 4 separate columns — Brand | Quick Links | Our Services | Contact */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 sm:gap-10">
           {/* Brand */}
           <div>
             <div className="mb-4">

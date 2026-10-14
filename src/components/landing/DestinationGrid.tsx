@@ -106,7 +106,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="aspect-[4/5] rounded-2xl bg-muted animate-pulse" />
         ))}
@@ -134,7 +134,7 @@ export function DestinationGrid({ searchQuery = '', activeCategory }: Destinatio
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
           {destinations.map((dest, index) => (
             <motion.div
               key={dest.id}

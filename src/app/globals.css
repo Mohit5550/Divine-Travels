@@ -125,6 +125,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    /* Kill horizontal overflow (desktop-mode on phones, wide tables) */
+    overflow-x: clip;
+  }
   body {
     @apply bg-background text-foreground;
   }

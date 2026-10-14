@@ -80,7 +80,7 @@ export function CompanySection() {
         </motion.div>
 
         {/* Companies Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           {companies.map((company, index) => {
             const planCount = company._count?.plans || 0
             return (
@@ -143,7 +143,7 @@ export function CompanySection() {
                     </h3>
 
                     {company.description && (
-                      <p className="hidden sm:block text-gray-300 text-xs mt-1.5 line-clamp-2 leading-relaxed opacity-90">
+                      <p className="text-gray-300 text-xs mt-1.5 leading-relaxed opacity-90 overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
                         {company.description}
                       </p>
                     )}

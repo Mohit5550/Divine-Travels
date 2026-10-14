@@ -33,7 +33,7 @@ export function TrustGuarantee() {
   return (
     <section className="py-4 sm:py-5 bg-white border-y border-gray-100/90 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {guarantees.map((g, idx) => {
             const Icon = g.icon
             return (
