@@ -72,5 +72,5 @@ export function AuthGuard() {
     }
   }, [token])
 
-  return <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+  return <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} defaultMode="login" />
 }

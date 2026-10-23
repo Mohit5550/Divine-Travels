@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react'
@@ -14,11 +14,12 @@ import { autoSubscribe } from '@/components/ui/PushNotificationManager'
 interface LoginModalProps {
   open: boolean
   onClose: () => void
+  defaultMode?: 'login' | 'register'
 }
 
-export function LoginModal({ open, onClose }: LoginModalProps) {
+export function LoginModal({ open, onClose, defaultMode = 'register' }: LoginModalProps) {
   const { setUser, navigate } = useAppStore()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<'login' | 'register'>(defaultMode)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
@@ -28,6 +29,16 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     password: '',
     phone: '',
   })
+
+  // Every fresh open starts on the Create Account form so new visitors can
+  // sign up immediately (existing users can switch via the link below).
+  useEffect(() => {
+    if (!open) return
+    setMode(defaultMode)
+    setForm({ name: '', email: '', password: '', phone: '' })
+    setShowPassword(false)
+    setShowForgotPassword(false)
+  }, [open, defaultMode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
