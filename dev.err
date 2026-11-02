@@ -1,0 +1,4 @@
+⚠ `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.ts to protect your application from malicious users.
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+^C
