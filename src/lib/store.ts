@@ -102,9 +102,7 @@ const PATH_TO_VIEW: Record<string, string> = Object.fromEntries(
   Object.entries(VIEW_TO_PATH).map(([view, path]) => [path, view])
 )
 
-function resolveFromURL(): { view: string; packageId: string | null; destinationId: string | null } {
-  if (typeof window === 'undefined') return { view: 'landing', packageId: null, destinationId: null }
-  const path = window.location.pathname
+function resolveFromPath(path: string): { view: string; packageId: string | null; destinationId: string | null } {
   let m = path.match(/^\/package\/([^/]+)\/book$/)
   if (m) return { view: 'package-booking', packageId: m[1], destinationId: null }
   m = path.match(/^\/package\/([^/]+)$/)
@@ -118,6 +116,25 @@ function resolveFromURL(): { view: string; packageId: string | null; destination
   m = path.match(/^\/destination\/([^/]+)$/)
   if (m) return { view: 'destination-detail', destinationId: m[1], packageId: null }
   return { view: PATH_TO_VIEW[path] || 'landing', packageId: null, destinationId: null }
+}
+
+function resolveFromURL(): { view: string; packageId: string | null; destinationId: string | null } {
+  if (typeof window === 'undefined') return { view: 'landing', packageId: null, destinationId: null }
+  return resolveFromPath(window.location.pathname)
+}
+
+/**
+ * Navigate to the view that corresponds to a URL path (e.g. '/rafting').
+ * Returns true when the path is a known SPA route and navigation happened.
+ * Used by the global SPA link interceptor so that plain <a href> / <Link href>
+ * clicks update currentView instead of only changing the URL.
+ */
+export function navigateFromPath(path: string): boolean {
+  if (typeof window === 'undefined') return false
+  const r = resolveFromPath(path)
+  if (r.view === 'landing' && !PATH_TO_VIEW[path]) return false
+  useAppStore.getState().navigate(r.view, r.destinationId, r.packageId)
+  return true
 }
 
 function getPathForView(view: string): string {

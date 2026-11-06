@@ -6,6 +6,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { ChunkReloadGuard } from "@/lib/lazy-retry";
+import { SpaNavInterceptor } from "@/components/ui/SpaNavInterceptor";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
 const inter = Inter({
@@ -104,6 +105,7 @@ export default function RootLayout({
         <Toaster richColors position="bottom-right" />
         <CookieConsent />
         <ChunkReloadGuard />
+        <SpaNavInterceptor />
         <AuthGuard />
         <script
           dangerouslySetInnerHTML={{
